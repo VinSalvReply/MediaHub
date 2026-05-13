@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/color.dart';
-import 'package:mediahub/features/users/dialogs/user_detail_dialog.dart';
 import 'package:mediahub/features/users/models/user.dart';
+import 'package:mediahub/features/users/widgets/user_detail_modal.dart';
+import 'dart:ui';
 
 class UserCard extends StatefulWidget {
   final User user;
@@ -21,6 +22,7 @@ class UserCard extends StatefulWidget {
 
 class _UserCardState extends State<UserCard> {
   bool hovered = false;
+  bool isTransitioning = false;
 
   @override
   Widget build(BuildContext context) {
@@ -28,42 +30,96 @@ class _UserCardState extends State<UserCard> {
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: GestureDetector(
-        onTap: () {
-          showUserDetail(context, widget.user);
-        },
+        onTap: () async {
+          {
+            setState(() => isTransitioning = true);
 
-        child: AnimatedScale(
-          duration: const Duration(milliseconds: 180),
-          scale: hovered ? 1.03 : 1.0,
-          curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: hovered
-                  ? [const BoxShadow(blurRadius: 25, color: Colors.black12)]
-                  : [],
-            ),
-            child: Card(
-              elevation: hovered ? 10 : 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: BorderSide(color: defaultColorLight!, width: 4),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: Duration(milliseconds: 250 + (widget.index * 40)),
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - value) * 20),
-                      child: child,
+            await Navigator.of(context).push(
+              PageRouteBuilder(
+                transitionDuration: const Duration(milliseconds: 600),
+                reverseTransitionDuration: const Duration(milliseconds: 600),
+                pageBuilder: (_, __, ___) {
+                  return Scaffold(
+                    backgroundColor: Colors.transparent,
+                    body: Stack(
+                      children: [
+                        Center(
+                          child: UserDetailModal(
+                            user: widget.user,
+                            color: widget.color,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
-                child: _CardContent(user: widget.user, color: widget.color),
+              ),
+            );
+
+            setState(() => isTransitioning = false);
+          }
+        },
+
+        child: Hero(
+          tag: 'user-${widget.user.id}',
+          flightShuttleBuilder: (context, animation, direction, from, to) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            );
+
+            return AnimatedBuilder(
+              animation: curved,
+              builder: (context, _) {
+                return Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()..setEntry(3, 2, 0.001),
+                  child: ClipRRect(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: to.widget,
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 180),
+            scale: hovered && !isTransitioning ? 1.02 : 1.0,
+            curve: Curves.easeOut,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              transform: Matrix4.identity()
+                ..scale(hovered ? 1.02 : 1.0, hovered ? 1.01 : 1.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: hovered
+                    ? [const BoxShadow(blurRadius: 25, color: Colors.black12)]
+                    : [],
+              ),
+              child: Card(
+                elevation: hovered ? 10 : 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(color: defaultColorLight!, width: 4),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: Duration(milliseconds: 250 + (widget.index * 40)),
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, (1 - value) * 20),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _CardContent(user: widget.user, color: widget.color),
+                ),
               ),
             ),
           ),
@@ -98,6 +154,7 @@ class _CardContent extends StatelessWidget {
           child: Column(
             children: [
               _AvatarWithStatus(
+                id: user.id,
                 initials: '${user.name[0]}${user.lastName[0]}',
                 isActive: user.isActive,
                 color: color,
@@ -167,11 +224,13 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _AvatarWithStatus extends StatelessWidget {
+  final int id;
   final String initials;
   final bool isActive;
   final Color color;
 
   const _AvatarWithStatus({
+    required this.id,
     required this.initials,
     required this.isActive,
     required this.color,
@@ -189,9 +248,11 @@ class _AvatarWithStatus extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: defaultColorLight!, width: 5),
           ),
+
           child: CircleAvatar(
             radius: 50,
             backgroundColor: Colors.white,
+
             child: CircleAvatar(
               radius: 42,
               backgroundColor: color.withValues(alpha: 0.15),
