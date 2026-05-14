@@ -89,57 +89,55 @@ class _UserCardState extends State<UserCard> {
           }
         },
 
-        child: AnimatedScale(
-          duration: const Duration(milliseconds: 180),
-          scale: hovered && !isTransitioning ? 1.02 : 1.0,
-          curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            transform: Matrix4.identity()
-              ..scaleByDouble(
-                hovered ? 1.02 : 1.0,
-                hovered ? 1.01 : 1.0,
-                1.0,
-                1.0,
-              ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: hovered
-                  ? [const BoxShadow(blurRadius: 25, color: Colors.black12)]
-                  : [],
-            ),
-            child: Hero(
-              tag: 'user-${widget.user.id}',
-              flightShuttleBuilder: (context, animation, direction, from, to) {
-                final curved = CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOutCubic,
-                );
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: Duration(milliseconds: 400 + (widget.index * 60)),
+          curve: Curves.easeOutCubic,
 
-                return AnimatedBuilder(
-                  animation: curved,
-                  builder: (context, _) {
-                    return Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.identity()..setEntry(3, 2, 0.001),
-                      child: Material(
-                        borderRadius: BorderRadius.circular(20),
-                        color: Colors.transparent,
-                        child: to.widget,
-                      ),
-                    );
-                  },
-                );
-              },
-              child: Card(
-                elevation: hovered ? 10 : 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  side: BorderSide(color: defaultColorLight!, width: 4),
+          builder: (context, value, child) {
+            final slide = (1 - value);
+
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, slide * 50),
+                child: Transform.scale(
+                  scale: 0.95 + (0.05 * value),
+                  child: child,
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: _CardContent(user: widget.user, color: widget.color),
+              ),
+            );
+          },
+
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 180),
+            scale: hovered && !isTransitioning ? 1.02 : 1.0,
+            curve: Curves.easeOut,
+
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 25 * (hovered ? 1 : 0.5),
+                    color: Colors.black.withValues(alpha: 0.12),
+                  ),
+                ],
+              ),
+
+              child: Hero(
+                tag: 'user-${widget.user.id}',
+                child: Card(
+                  elevation: 0, // ❗ togli elevation → gestiamo shadow fuori
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(color: defaultColorLight!, width: 4),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: _CardContent(user: widget.user, color: widget.color),
+                ),
               ),
             ),
           ),
