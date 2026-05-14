@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/color.dart';
+import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/features/users/models/user.dart';
-import 'package:mediahub/features/users/widgets/user_detail_modal.dart';
-import 'dart:ui';
+import 'package:mediahub/features/users/widgets/user_detail/user_detail.dart';
 
 class UserCard extends StatefulWidget {
   final User user;
@@ -36,21 +36,48 @@ class _UserCardState extends State<UserCard> {
 
             await Navigator.of(context).push(
               PageRouteBuilder(
-                transitionDuration: const Duration(milliseconds: 600),
-                reverseTransitionDuration: const Duration(milliseconds: 600),
+                transitionDuration: const Duration(milliseconds: 500),
+                reverseTransitionDuration: const Duration(milliseconds: 400),
+                opaque: false,
                 pageBuilder: (_, __, ___) {
                   return Scaffold(
                     backgroundColor: Colors.transparent,
                     body: Stack(
                       children: [
+                        ModalBarrier(
+                          dismissible: true,
+                          color: Colors.black.withOpacity(0.5),
+                        ),
                         Center(
-                          child: UserDetailModal(
+                          child: UserDetail(
                             user: widget.user,
                             color: widget.color,
                           ),
                         ),
                       ],
                     ),
+                  );
+                },
+
+                transitionsBuilder: (_, animation, __, child) {
+                  final curved = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeInOutCubic,
+                  );
+
+                  return Stack(
+                    children: [
+                      AnimatedBuilder(
+                        animation: curved,
+                        builder: (context, _) {
+                          return Container(
+                            color: Colors.black.withOpacity(0.5 * curved.value),
+                          );
+                        },
+                      ),
+
+                      child,
+                    ],
                   );
                 },
               ),
@@ -60,45 +87,44 @@ class _UserCardState extends State<UserCard> {
           }
         },
 
-        child: Hero(
-          tag: 'user-${widget.user.id}',
-          flightShuttleBuilder: (context, animation, direction, from, to) {
-            final curved = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            );
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 180),
+          scale: hovered && !isTransitioning ? 1.02 : 1.0,
+          curve: Curves.easeOut,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            transform: Matrix4.identity()
+              ..scale(hovered ? 1.02 : 1.0, hovered ? 1.01 : 1.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: hovered
+                  ? [const BoxShadow(blurRadius: 25, color: Colors.black12)]
+                  : [],
+            ),
+            child: Hero(
+              tag: 'user-${widget.user.id}',
+              flightShuttleBuilder: (context, animation, direction, from, to) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOutCubic,
+                );
 
-            return AnimatedBuilder(
-              animation: curved,
-              builder: (context, _) {
-                return Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()..setEntry(3, 2, 0.001),
-                  child: ClipRRect(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: to.widget,
-                    ),
-                  ),
+                return AnimatedBuilder(
+                  animation: curved,
+                  builder: (context, _) {
+                    return Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()..setEntry(3, 2, 0.001),
+                      child: Material(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.transparent,
+                        child: to.widget,
+                      ),
+                    );
+                  },
                 );
               },
-            );
-          },
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 180),
-            scale: hovered && !isTransitioning ? 1.02 : 1.0,
-            curve: Curves.easeOut,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              transform: Matrix4.identity()
-                ..scale(hovered ? 1.02 : 1.0, hovered ? 1.01 : 1.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: hovered
-                    ? [const BoxShadow(blurRadius: 25, color: Colors.black12)]
-                    : [],
-              ),
               child: Card(
                 elevation: hovered ? 10 : 4,
                 shape: RoundedRectangleBorder(
@@ -106,20 +132,7 @@ class _UserCardState extends State<UserCard> {
                   side: BorderSide(color: defaultColorLight!, width: 4),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 250 + (widget.index * 40)),
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, (1 - value) * 20),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _CardContent(user: widget.user, color: widget.color),
-                ),
+                child: _CardContent(user: widget.user, color: widget.color),
               ),
             ),
           ),
@@ -181,7 +194,8 @@ class _CardContent extends StatelessWidget {
                     const SizedBox(height: 8),
                     _InfoRow(
                       icon: Icons.calendar_today,
-                      text: _formatDate(user.createdAt),
+                      text:
+                          'Creato il ${formatDate(user.createdAt, format: "dd/mm/yyyy")}',
                     ),
                   ],
                 ),
@@ -191,10 +205,6 @@ class _CardContent extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return 'Creato il ${date.toLocal().toString().split(' ')[0]}';
   }
 }
 

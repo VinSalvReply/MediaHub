@@ -1,140 +1,135 @@
-class UserService {
-  Future<List<Map<String, dynamic>>> getUsers() async {
-    await Future.delayed(const Duration(seconds: 2));
+import 'dart:math';
 
-    return [
-      {
-        "id": 1,
-        "name": "Mario",
-        "last_name": "Rossi",
-        "email": "mario.rossi@hotmail.it",
-        "role": "Admin",
-        "is_active": true,
-        "created_at": "2023-01-15T00:00:00",
-        "last_login": "2024-10-10T00:00:00",
-        "assigned_events": [1, 3],
-      },
-      {
-        "id": 2,
-        "name": "Luigi",
-        "last_name": "Verdi",
-        "email": "luigi.verdi@hotmail.it",
-        "role": "User",
-        "is_active": true,
-        "created_at": "2023-03-22T00:00:00",
-        "last_login": "2024-09-05T00:00:00",
-        "assigned_events": [],
-      },
-      {
-        "id": 3,
-        "name": "Anna",
-        "last_name": "Bianchi",
-        "email": "anna.bianchi@gmail.com",
-        "role": "Moderator",
-        "is_active": false,
-        "created_at": "2023-05-10T00:00:00",
-        "last_login": null,
-        "assigned_events": [2],
-      },
-      {
-        "id": 4,
-        "name": "Giovanni",
-        "last_name": "Neri",
-        "email": "giovanni.neri@outlook.com",
-        "role": "User",
-        "is_active": true,
-        "created_at": "2023-07-08T00:00:00",
-        "last_login": "2024-11-01T00:00:00",
-        "assigned_events": [1, 2, 4],
-      },
-      {
-        "id": 5,
-        "name": "Francesca",
-        "last_name": "Gialli",
-        "email": "francesca.gialli@yahoo.com",
-        "role": "Admin",
-        "is_active": true,
-        "created_at": "2023-09-14T00:00:00",
-        "last_login": "2024-10-20T00:00:00",
-        "assigned_events": [3, 5],
-      },
-      {
-        "id": 6,
-        "name": "Luca",
-        "last_name": "Blu",
-        "email": "luca.blu@live.com",
-        "role": "User",
-        "is_active": false,
-        "created_at": "2023-11-30T00:00:00",
-        "last_login": null,
-        "assigned_events": [],
-      },
-      {
-        "id": 7,
-        "name": "Sofia",
-        "last_name": "Rosa",
-        "email": "sofia.rosa@icloud.com",
-        "role": "Moderator",
-        "is_active": true,
-        "created_at": "2024-01-05T00:00:00",
-        "last_login": "2024-10-15T00:00:00",
-        "assigned_events": [2, 3],
-      },
-      {
-        "id": 8,
-        "name": "Marco",
-        "last_name": "Viola",
-        "email": "marco.viola@protonmail.com",
-        "role": "User",
-        "is_active": true,
-        "created_at": "2024-03-18T00:00:00",
-        "last_login": "2024-09-30T00:00:00",
-        "assigned_events": [1],
-      },
-      {
-        "id": 9,
-        "name": "Elena",
-        "last_name": "Arancione",
-        "email": "elena.arancione@zoho.com",
-        "role": "Admin",
-        "is_active": false,
-        "created_at": "2024-05-25T00:00:00",
-        "last_login": null,
-        "assigned_events": [4, 5],
-      },
-      {
-        "id": 10,
-        "name": "Paolo",
-        "last_name": "Celeste",
-        "email": "paolo.celeste@fastmail.com",
-        "role": "User",
-        "is_active": true,
-        "created_at": "2024-07-12T00:00:00",
-        "last_login": "2024-11-05T00:00:00",
-        "assigned_events": [],
-      },
-      {
-        "id": 11,
-        "name": "Giulia",
-        "last_name": "Marrone",
-        "email": "giulia.marrone@tutanota.com",
-        "role": "Moderator",
-        "is_active": true,
-        "created_at": "2024-09-08T00:00:00",
-        "last_login": "2024-10-25T00:00:00",
-        "assigned_events": [3],
-      },
-      {
-        "id": 12,
-        "name": "Alessandro",
-        "last_name": "Grigio",
-        "email": "alessandro.grigio@yandex.com",
-        "role": "User",
-        "is_active": false,
-        "created_at": "2024-11-20T00:00:00",
-        "last_login": null,
-        "assigned_events": [1, 2],
-      },
-    ];
+const _names = [
+  "Luca",
+  "Marco",
+  "Giulia",
+  "Francesca",
+  "Alessandro",
+  "Chiara",
+  "Davide",
+  "Elena",
+];
+
+const _lastNames = ["Rossi", "Bianchi", "Ferrari", "Romano", "Gallo", "Conti"];
+
+const _roles = ["Admin", "Editor", "User"];
+
+const _activityTypes = ["login", "edit", "upload", "delete"];
+
+const _events = [
+  "Flutter Meetup",
+  "Tech Conference",
+  "Design Sprint",
+  "Hackathon",
+  "Workshop UX",
+];
+
+const _contentTypes = ["image", "video", "post"];
+
+const _contentTitles = [
+  "Landing Page Design",
+  "Promo Video",
+  "User Interview",
+  "Marketing Campaign",
+  "Dashboard UI",
+];
+
+class UserService {
+  final _random = Random();
+
+  // ================= USERS =================
+
+  Future<List<Map<String, dynamic>>> getUsers() async {
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    return List.generate(20, (i) {
+      return {
+        "id": i + 1,
+        "name": _names[i % _names.length],
+        "last_name": _lastNames[i % _lastNames.length],
+        "email": "user${i + 1}@mediahub.dev",
+        "role": _roles[i % _roles.length],
+        "is_active": _random.nextBool(),
+        "created_at": _randomDate().toIso8601String(),
+        "last_login": _random.nextBool()
+            ? _randomDate().toIso8601String()
+            : null,
+      };
+    });
+  }
+
+  // ================= ACTIVITY =================
+
+  Future<List<Map<String, dynamic>>> getUserActivity(int userId) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    return List.generate(10 + _random.nextInt(10), (i) {
+      final type = _activityTypes[_random.nextInt(_activityTypes.length)];
+
+      return {
+        "type": type,
+        "description": _activityDescription(type),
+        "date": _randomDate().toIso8601String(),
+      };
+    });
+  }
+
+  // ================= EVENTS =================
+
+  Future<List<Map<String, dynamic>>> getUserEvents(int userId) async {
+    await Future.delayed(const Duration(milliseconds: 700));
+
+    return List.generate(4 + _random.nextInt(6), (i) {
+      return {
+        "id": i + 1,
+        "title": _events[_random.nextInt(_events.length)],
+        "date": _randomFutureDate().toIso8601String(),
+      };
+    });
+  }
+
+  // ================= CONTENT =================
+
+  Future<List<Map<String, dynamic>>> getUserContent(int userId) async {
+    await Future.delayed(const Duration(milliseconds: 900));
+
+    return List.generate(8 + _random.nextInt(12), (i) {
+      final type = _contentTypes[_random.nextInt(_contentTypes.length)];
+
+      return {
+        "id": i + 1,
+        "title": _contentTitles[_random.nextInt(_contentTitles.length)],
+        "type": type,
+        "created_at": _randomDate().toIso8601String(),
+      };
+    });
+  }
+
+  // ================= HELPERS =================
+
+  DateTime _randomDate() {
+    return DateTime.now().subtract(
+      Duration(days: _random.nextInt(60), hours: _random.nextInt(24)),
+    );
+  }
+
+  DateTime _randomFutureDate() {
+    return DateTime.now().add(Duration(days: _random.nextInt(60)));
+  }
+
+  String _activityDescription(String type) {
+    switch (type) {
+      case "login":
+        return "Accesso effettuato";
+      case "edit":
+        return "Modifica profilo";
+      case "upload":
+        return "Caricamento contenuto";
+      case "delete":
+        return "Eliminazione contenuto";
+      default:
+        return "Attività generica";
+    }
   }
 }

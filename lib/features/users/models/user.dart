@@ -1,19 +1,14 @@
 class User {
   final int id;
-
   final String name;
   final String lastName;
   final String email;
-
   final String role;
-
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastLogin;
 
-  final List<int> assignedEvents;
-
-  User({
+  const User({
     required this.id,
     required this.name,
     required this.lastName,
@@ -22,6 +17,5 @@ class User {
     required this.isActive,
     required this.createdAt,
     this.lastLogin,
-    this.assignedEvents = const [],
   });
 }
