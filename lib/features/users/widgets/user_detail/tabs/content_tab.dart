@@ -16,7 +16,7 @@ class ContentTab extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.2,
+        childAspectRatio: 5 / 2,
       ),
       itemCount: data.contents.length,
       itemBuilder: (context, i) {

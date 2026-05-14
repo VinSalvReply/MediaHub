@@ -39,14 +39,14 @@ class _UserCardState extends State<UserCard> {
                 transitionDuration: const Duration(milliseconds: 500),
                 reverseTransitionDuration: const Duration(milliseconds: 400),
                 opaque: false,
-                pageBuilder: (_, __, ___) {
+                pageBuilder: (_, _, _) {
                   return Scaffold(
                     backgroundColor: Colors.transparent,
                     body: Stack(
                       children: [
                         ModalBarrier(
                           dismissible: true,
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                         ),
                         Center(
                           child: UserDetail(
@@ -59,7 +59,7 @@ class _UserCardState extends State<UserCard> {
                   );
                 },
 
-                transitionsBuilder: (_, animation, __, child) {
+                transitionsBuilder: (_, animation, _, child) {
                   final curved = CurvedAnimation(
                     parent: animation,
                     curve: Curves.easeInOutCubic,
@@ -71,7 +71,9 @@ class _UserCardState extends State<UserCard> {
                         animation: curved,
                         builder: (context, _) {
                           return Container(
-                            color: Colors.black.withOpacity(0.5 * curved.value),
+                            color: Colors.black.withValues(
+                              alpha: 0.5 * curved.value,
+                            ),
                           );
                         },
                       ),
@@ -195,7 +197,7 @@ class _CardContent extends StatelessWidget {
                     _InfoRow(
                       icon: Icons.calendar_today,
                       text:
-                          'Creato il ${formatDate(user.createdAt, format: "dd/mm/yyyy")}',
+                          'Creato il ${formatDate(user.createdAt, format: "dd-mm-yyyy")}',
                     ),
                   ],
                 ),

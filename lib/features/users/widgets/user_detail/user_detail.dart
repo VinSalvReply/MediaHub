@@ -102,8 +102,8 @@ class _UserDetailState extends State<UserDetail>
 
                   Expanded(
                     child: _UserTabsLoader(
-                      userId: widget.user.id,
                       user: widget.user,
+                      color: widget.color,
                     ),
                   ),
                 ],
@@ -176,10 +176,10 @@ class _Header extends StatelessWidget {
 }
 
 class _UserTabsLoader extends StatefulWidget {
-  final int userId;
   final User user;
+  final Color color;
 
-  const _UserTabsLoader({required this.userId, required this.user});
+  const _UserTabsLoader({required this.user, required this.color});
 
   @override
   State<_UserTabsLoader> createState() => _UserTabsLoaderState();
@@ -193,7 +193,7 @@ class _UserTabsLoaderState extends State<_UserTabsLoader> {
   @override
   void initState() {
     super.initState();
-    future = repo.getUserDetail(widget.userId);
+    future = repo.getUserDetail(widget.user.id);
   }
 
   @override
@@ -207,7 +207,7 @@ class _UserTabsLoaderState extends State<_UserTabsLoader> {
 
         final data = snapshot.data!;
 
-        return _UserTabs(data: data);
+        return _UserTabs(data: data, color: widget.color);
       },
     );
   }
@@ -234,7 +234,7 @@ class _UserDetailSkeleton extends StatelessWidget {
         Expanded(
           child: ListView.builder(
             itemCount: 7,
-            itemBuilder: (_, __) {
+            itemBuilder: (_, _) {
               return Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: 6,
@@ -262,8 +262,9 @@ class _UserDetailSkeleton extends StatelessWidget {
 
 class _UserTabs extends StatelessWidget {
   final UserDetailData data;
+  final Color color;
 
-  const _UserTabs({required this.data});
+  const _UserTabs({required this.data, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +272,23 @@ class _UserTabs extends StatelessWidget {
       length: 4,
       child: Column(
         children: [
-          const TabBar(
+          TabBar(
+            indicatorColor: color,
+            labelColor: color,
+            unselectedLabelColor: Colors.grey,
+
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return color.withValues(alpha: 0.15);
+              }
+
+              if (states.contains(WidgetState.hovered)) {
+                return color.withValues(alpha: 0.07);
+              }
+
+              return Colors.transparent;
+            }),
+
             tabs: [
               Tab(text: "Overview"),
               Tab(text: "Activity"),
