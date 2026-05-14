@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';

@@ -47,7 +47,8 @@ class _ContentTileState extends State<_ContentTile> {
       onExit: (_) => setState(() => hover = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        transform: Matrix4.identity()..scale(hover ? 1.03 : 1.0),
+        transform: Matrix4.identity()
+          ..scaleByDouble(hover ? 1.03 : 1.0, hover ? 1.03 : 1.0, 1.0, 1.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: Colors.black.withValues(alpha: 0.03),

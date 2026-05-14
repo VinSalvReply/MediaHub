@@ -97,7 +97,12 @@ class _UserCardState extends State<UserCard> {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOut,
             transform: Matrix4.identity()
-              ..scale(hovered ? 1.02 : 1.0, hovered ? 1.01 : 1.0),
+              ..scaleByDouble(
+                hovered ? 1.02 : 1.0,
+                hovered ? 1.01 : 1.0,
+                1.0,
+                1.0,
+              ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               boxShadow: hovered
