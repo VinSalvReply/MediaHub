@@ -7,6 +7,7 @@ import 'package:mediahub/data/mappers/event_mapper.dart';
 import 'package:mediahub/data/mappers/user_activity_mapper.dart';
 import 'package:mediahub/data/mappers/user_mapper.dart';
 import 'package:mediahub/data/services/user_service.dart';
+import 'package:mediahub/features/dashboard/models/dashboard_data.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
 import 'package:mediahub/features/users/models/user.dart';
@@ -55,6 +56,15 @@ class UserRepository {
   Future<UserDetailData> getUserDetail(int userId) async {
     return UserDetailData(
       user: await getUser(userId),
+      activities: await getUserActivity(userId),
+      events: await getEvents(userId),
+      contents: await getUserContent(userId),
+    );
+  }
+
+  Future<DashboardData> getDashboard(int userId) async {
+    return DashboardData(
+      users: await getUsers(),
       activities: await getUserActivity(userId),
       events: await getEvents(userId),
       contents: await getUserContent(userId),

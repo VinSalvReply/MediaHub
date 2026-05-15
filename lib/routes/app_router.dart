@@ -6,6 +6,9 @@ import 'package:mediahub/features/users/pages/users_page.dart';
 class AppRoutes {
   static const dashboard = '/';
   static const users = '/users';
+  static const events = '/events';
+  static const contents = '/contents';
+  static const profile = '/profile';
 }
 
 final router = GoRouter(
