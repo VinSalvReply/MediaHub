@@ -12,24 +12,21 @@ class UsersList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scrollbar(
       thumbVisibility: true,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 320,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              mainAxisExtent: 380,
-            ),
-            itemCount: users.length,
-            itemBuilder: (context, index) {
-              final user = users[index];
-              final baseColor = cardColors[index % cardColors.length];
-
-              return UserCard(user: user, color: baseColor, index: index);
-            },
-          );
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 340,
+          crossAxisSpacing: 18,
+          mainAxisSpacing: 18,
+          mainAxisExtent: 390,
+        ),
+        itemCount: users.length,
+        itemBuilder: (context, index) {
+          final user = users[index];
+          final baseColor = cardColors[index % cardColors.length];
+          return UserCard(user: user, color: baseColor, index: index);
         },
       ),
     );

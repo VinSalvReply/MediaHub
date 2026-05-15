@@ -13,7 +13,7 @@ class OverviewTab extends StatelessWidget {
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -23,7 +23,7 @@ class OverviewTab extends StatelessWidget {
                 child: _InfoCard(
                   title: "Email",
                   value: user.email,
-                  icon: Icons.email,
+                  icon: Icons.email_rounded,
                 ),
               ),
               const SizedBox(width: 12),
@@ -31,21 +31,29 @@ class OverviewTab extends StatelessWidget {
                 child: _InfoCard(
                   title: "Role",
                   value: user.role,
-                  icon: Icons.badge,
+                  icon: Icons.badge_rounded,
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Row(
             children: [
               Expanded(
                 child: _InfoCard(
                   title: "Created",
                   value: formatDate(user.createdAt),
-                  icon: Icons.calendar_today,
+                  icon: Icons.calendar_today_rounded,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _InfoCard(
+                  title: "Status",
+                  value: user.isActive
+                      ? 'Active'
+                      : 'Inactive${user.lastLogin != null ? ' - Last login: ${formatDate(user.lastLogin)}' : ''}',
+                  icon: Icons.verified_user_rounded,
                 ),
               ),
             ],
@@ -69,21 +77,31 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.all(14),
+    return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: Colors.black.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(18),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 18,
+            offset: Offset(0, 8),
+            color: Color(0x08000000),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18),
-          const SizedBox(height: 8),
+          Icon(icon, size: 20),
+          const SizedBox(height: 10),
           Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );

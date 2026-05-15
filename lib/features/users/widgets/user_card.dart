@@ -26,77 +26,57 @@ class _UserCardState extends State<UserCard> {
 
   @override
   Widget build(BuildContext context) {
+    final user = widget.user;
+    final color = widget.color;
+
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: GestureDetector(
         onTap: () async {
-          {
-            setState(() => isTransitioning = true);
+          setState(() => isTransitioning = true);
 
-            await Navigator.of(context).push(
-              PageRouteBuilder(
-                transitionDuration: const Duration(milliseconds: 500),
-                reverseTransitionDuration: const Duration(milliseconds: 400),
-                opaque: false,
-                pageBuilder: (_, _, _) {
-                  return Scaffold(
-                    backgroundColor: Colors.transparent,
-                    body: Stack(
-                      children: [
-                        ModalBarrier(
-                          dismissible: true,
-                          color: Colors.black.withValues(alpha: 0.5),
-                        ),
-                        Center(
-                          child: UserDetail(
-                            user: widget.user,
-                            color: widget.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-
-                transitionsBuilder: (_, animation, _, child) {
-                  final curved = CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeInOutCubic,
-                  );
-
-                  return Stack(
+          await Navigator.of(context).push(
+            PageRouteBuilder(
+              transitionDuration: const Duration(milliseconds: 500),
+              reverseTransitionDuration: const Duration(milliseconds: 400),
+              opaque: false,
+              pageBuilder: (_, _, _) {
+                return Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Stack(
                     children: [
-                      AnimatedBuilder(
-                        animation: curved,
-                        builder: (context, _) {
-                          return Container(
-                            color: Colors.black.withValues(
-                              alpha: 0.5 * curved.value,
-                            ),
-                          );
-                        },
+                      ModalBarrier(
+                        dismissible: true,
+                        color: Colors.black.withValues(alpha: 0.5),
                       ),
-
-                      child,
+                      Center(
+                        child: UserDetail(user: user, color: color),
+                      ),
                     ],
-                  );
-                },
-              ),
-            );
+                  ),
+                );
+              },
+              transitionsBuilder: (_, animation, _, child) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOutCubic,
+                );
 
-            setState(() => isTransitioning = false);
-          }
+                return FadeTransition(opacity: curved, child: child);
+              },
+            ),
+          );
+
+          setState(() => isTransitioning = false);
         },
-
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: 1),
           duration: Duration(milliseconds: 400 + (widget.index * 60)),
           curve: Curves.easeOutCubic,
-
           builder: (context, value, child) {
             final slide = (1 - value);
-
             return Opacity(
               opacity: value,
               child: Transform.translate(
@@ -108,35 +88,35 @@ class _UserCardState extends State<UserCard> {
               ),
             );
           },
-
           child: AnimatedScale(
             duration: const Duration(milliseconds: 180),
             scale: hovered && !isTransitioning ? 1.02 : 1.0,
             curve: Curves.easeOut,
-
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    blurRadius: 25 * (hovered ? 1 : 0.5),
-                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: hovered ? 28 : 18,
+                    offset: Offset(0, hovered ? 14 : 8),
+                    color: Colors.black.withValues(
+                      alpha: hovered ? 0.14 : 0.08,
+                    ),
                   ),
                 ],
               ),
-
               child: Hero(
-                tag: 'user-${widget.user.id}',
+                tag: 'user-${user.id}',
                 child: Card(
-                  elevation: 0, // ❗ togli elevation → gestiamo shadow fuori
+                  elevation: 0,
+                  color: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    side: BorderSide(color: defaultColorLight!, width: 4),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: _CardContent(user: widget.user, color: widget.color),
+                  child: _CardContent(user: user, color: color),
                 ),
               ),
             ),
@@ -155,15 +135,26 @@ class _CardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = user.isActive
+        ? const Color(0xFF22C55E)
+        : const Color(0xFFEF4444);
+
     return Column(
       children: [
         Container(
           height: 110,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: defaultColorLight,
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.95),
+                color.withValues(alpha: 0.65),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(24),
+              bottom: Radius.circular(26),
             ),
           ),
         ),
@@ -171,36 +162,89 @@ class _CardContent extends StatelessWidget {
           offset: const Offset(0, -55),
           child: Column(
             children: [
-              _AvatarWithStatus(
-                id: user.id,
-                initials: '${user.name[0]}${user.lastName[0]}',
-                isActive: user.isActive,
-                color: color,
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    width: 106,
+                    height: 106,
+                    decoration: BoxDecoration(shape: BoxShape.circle),
+                    child: CircleAvatar(
+                      radius: 43,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 43,
+                        backgroundColor: color.withValues(alpha: 0.15),
+                        child: Text(
+                          '${user.name[0]}${user.lastName[0]}',
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: statusColor,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: user.isActive ? 10 : 4,
+                          color: statusColor.withValues(alpha: 0.30),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
                 '${user.name} ${user.lastName}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(user.role, style: TextStyle(fontSize: 13, color: greyLight)),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  user.role,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+              ),
               const SizedBox(height: 14),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
+                padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _InfoRow(icon: Icons.email, text: user.email),
+                    _InfoRow(icon: Icons.email_rounded, text: user.email),
                     const SizedBox(height: 8),
                     _InfoRow(
-                      icon: Icons.calendar_today,
+                      icon: Icons.calendar_today_rounded,
                       text:
-                          'Creato il ${formatDate(user.createdAt, format: "dd-mm-yyyy")}',
+                          'Creato il ${formatDate(user.createdAt, format: "dd-MM-yyyy")}',
                     ),
                   ],
                 ),
@@ -231,74 +275,6 @@ class _InfoRow extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 13, color: greyLight),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AvatarWithStatus extends StatelessWidget {
-  final int id;
-  final String initials;
-  final bool isActive;
-  final Color color;
-
-  const _AvatarWithStatus({
-    required this.id,
-    required this.initials,
-    required this.isActive,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomRight,
-      children: [
-        Container(
-          width: 115,
-          height: 115,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: defaultColorLight!, width: 5),
-          ),
-
-          child: CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.white,
-
-            child: CircleAvatar(
-              radius: 42,
-              backgroundColor: color.withValues(alpha: 0.15),
-              child: Text(
-                initials,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isActive ? Colors.green : Colors.red,
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: isActive ? 10 : 3,
-                color: (isActive ? Colors.green : Colors.red).withValues(
-                  alpha: 0.3,
-                ),
-              ),
-            ],
           ),
         ),
       ],
