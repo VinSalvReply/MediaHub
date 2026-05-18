@@ -61,13 +61,4 @@ class UserRepository {
       contents: await getUserContent(userId),
     );
   }
-
-  Future<DashboardData> getDashboard(int userId) async {
-    return DashboardData(
-      users: await getUsers(),
-      activities: await getUserActivity(userId),
-      events: await getEvents(userId),
-      contents: await getUserContent(userId),
-    );
-  }
 }

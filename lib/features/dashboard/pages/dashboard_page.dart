@@ -1,4 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:mediahub/data/repositories/dashboard_repository.dart';
+import 'package:mediahub/features/dashboard/models/dashboard_data.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -11,104 +15,15 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeIn;
+  late Future<DashboardData> _future;
 
-  final List<_DashboardMetric> _metrics = const [
-    _DashboardMetric(
-      title: 'Users',
-      value: '128',
-      delta: '+12%',
-      icon: Icons.people_alt_rounded,
-      accent: Color(0xFF4F46E5),
-    ),
-    _DashboardMetric(
-      title: 'Active',
-      value: '87',
-      delta: '+6%',
-      icon: Icons.bolt_rounded,
-      accent: Color(0xFF14B8A6),
-    ),
-    _DashboardMetric(
-      title: 'Events',
-      value: '34',
-      delta: '+3',
-      icon: Icons.event_rounded,
-      accent: Color(0xFFF59E0B),
-    ),
-    _DashboardMetric(
-      title: 'Content',
-      value: '241',
-      delta: '+18',
-      icon: Icons.layers_rounded,
-      accent: Color(0xFFEC4899),
-    ),
-  ];
-
-  final List<_ActivityItem> _activities = const [
-    _ActivityItem(
-      title: 'Luca Rossi created a new event',
-      subtitle: 'Live Streaming - 12 min ago',
-      icon: Icons.add_circle_rounded,
-      color: Color(0xFF4F46E5),
-    ),
-    _ActivityItem(
-      title: 'Giulia Bianchi updated a content item',
-      subtitle: 'Promo video - 28 min ago',
-      icon: Icons.edit_rounded,
-      color: Color(0xFF14B8A6),
-    ),
-    _ActivityItem(
-      title: 'Marco Verdi logged in',
-      subtitle: 'Desktop web - 43 min ago',
-      icon: Icons.login_rounded,
-      color: Color(0xFFF59E0B),
-    ),
-    _ActivityItem(
-      title: 'Admin disabled a user profile',
-      subtitle: 'Security action - 1 hour ago',
-      icon: Icons.verified_user_rounded,
-      color: Color(0xFFEF4444),
-    ),
-  ];
-
-  final List<_InsightItem> _insights = const [
-    _InsightItem(label: 'Active users', value: 0.74, color: Color(0xFF4F46E5)),
-    _InsightItem(
-      label: 'Event coverage',
-      value: 0.52,
-      color: Color(0xFF14B8A6),
-    ),
-    _InsightItem(
-      label: 'Content growth',
-      value: 0.88,
-      color: Color(0xFFEC4899),
-    ),
-    _InsightItem(label: 'System health', value: 0.94, color: Color(0xFF22C55E)),
-  ];
-
-  final List<_QuickAction> _quickActions = const [
-    _QuickAction(
-      title: 'Create user',
-      subtitle: 'Add a new operator or editor',
-      icon: Icons.person_add_alt_1_rounded,
-      color: Color(0xFF4F46E5),
-    ),
-    _QuickAction(
-      title: 'Create event',
-      subtitle: 'Schedule a new live session',
-      icon: Icons.event_available_rounded,
-      color: Color(0xFF14B8A6),
-    ),
-    _QuickAction(
-      title: 'Upload content',
-      subtitle: 'Push a new asset or campaign',
-      icon: Icons.upload_rounded,
-      color: Color(0xFFEC4899),
-    ),
-  ];
+  final DashboardRepository _repository = DashboardRepository();
 
   @override
   void initState() {
     super.initState();
+    _future = _repository.getDashboard();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -123,6 +38,12 @@ class _DashboardPageState extends State<DashboardPage>
     super.dispose();
   }
 
+  void _reload() {
+    setState(() {
+      _future = _repository.getDashboard();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,77 +51,136 @@ class _DashboardPageState extends State<DashboardPage>
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeIn,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 1200;
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _TopBar(
-                        title: 'MediaHub Dashboard',
-                        subtitle: 'Operations overview and system insights',
-                        onSearchTap: () {},
-                        onRefreshTap: () {},
-                      ),
-                      const SizedBox(height: 24),
-                      _MetricsGrid(metrics: _metrics),
-                      const SizedBox(height: 24),
-                      if (wide)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: _SectionCard(
-                                title: 'Recent activity',
-                                subtitle: 'What is happening right now',
-                                child: _ActivityFeed(items: _activities),
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              flex: 2,
-                              child: _SectionCard(
-                                title: 'Insights',
-                                subtitle:
-                                    'Derived from users, events and content',
-                                child: _InsightsPanel(items: _insights),
-                              ),
-                            ),
-                          ],
-                        )
-                      else ...[
-                        _SectionCard(
-                          title: 'Recent activity',
-                          subtitle: 'What is happening right now',
-                          child: _ActivityFeed(items: _activities),
-                        ),
-                        const SizedBox(height: 20),
-                        _SectionCard(
-                          title: 'Insights',
-                          subtitle: 'Derived from users, events and content',
-                          child: _InsightsPanel(items: _insights),
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-                      _SectionCard(
-                        title: 'Quick actions',
-                        subtitle: 'Start from common operations',
-                        child: _QuickActionsGrid(actions: _quickActions),
-                      ),
-                    ],
-                  ),
-                ),
+          child: FutureBuilder<DashboardData>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return _DashboardError(
+                  message: snapshot.error.toString(),
+                  onRetry: _reload,
+                );
+              }
+
+              if (!snapshot.hasData) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: _DashboardSkeleton(),
+                );
+              }
+
+              return _DashboardView(
+                data: snapshot.data!,
+                onRefreshTap: _reload,
               );
             },
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DashboardView extends StatelessWidget {
+  final DashboardData data;
+  final VoidCallback onRefreshTap;
+
+  const _DashboardView({required this.data, required this.onRefreshTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 1200;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _TopBar(
+                  title: 'MediaHub Dashboard',
+                  subtitle: 'Operations overview and system insights',
+                  onSearchTap: () {},
+                  onRefreshTap: onRefreshTap,
+                ),
+                const SizedBox(height: 24),
+                _AlertStrip(alerts: data.alerts),
+                const SizedBox(height: 24),
+                _MetricsGrid(metrics: data.metrics),
+                const SizedBox(height: 24),
+                if (wide)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: _SectionCard(
+                          title: 'Recent activity',
+                          subtitle: 'What is happening right now',
+                          child: _ActivityFeed(items: data.activities),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          children: [
+                            _SectionCard(
+                              title: 'Insights',
+                              subtitle:
+                                  'Derived from users, events and content',
+                              child: _InsightsPanel(items: data.insights),
+                            ),
+                            const SizedBox(height: 20),
+                            _SectionCard(
+                              title: 'Top users',
+                              subtitle: 'Most engaged profiles',
+                              child: _TopUsersPanel(users: data.topUsers),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                else ...[
+                  _SectionCard(
+                    title: 'Recent activity',
+                    subtitle: 'What is happening right now',
+                    child: _ActivityFeed(items: data.activities),
+                  ),
+                  const SizedBox(height: 20),
+                  _SectionCard(
+                    title: 'Insights',
+                    subtitle: 'Derived from users, events and content',
+                    child: _InsightsPanel(items: data.insights),
+                  ),
+                  const SizedBox(height: 20),
+                  _SectionCard(
+                    title: 'Top users',
+                    subtitle: 'Most engaged profiles',
+                    child: _TopUsersPanel(users: data.topUsers),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                _SectionCard(
+                  title: 'Usage trend',
+                  subtitle: 'Active users and content created over time',
+                  child: _TrendPanel(trend: data.trend),
+                ),
+                const SizedBox(height: 20),
+                _SectionCard(
+                  title: 'Quick actions',
+                  subtitle: 'Start from common operations',
+                  child: const _QuickActionsGrid(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -223,21 +203,18 @@ class _TopBar extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
+        const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                ),
+                'MediaHub Dashboard',
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
-                subtitle,
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                'Operations overview and system insights',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
             ],
           ),
@@ -267,6 +244,7 @@ class _IconActionButtonState extends State<_IconActionButton> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: AnimatedContainer(
@@ -285,7 +263,7 @@ class _IconActionButtonState extends State<_IconActionButton> {
                     color: Color(0x12000000),
                   ),
                 ]
-              : [],
+              : const [],
         ),
         child: IconButton(
           onPressed: widget.onTap,
@@ -296,13 +274,118 @@ class _IconActionButtonState extends State<_IconActionButton> {
   }
 }
 
+class _AlertStrip extends StatelessWidget {
+  final List<DashboardAlert> alerts;
+
+  const _AlertStrip({required this.alerts});
+
+  @override
+  Widget build(BuildContext context) {
+    if (alerts.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: alerts.map((alert) => _AlertChip(alert: alert)).toList(),
+    );
+  }
+}
+
+class _AlertChip extends StatelessWidget {
+  final DashboardAlert alert;
+
+  const _AlertChip({required this.alert});
+
+  Color _colorFor(String type) {
+    switch (type) {
+      case 'warning':
+        return const Color(0xFFF59E0B);
+      case 'info':
+        return const Color(0xFF4F46E5);
+      case 'error':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF64748B);
+    }
+  }
+
+  IconData _iconFor(String type) {
+    switch (type) {
+      case 'warning':
+        return Icons.warning_rounded;
+      case 'info':
+        return Icons.info_rounded;
+      case 'error':
+        return Icons.error_rounded;
+      default:
+        return Icons.notifications_rounded;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _colorFor(alert.type);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_iconFor(alert.type), size: 18, color: color),
+          const SizedBox(width: 10),
+          Text(
+            alert.message,
+            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MetricsGrid extends StatelessWidget {
-  final List<_DashboardMetric> metrics;
+  final DashboardMetrics metrics;
 
   const _MetricsGrid({required this.metrics});
 
   @override
   Widget build(BuildContext context) {
+    final cards = <_MetricCardData>[
+      _MetricCardData(
+        title: 'Users',
+        value: metrics.totalUsers.toString(),
+        detail: _formatPercent(metrics.usersDelta),
+        icon: Icons.people_alt_rounded,
+        accent: const Color(0xFF4F46E5),
+      ),
+      _MetricCardData(
+        title: 'Active',
+        value: metrics.activeUsers.toString(),
+        detail: _formatPercent(metrics.activeDelta),
+        icon: Icons.bolt_rounded,
+        accent: const Color(0xFF14B8A6),
+      ),
+      _MetricCardData(
+        title: 'Events',
+        value: metrics.events.toString(),
+        detail: 'Tracked',
+        icon: Icons.event_rounded,
+        accent: const Color(0xFFF59E0B),
+      ),
+      _MetricCardData(
+        title: 'Content',
+        value: metrics.content.toString(),
+        detail: 'Assets',
+        icon: Icons.layers_rounded,
+        accent: const Color(0xFFEC4899),
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth >= 1200
@@ -314,7 +397,7 @@ class _MetricsGrid extends StatelessWidget {
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: metrics.length,
+          itemCount: cards.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
@@ -322,8 +405,7 @@ class _MetricsGrid extends StatelessWidget {
             childAspectRatio: 2.8,
           ),
           itemBuilder: (context, index) {
-            final metric = metrics[index];
-            return _MetricCard(metric: metric);
+            return _MetricCard(metric: cards[index]);
           },
         );
       },
@@ -332,7 +414,7 @@ class _MetricsGrid extends StatelessWidget {
 }
 
 class _MetricCard extends StatefulWidget {
-  final _DashboardMetric metric;
+  final _MetricCardData metric;
 
   const _MetricCard({required this.metric});
 
@@ -348,12 +430,14 @@ class _MetricCardState extends State<_MetricCard> {
     final metric = widget.metric;
 
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        transform: Matrix4.identity()
-          ..translateByDouble(0.0, hovered ? -4.0 : 0.0, 0.0, 1.0),
+        transform: hovered
+            ? (Matrix4.identity()..translate(0.0, -4.0, 0.0))
+            : Matrix4.identity(),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(22),
@@ -413,7 +497,7 @@ class _MetricCardState extends State<_MetricCard> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          metric.delta,
+                          metric.detail,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -483,7 +567,7 @@ class _SectionCard extends StatelessWidget {
 }
 
 class _ActivityFeed extends StatelessWidget {
-  final List<_ActivityItem> items;
+  final List<DashboardActivity> items;
 
   const _ActivityFeed({required this.items});
 
@@ -507,7 +591,7 @@ class _ActivityFeed extends StatelessWidget {
 }
 
 class _ActivityRow extends StatefulWidget {
-  final _ActivityItem item;
+  final DashboardActivity item;
 
   const _ActivityRow({required this.item});
 
@@ -521,8 +605,10 @@ class _ActivityRowState extends State<_ActivityRow> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    final color = _activityColor(item.type);
 
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: AnimatedContainer(
@@ -540,9 +626,9 @@ class _ActivityRowState extends State<_ActivityRow> {
               height: 42,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                color: item.color.withValues(alpha: 0.12),
+                color: color.withValues(alpha: 0.12),
               ),
-              child: Icon(item.icon, color: item.color, size: 20),
+              child: Icon(_activityIcon(item.type), color: color, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -561,7 +647,10 @@ class _ActivityRowState extends State<_ActivityRow> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+            Text(
+              _formatShortDateTime(item.date),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
           ],
         ),
       ),
@@ -570,18 +659,30 @@ class _ActivityRowState extends State<_ActivityRow> {
 }
 
 class _InsightsPanel extends StatelessWidget {
-  final List<_InsightItem> items;
+  final List<DashboardInsight> items;
 
   const _InsightsPanel({required this.items});
 
   @override
   Widget build(BuildContext context) {
+    final palette = <Color>[
+      const Color(0xFF4F46E5),
+      const Color(0xFF14B8A6),
+      const Color(0xFFEC4899),
+      const Color(0xFF22C55E),
+    ];
+
     return Column(
       children: items
+          .asMap()
+          .entries
           .map(
-            (item) => Padding(
+            (entry) => Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: _InsightBar(item: item),
+              child: _InsightBar(
+                item: entry.value,
+                color: palette[entry.key % palette.length],
+              ),
             ),
           )
           .toList(),
@@ -590,9 +691,10 @@ class _InsightsPanel extends StatelessWidget {
 }
 
 class _InsightBar extends StatelessWidget {
-  final _InsightItem item;
+  final DashboardInsight item;
+  final Color color;
 
-  const _InsightBar({required this.item});
+  const _InsightBar({required this.item, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -615,10 +717,7 @@ class _InsightBar extends StatelessWidget {
               ),
               Text(
                 '${(item.value * 100).round()}%',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: item.color,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w800, color: color),
               ),
             ],
           ),
@@ -629,7 +728,7 @@ class _InsightBar extends StatelessWidget {
               minHeight: 10,
               value: item.value,
               backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(item.color),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
         ],
@@ -638,13 +737,262 @@ class _InsightBar extends StatelessWidget {
   }
 }
 
-class _QuickActionsGrid extends StatelessWidget {
-  final List<_QuickAction> actions;
+class _TopUsersPanel extends StatelessWidget {
+  final List<TopUser> users;
 
-  const _QuickActionsGrid({required this.actions});
+  const _TopUsersPanel({required this.users});
 
   @override
   Widget build(BuildContext context) {
+    final maxScore = users.isEmpty
+        ? 1
+        : users.map((u) => u.score).reduce(math.max);
+
+    return Column(
+      children: users
+          .asMap()
+          .entries
+          .map(
+            (entry) => Padding(
+              padding: EdgeInsets.only(
+                bottom: entry.key == users.length - 1 ? 0 : 12,
+              ),
+              child: _TopUserTile(
+                user: entry.value,
+                index: entry.key + 1,
+                maxScore: maxScore,
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _TopUserTile extends StatelessWidget {
+  final TopUser user;
+  final int index;
+  final int maxScore;
+
+  const _TopUserTile({
+    required this.user,
+    required this.index,
+    required this.maxScore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = maxScore == 0 ? 0.0 : user.score / maxScore;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFF8FAFC),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: const Color(
+                  0xFF4F46E5,
+                ).withValues(alpha: 0.12),
+                child: Text(
+                  '$index',
+                  style: const TextStyle(
+                    color: Color(0xFF4F46E5),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  user.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                '${user.score}',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: progress,
+              backgroundColor: Colors.grey.shade300,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF4F46E5),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendPanel extends StatelessWidget {
+  final List<DashboardTrendPoint> trend;
+
+  const _TrendPanel({required this.trend});
+
+  @override
+  Widget build(BuildContext context) {
+    if (trend.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final maxValue = trend
+        .map((e) => math.max(e.activeUsers, e.contentCreated))
+        .reduce(math.max)
+        .toDouble();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: const [
+            _TrendLegend(color: Color(0xFF4F46E5), label: 'Active users'),
+            SizedBox(width: 16),
+            _TrendLegend(color: Color(0xFFEC4899), label: 'Content created'),
+          ],
+        ),
+        const SizedBox(height: 18),
+        SizedBox(
+          height: 220,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: trend
+                  .map(
+                    (point) => Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: _TrendGroup(point: point, maxValue: maxValue),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrendLegend extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _TrendLegend({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+}
+
+class _TrendGroup extends StatelessWidget {
+  final DashboardTrendPoint point;
+  final double maxValue;
+
+  const _TrendGroup({required this.point, required this.maxValue});
+
+  @override
+  Widget build(BuildContext context) {
+    final activeHeight = 150 * (point.activeUsers / maxValue);
+    final contentHeight = 150 * (point.contentCreated / maxValue);
+
+    return SizedBox(
+      width: 56,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _TrendBar(height: activeHeight, color: const Color(0xFF4F46E5)),
+              const SizedBox(width: 6),
+              _TrendBar(height: contentHeight, color: const Color(0xFFEC4899)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _dayLabel(point.date),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendBar extends StatelessWidget {
+  final double height;
+  final Color color;
+
+  const _TrendBar({required this.height, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 14,
+      height: height.clamp(12, 150),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
+  }
+}
+
+class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = const [
+      _QuickAction(
+        title: 'Create user',
+        subtitle: 'Add a new operator or editor',
+        icon: Icons.person_add_alt_1_rounded,
+        color: Color(0xFF4F46E5),
+      ),
+      _QuickAction(
+        title: 'Create event',
+        subtitle: 'Schedule a new live session',
+        icon: Icons.event_available_rounded,
+        color: Color(0xFF14B8A6),
+      ),
+      _QuickAction(
+        title: 'Upload content',
+        subtitle: 'Push a new asset or campaign',
+        icon: Icons.upload_rounded,
+        color: Color(0xFFEC4899),
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth >= 1000
@@ -689,9 +1037,9 @@ class _QuickActionCardState extends State<_QuickActionCard> {
     final action = widget.action;
 
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
-      cursor: SystemMouseCursors.click,
       child: RepaintBoundary(
         child: TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: hovered ? 1 : 0),
@@ -709,7 +1057,6 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                   ),
                   child: child,
                 ),
-
                 Positioned.fill(
                   child: IgnorePointer(
                     child: Container(
@@ -768,45 +1115,248 @@ class _QuickActionCardState extends State<_QuickActionCard> {
   }
 }
 
-class _DashboardMetric {
+class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SkeletonBar(width: 260, height: 34),
+          const SizedBox(height: 10),
+          const _SkeletonBar(width: 320, height: 18),
+          const SizedBox(height: 24),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: List.generate(
+              2,
+              (_) => const _SkeletonPill(width: 220, height: 44),
+            ),
+          ),
+          const SizedBox(height: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final crossAxisCount = constraints.maxWidth >= 900 ? 4 : 2;
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 4,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 2.8,
+                ),
+                itemBuilder: (_, __) => const _MetricSkeleton(),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 1200) {
+                return const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: _PanelSkeleton(lines: 4)),
+                    SizedBox(width: 20),
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        children: [
+                          _PanelSkeleton(lines: 4),
+                          SizedBox(height: 20),
+                          _PanelSkeleton(lines: 4),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return const Column(
+                children: [
+                  _PanelSkeleton(lines: 4),
+                  SizedBox(height: 20),
+                  _PanelSkeleton(lines: 4),
+                  SizedBox(height: 20),
+                  _PanelSkeleton(lines: 4),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 20),
+          const _PanelSkeleton(lines: 5),
+          const SizedBox(height: 20),
+          const _PanelSkeleton(lines: 3),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricSkeleton extends StatelessWidget {
+  const _MetricSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+      ),
+      child: Row(
+        children: const [
+          _SkeletonPill(width: 52, height: 52),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _SkeletonBar(width: 70, height: 12),
+                SizedBox(height: 8),
+                _SkeletonBar(width: 100, height: 22),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelSkeleton extends StatelessWidget {
+  final int lines;
+
+  const _PanelSkeleton({required this.lines});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SkeletonBar(width: 160, height: 18),
+          const SizedBox(height: 6),
+          const _SkeletonBar(width: 220, height: 12),
+          const SizedBox(height: 16),
+          ...List.generate(
+            lines,
+            (index) => Padding(
+              padding: EdgeInsets.only(bottom: index == lines - 1 ? 0 : 12),
+              child: const _SkeletonBar(width: double.infinity, height: 58),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonBar extends StatelessWidget {
+  final double width;
+  final double height;
+
+  const _SkeletonBar({required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE6E6E6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+}
+
+class _SkeletonPill extends StatelessWidget {
+  final double width;
+  final double height;
+
+  const _SkeletonPill({required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE6E6E6),
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
+  }
+}
+
+class _DashboardError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _DashboardError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE7EAF0)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
+            const SizedBox(height: 12),
+            const Text(
+              'Failed to load dashboard',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricCardData {
   final String title;
   final String value;
-  final String delta;
+  final String detail;
   final IconData icon;
   final Color accent;
 
-  const _DashboardMetric({
+  const _MetricCardData({
     required this.title,
     required this.value,
-    required this.delta,
+    required this.detail,
     required this.icon,
     required this.accent,
-  });
-}
-
-class _ActivityItem {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-
-  const _ActivityItem({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-  });
-}
-
-class _InsightItem {
-  final String label;
-  final double value;
-  final Color color;
-
-  const _InsightItem({
-    required this.label,
-    required this.value,
-    required this.color,
   });
 }
 
@@ -822,4 +1372,52 @@ class _QuickAction {
     required this.icon,
     required this.color,
   });
+}
+
+String _formatPercent(double value) {
+  final pct = (value * 100).round();
+  return value >= 0 ? '+$pct%' : '$pct%';
+}
+
+String _dayLabel(DateTime date) {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  return days[date.weekday - 1];
+}
+
+String _formatShortDateTime(DateTime date) {
+  final d = date.day.toString().padLeft(2, '0');
+  final m = date.month.toString().padLeft(2, '0');
+  final h = date.hour.toString().padLeft(2, '0');
+  final min = date.minute.toString().padLeft(2, '0');
+  return '$d/$m $h:$min';
+}
+
+IconData _activityIcon(String type) {
+  switch (type) {
+    case 'login':
+      return Icons.login_rounded;
+    case 'edit':
+      return Icons.edit_rounded;
+    case 'upload':
+      return Icons.cloud_upload_rounded;
+    case 'delete':
+      return Icons.delete_outline_rounded;
+    default:
+      return Icons.bolt_rounded;
+  }
+}
+
+Color _activityColor(String type) {
+  switch (type) {
+    case 'login':
+      return const Color(0xFF14B8A6);
+    case 'edit':
+      return const Color(0xFF4F46E5);
+    case 'upload':
+      return const Color(0xFFEC4899);
+    case 'delete':
+      return const Color(0xFFEF4444);
+    default:
+      return const Color(0xFFF59E0B);
+  }
 }
