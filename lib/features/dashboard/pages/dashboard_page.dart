@@ -447,7 +447,7 @@ class _MetricCardState extends State<_MetricCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         transform: hovered
-            ? (Matrix4.identity()..translate(0.0, -4.0, 0.0))
+          ? (Matrix4.identity()..translateByDouble(0.0, -4.0, 0.0, 1.0))
             : Matrix4.identity(),
         decoration: BoxDecoration(
           color: Colors.white,

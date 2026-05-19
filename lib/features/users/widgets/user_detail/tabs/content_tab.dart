@@ -63,8 +63,8 @@ class _ContentTileState extends State<_ContentTile> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         transform: Matrix4.identity()
-          ..translate(0.0, hover ? -3.0 : 0.0)
-          ..scale(hover ? 1.03 : 1.0),
+          ..translateByDouble(0.0, hover ? -3.0 : 0.0, 0.0, 1.0)
+          ..scaleByDouble(hover ? 1.03 : 1.0, hover ? 1.03 : 1.0, 1.0, 1.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: Colors.white,
