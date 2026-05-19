@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/data/repositories/dashboard_repository.dart';
 import 'package:mediahub/features/dashboard/models/dashboard_data.dart';
 
@@ -568,7 +569,7 @@ class _ActivityFeed extends StatelessWidget {
       shrinkWrap: true,
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         return _ActivityRow(item: items[index]);
       },
@@ -826,18 +827,52 @@ class _TopUserTile extends StatelessWidget {
   }
 }
 
-class _TrendPanel extends StatelessWidget {
+class _TrendPanel extends StatefulWidget {
   final List<DashboardTrendPoint> trend;
 
   const _TrendPanel({required this.trend});
 
   @override
-  Widget build(BuildContext context) {
-    if (trend.isEmpty) {
-      return const SizedBox.shrink();
-    }
+  State<_TrendPanel> createState() => _TrendPanelState();
+}
 
-    final maxValue = trend
+class _TrendPanelState extends State<_TrendPanel> {
+  int? hoveredIndex;
+  final GlobalKey _stackKey = GlobalKey();
+  final Map<int, GlobalKey> _groupKeys = <int, GlobalKey>{};
+
+  GlobalKey _groupKeyForIndex(int index) {
+    return _groupKeys.putIfAbsent(index, () => GlobalKey());
+  }
+
+  double? _tooltipLeft(double availableWidth) {
+    final index = hoveredIndex;
+    if (index == null) return null;
+
+    final groupContext = _groupKeyForIndex(index).currentContext;
+    final stackContext = _stackKey.currentContext;
+    if (groupContext == null || stackContext == null) return null;
+
+    final groupBox = groupContext.findRenderObject() as RenderBox?;
+    final stackBox = stackContext.findRenderObject() as RenderBox?;
+    if (groupBox == null || stackBox == null) return null;
+
+    const tooltipWidth = _TrendInfoCard.cardWidth;
+    final centerInStack = groupBox.localToGlobal(
+      groupBox.size.center(Offset.zero),
+      ancestor: stackBox,
+    );
+
+    final rawLeft = centerInStack.dx - (tooltipWidth / 2);
+    final maxLeft = math.max(0.0, availableWidth - tooltipWidth);
+    return rawLeft.clamp(0.0, maxLeft);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.trend.isEmpty) return const SizedBox.shrink();
+
+    final maxValue = widget.trend
         .map((e) => math.max(e.activeUsers, e.contentCreated))
         .reduce(math.max)
         .toDouble();
@@ -845,32 +880,344 @@ class _TrendPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: const [
+        const Row(
+          children: [
             _TrendLegend(color: Color(0xFF4F46E5), label: 'Active users'),
             SizedBox(width: 16),
             _TrendLegend(color: Color(0xFFEC4899), label: 'Content created'),
           ],
         ),
-        const SizedBox(height: 18),
+
+        const SizedBox(height: 12),
+
         SizedBox(
-          height: 220,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: trend
-                  .map(
-                    (point) => Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: _TrendGroup(point: point, maxValue: maxValue),
+          height: 260,
+          child: Stack(
+            key: _stackKey,
+            clipBehavior: Clip.none,
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const spacing = 14.0;
+                  const minGroupWidth = 72.0;
+                  final count = widget.trend.length;
+                  final requiredMinWidth =
+                      (count * minGroupWidth) + ((count - 1) * spacing);
+                  final shouldScroll = requiredMinWidth > constraints.maxWidth;
+                  final chartWidth = shouldScroll
+                      ? requiredMinWidth
+                      : constraints.maxWidth;
+                  final groupWidth =
+                      (chartWidth - ((count - 1) * spacing)) / count;
+
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: chartWidth,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: widget.trend.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final point = entry.value;
+
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              right: index == count - 1 ? 0 : spacing,
+                            ),
+                            child: MouseRegion(
+                              onEnter: (_) =>
+                                  setState(() => hoveredIndex = index),
+                              onExit: (_) =>
+                                  setState(() => hoveredIndex = null),
+                              child: SizedBox(
+                                key: _groupKeyForIndex(index),
+                                width: groupWidth,
+                                child: _TrendGroup(
+                                  point: point,
+                                  maxValue: maxValue,
+                                  hovered: hoveredIndex == index,
+                                  onHoverChanged: (_) {},
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  )
-                  .toList(),
-            ),
+                  );
+                },
+              ),
+
+              if (hoveredIndex != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final left = _tooltipLeft(constraints.maxWidth);
+                        if (left == null) return const SizedBox.shrink();
+
+                        return Stack(
+                          children: [
+                            Positioned(
+                              top: 0,
+                              left: left,
+                              child: _TrendInfoCard(
+                                point: widget.trend[hoveredIndex!],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TrendGroup extends StatefulWidget {
+  final DashboardTrendPoint point;
+  final double maxValue;
+  final bool hovered;
+  final ValueChanged<bool> onHoverChanged;
+
+  const _TrendGroup({
+    required this.point,
+    required this.maxValue,
+    required this.hovered,
+    required this.onHoverChanged,
+  });
+
+  @override
+  State<_TrendGroup> createState() => _TrendGroupState();
+}
+
+class _TrendGroupState extends State<_TrendGroup> {
+  @override
+  Widget build(BuildContext context) {
+    final point = widget.point;
+    final maxValue = widget.maxValue;
+
+    final activeHeight = 150 * (point.activeUsers / maxValue);
+    final contentHeight = 150 * (point.contentCreated / maxValue);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => widget.onHoverChanged(true),
+      onExit: (_) => widget.onHoverChanged(false),
+      child: AnimatedScale(
+        scale: widget.hovered ? 1.06 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: SizedBox(
+            height: 220,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  height: 170,
+                  alignment: Alignment.bottomCenter,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _TrendBar(
+                        height: activeHeight,
+                        color: const Color(0xFF4F46E5),
+                        highlighted: widget.hovered,
+                      ),
+                      const SizedBox(width: 6),
+                      _TrendBar(
+                        height: contentHeight,
+                        color: const Color(0xFFEC4899),
+                        highlighted: widget.hovered,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _dayLabel(point.date),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: widget.hovered
+                        ? const Color(0xFF111827)
+                        : Colors.grey,
+                    fontWeight: widget.hovered
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrendInfoCard extends StatelessWidget {
+  static const double cardWidth = 160;
+  final DashboardTrendPoint? point;
+
+  const _TrendInfoCard({required this.point});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = point;
+    if (p == null) return const SizedBox(width: 220);
+
+    return Container(
+      width: cardWidth,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 16,
+            offset: Offset(0, 6),
+            color: Color(0x12000000),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Column(
+            children: [
+              Text(
+                _dayLabel(p.date),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              Text(
+                formatDate(p.date, format: 'dd/MM'),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
+
+          const SizedBox(width: 18),
+          _MiniStat(label: "Active", value: p.activeUsers),
+          const SizedBox(width: 6),
+          _MiniStat(label: "Content", value: p.contentCreated),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final int value;
+
+  const _MiniStat({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Color(0xFF9CA3AF),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          value.toString(),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF111827),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ignore: unused_element
+class _TrendMiniStat extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+
+  const _TrendMiniStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: const Color(0xFF6B7280),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '$value',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrendBar extends StatelessWidget {
+  final double height;
+  final Color color;
+  final bool highlighted;
+
+  const _TrendBar({
+    required this.height,
+    required this.color,
+    required this.highlighted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      width: highlighted ? 16 : 14,
+      height: height.clamp(12, 150),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: highlighted ? 1.0 : 0.82),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: highlighted
+            ? [
+                BoxShadow(
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                  color: color.withValues(alpha: 0.28),
+                ),
+              ]
+            : const [],
+      ),
     );
   }
 }
@@ -889,66 +1236,21 @@ class _TrendLegend extends StatelessWidget {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF6B7280),
+          ),
+        ),
       ],
-    );
-  }
-}
-
-class _TrendGroup extends StatelessWidget {
-  final DashboardTrendPoint point;
-  final double maxValue;
-
-  const _TrendGroup({required this.point, required this.maxValue});
-
-  @override
-  Widget build(BuildContext context) {
-    final activeHeight = 150 * (point.activeUsers / maxValue);
-    final contentHeight = 150 * (point.contentCreated / maxValue);
-
-    return SizedBox(
-      width: 56,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _TrendBar(height: activeHeight, color: const Color(0xFF4F46E5)),
-              const SizedBox(width: 6),
-              _TrendBar(height: contentHeight, color: const Color(0xFFEC4899)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _dayLabel(point.date),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrendBar extends StatelessWidget {
-  final double height;
-  final Color color;
-
-  const _TrendBar({required this.height, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 14,
-      height: height.clamp(12, 150),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(999),
-      ),
     );
   }
 }
@@ -1137,7 +1439,7 @@ class _DashboardSkeleton extends StatelessWidget {
                   mainAxisSpacing: 16,
                   childAspectRatio: 2.8,
                 ),
-                itemBuilder: (_, __) => const _MetricSkeleton(),
+                itemBuilder: (_, _) => const _MetricSkeleton(),
               );
             },
           ),

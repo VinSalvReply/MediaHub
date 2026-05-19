@@ -202,7 +202,7 @@ class _UserDetailSkeleton extends StatelessWidget {
                   child: ListView.separated(
                     physics: const BouncingScrollPhysics(),
                     itemCount: 6,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (_, index) {
                       if (index % 3 == 0) {
                         return Row(
