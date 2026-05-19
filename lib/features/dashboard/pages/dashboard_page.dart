@@ -112,38 +112,48 @@ class _DashboardView extends StatelessWidget {
                 _MetricsGrid(metrics: data.metrics),
                 const SizedBox(height: 24),
                 if (wide)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: _SectionCard(
-                          title: 'Recent activity',
-                          subtitle: 'What is happening right now',
-                          child: _ActivityFeed(items: data.activities),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        flex: 2,
-                        child: Column(
-                          children: [
-                            _SectionCard(
-                              title: 'Insights',
-                              subtitle:
-                                  'Derived from users, events and content',
-                              child: _InsightsPanel(items: data.insights),
+                  SizedBox(
+                    height: 876,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          flex: 3,
+
+                          child: _SectionCard(
+                            title: 'Recent activity',
+                            subtitle: 'What is happening right now',
+                            child: SizedBox(
+                              height: 795,
+                              child: _ActivityFeed(items: data.activities),
                             ),
-                            const SizedBox(height: 20),
-                            _SectionCard(
-                              title: 'Top users',
-                              subtitle: 'Most engaged profiles',
-                              child: _TopUsersPanel(users: data.topUsers),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 20),
+                        Expanded(
+                          flex: 2,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                _SectionCard(
+                                  title: 'Insights',
+                                  subtitle:
+                                      'Derived from users, events and content',
+                                  child: _InsightsPanel(items: data.insights),
+                                ),
+
+                                const SizedBox(height: 20),
+                                _SectionCard(
+                                  title: 'Top users',
+                                  subtitle: 'Most engaged profiles',
+                                  child: _TopUsersPanel(users: data.topUsers),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   )
                 else ...[
                   _SectionCard(
@@ -535,31 +545,12 @@ class _SectionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 24,
-            offset: Offset(0, 10),
-            color: Color(0x0D000000),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
-            child,
-          ],
+          children: [Text(title), const SizedBox(height: 16), child],
         ),
       ),
     );
@@ -573,19 +564,14 @@ class _ActivityFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: items
-          .asMap()
-          .entries
-          .map(
-            (entry) => Padding(
-              padding: EdgeInsets.only(
-                bottom: entry.key == items.length - 1 ? 0 : 12,
-              ),
-              child: _ActivityRow(item: entry.value),
-            ),
-          )
-          .toList(),
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        return _ActivityRow(item: items[index]);
+      },
     );
   }
 }
