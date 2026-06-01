@@ -63,20 +63,29 @@ usersRouter.post("/:id/activity", (req, res) => {
 usersRouter.get("/:id/events", (req, res) => {
   const id = parseId(req.params.id);
   requireUser(id);
-  res.json(eventRepository.list(id));
+  res.json(eventRepository.listGlobal(id));
 });
 
 usersRouter.post("/:id/events", (req, res) => {
   const id = parseId(req.params.id);
   requireUser(id);
-  res.status(201).json(eventRepository.create(id, req.body));
+  res
+    .status(201)
+    .json(eventRepository.createGlobal({ ...req.body, user_id: id }));
 });
 
 usersRouter.put("/:userId/events/:eventId", (req, res) => {
   const userId = parseId(req.params.userId, "userId");
   const eventId = parseId(req.params.eventId, "eventId");
   requireUser(userId);
-  const updated = eventRepository.update(userId, eventId, req.body);
+  const existing = eventRepository
+    .listGlobal(userId)
+    .find((event) => event.id === eventId);
+  if (!existing) notFound("Event not found");
+  const updated = eventRepository.updateGlobal(eventId, {
+    ...req.body,
+    user_id: userId,
+  });
   if (!updated) notFound("Event not found");
   res.json(updated);
 });
@@ -85,7 +94,11 @@ usersRouter.delete("/:userId/events/:eventId", (req, res) => {
   const userId = parseId(req.params.userId, "userId");
   const eventId = parseId(req.params.eventId, "eventId");
   requireUser(userId);
-  if (!eventRepository.remove(userId, eventId)) notFound("Event not found");
+  const existing = eventRepository
+    .listGlobal(userId)
+    .find((event) => event.id === eventId);
+  if (!existing) notFound("Event not found");
+  if (!eventRepository.removeGlobal(eventId)) notFound("Event not found");
   res.status(204).end();
 });
 
@@ -94,20 +107,29 @@ usersRouter.delete("/:userId/events/:eventId", (req, res) => {
 usersRouter.get("/:id/content", (req, res) => {
   const id = parseId(req.params.id);
   requireUser(id);
-  res.json(contentRepository.list(id));
+  res.json(contentRepository.listGlobal({ userId: id }));
 });
 
 usersRouter.post("/:id/content", (req, res) => {
   const id = parseId(req.params.id);
   requireUser(id);
-  res.status(201).json(contentRepository.create(id, req.body));
+  res
+    .status(201)
+    .json(contentRepository.createGlobal({ ...req.body, user_id: id }));
 });
 
 usersRouter.put("/:userId/content/:itemId", (req, res) => {
   const userId = parseId(req.params.userId, "userId");
   const itemId = parseId(req.params.itemId, "itemId");
   requireUser(userId);
-  const updated = contentRepository.update(userId, itemId, req.body);
+  const existing = contentRepository
+    .listGlobal({ userId })
+    .find((item) => item.id === itemId);
+  if (!existing) notFound("Content not found");
+  const updated = contentRepository.updateGlobal(itemId, {
+    ...req.body,
+    user_id: userId,
+  });
   if (!updated) notFound("Content not found");
   res.json(updated);
 });
@@ -116,6 +138,10 @@ usersRouter.delete("/:userId/content/:itemId", (req, res) => {
   const userId = parseId(req.params.userId, "userId");
   const itemId = parseId(req.params.itemId, "itemId");
   requireUser(userId);
-  if (!contentRepository.remove(userId, itemId)) notFound("Content not found");
+  const existing = contentRepository
+    .listGlobal({ userId })
+    .find((item) => item.id === itemId);
+  if (!existing) notFound("Content not found");
+  if (!contentRepository.removeGlobal(itemId)) notFound("Content not found");
   res.status(204).end();
 });

@@ -54,6 +54,12 @@ export const userRepository = {
     const before = store.data.users.length;
     store.data.users = store.data.users.filter((u) => u.id !== id);
     if (store.data.users.length === before) return false;
+    store.data.global_events = store.data.global_events.map((event) =>
+      event.user_id === id ? { ...event, user_id: null } : event,
+    );
+    store.data.global_contents = store.data.global_contents.map((item) =>
+      item.user_id === id ? { ...item, user_id: null } : item,
+    );
     delete store.data.activities[id];
     delete store.data.events[id];
     delete store.data.contents[id];

@@ -69,6 +69,24 @@ class UserService {
   Future<void> deleteUserEvent(int userId, int eventId) =>
       _api.delete('/users/$userId/events/$eventId');
 
+  Future<List<Map<String, dynamic>>> getEvents({int? userId}) async {
+    final query = userId == null ? '' : '?userId=$userId';
+    return _listJson(await _api.get('/events$query'));
+  }
+
+  Future<Map<String, dynamic>> addEvent(Map<String, dynamic> body) async {
+    return _mapJson(await _api.post('/events', body));
+  }
+
+  Future<Map<String, dynamic>> updateEvent(
+    int eventId,
+    Map<String, dynamic> body,
+  ) async {
+    return _mapJson(await _api.put('/events/$eventId', body));
+  }
+
+  Future<void> deleteEvent(int eventId) => _api.delete('/events/$eventId');
+
   // ================= CONTENT =================
 
   Future<List<Map<String, dynamic>>> getUserContent(int userId) async {
@@ -92,6 +110,31 @@ class UserService {
 
   Future<void> deleteUserContent(int userId, int itemId) =>
       _api.delete('/users/$userId/content/$itemId');
+
+  Future<List<Map<String, dynamic>>> getContents({
+    int? userId,
+    int? eventId,
+  }) async {
+    final params = <String>[];
+    if (userId != null) params.add('userId=$userId');
+    if (eventId != null) params.add('eventId=$eventId');
+    final query = params.isEmpty ? '' : '?${params.join('&')}';
+    return _listJson(await _api.get('/contents$query'));
+  }
+
+  Future<Map<String, dynamic>> addContent(Map<String, dynamic> body) async {
+    return _mapJson(await _api.post('/contents', body));
+  }
+
+  Future<Map<String, dynamic>> updateContent(
+    int contentId,
+    Map<String, dynamic> body,
+  ) async {
+    return _mapJson(await _api.put('/contents/$contentId', body));
+  }
+
+  Future<void> deleteContent(int contentId) =>
+      _api.delete('/contents/$contentId');
 
   // ================= DASHBOARD =================
 

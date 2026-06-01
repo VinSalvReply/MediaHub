@@ -3,6 +3,13 @@ import 'package:mediahub/features/users/models/event.dart';
 
 extension EventMapper on EventDto {
   Event toModel() {
-    return Event(id: id, title: title, date: DateTime.parse(date));
+    return Event(
+      id: id,
+      title: title,
+      date: DateTime.parse(date),
+      attendees: attendees,
+      status: eventStatusFromString(status),
+      userId: userId,
+    );
   }
 }

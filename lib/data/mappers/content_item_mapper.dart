@@ -7,7 +7,10 @@ extension ContentItemMapper on ContentItemDto {
       id: id,
       title: title,
       type: type,
+      status: status,
       createdAt: DateTime.parse(createdAt),
+      userId: userId,
+      eventId: eventId,
     );
   }
 }

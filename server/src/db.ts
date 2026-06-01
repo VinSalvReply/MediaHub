@@ -11,7 +11,9 @@ function emptyDb(): Database {
     users: [],
     activities: {},
     events: {},
+    global_events: [],
     contents: {},
+    global_contents: [],
     trend: [],
     alerts: [],
     topUsers: [],
@@ -21,7 +23,15 @@ function emptyDb(): Database {
 export function loadDb(): Database {
   if (!fs.existsSync(DB_FILE)) return emptyDb();
   try {
-    return JSON.parse(fs.readFileSync(DB_FILE, "utf8")) as Database;
+    const parsed = JSON.parse(
+      fs.readFileSync(DB_FILE, "utf8"),
+    ) as Partial<Database>;
+    return {
+      ...emptyDb(),
+      ...parsed,
+      global_events: parsed.global_events ?? [],
+      global_contents: parsed.global_contents ?? [],
+    } as Database;
   } catch {
     return emptyDb();
   }

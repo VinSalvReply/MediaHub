@@ -35,12 +35,21 @@ export interface UserEvent {
   status: EventStatus;
 }
 
+export interface GlobalEvent extends UserEvent {
+  user_id: number | null;
+}
+
 export interface ContentItem {
   id: number;
   title: string;
   type: ContentType;
   status: ContentStatus;
   created_at: string;
+}
+
+export interface GlobalContentItem extends ContentItem {
+  user_id: number | null;
+  event_id: number | null;
 }
 
 export interface TrendPoint {
@@ -63,7 +72,9 @@ export interface Database {
   users: User[];
   activities: Record<number, Activity[]>;
   events: Record<number, UserEvent[]>;
+  global_events: GlobalEvent[];
   contents: Record<number, ContentItem[]>;
+  global_contents: GlobalContentItem[];
   trend: TrendPoint[];
   alerts: Alert[];
   topUsers: TopUser[];

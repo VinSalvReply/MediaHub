@@ -44,6 +44,48 @@ class UserRepository {
     return response.map((json) => EventDto.fromJson(json).toModel()).toList();
   }
 
+  Future<Event> createEvent(int userId, Event event) async {
+    final json = await _service.addUserEvent(userId, _eventToJson(event));
+    return EventDto.fromJson(json).toModel();
+  }
+
+  Future<Event> updateEvent(int userId, Event event) async {
+    final json = await _service.updateUserEvent(
+      userId,
+      event.id,
+      _eventToJson(event),
+    );
+    return EventDto.fromJson(json).toModel();
+  }
+
+  Future<void> deleteEvent(int userId, int eventId) =>
+      _service.deleteUserEvent(userId, eventId);
+
+  Future<List<Event>> getGlobalEvents({int? userId}) async {
+    final response = await _service.getEvents(userId: userId);
+    return response.map((json) => EventDto.fromJson(json).toModel()).toList();
+  }
+
+  Future<Event> createGlobalEvent(Event event) async {
+    final json = await _service.addEvent(_eventToJson(event));
+    return EventDto.fromJson(json).toModel();
+  }
+
+  Future<Event> updateGlobalEvent(Event event) async {
+    final json = await _service.updateEvent(event.id, _eventToJson(event));
+    return EventDto.fromJson(json).toModel();
+  }
+
+  Future<void> deleteGlobalEvent(int eventId) => _service.deleteEvent(eventId);
+
+  Map<String, dynamic> _eventToJson(Event event) => {
+    'title': event.title,
+    'date': event.date.toIso8601String(),
+    'attendees': event.attendees,
+    'status': event.status.name,
+    'user_id': event.userId,
+  };
+
   Future<List<ContentItem>> getUserContent(int userId) async {
     final response = await _service.getUserContent(userId);
 
@@ -51,6 +93,44 @@ class UserRepository {
         .map((json) => ContentItemDto.fromJson(json).toModel())
         .toList();
   }
+
+  Future<List<ContentItem>> getGlobalContents({
+    int? userId,
+    int? eventId,
+  }) async {
+    final response = await _service.getContents(
+      userId: userId,
+      eventId: eventId,
+    );
+    return response
+        .map((json) => ContentItemDto.fromJson(json).toModel())
+        .toList();
+  }
+
+  Future<ContentItem> createGlobalContent(ContentItem content) async {
+    final json = await _service.addContent(_contentToJson(content));
+    return ContentItemDto.fromJson(json).toModel();
+  }
+
+  Future<ContentItem> updateGlobalContent(ContentItem content) async {
+    final json = await _service.updateContent(
+      content.id,
+      _contentToJson(content),
+    );
+    return ContentItemDto.fromJson(json).toModel();
+  }
+
+  Future<void> deleteGlobalContent(int contentId) =>
+      _service.deleteContent(contentId);
+
+  Map<String, dynamic> _contentToJson(ContentItem content) => {
+    'title': content.title,
+    'type': content.type,
+    'status': content.status,
+    'created_at': content.createdAt.toIso8601String(),
+    'user_id': content.userId,
+    'event_id': content.eventId,
+  };
 
   Future<UserDetailData> getUserDetail(int userId) async {
     return UserDetailData(

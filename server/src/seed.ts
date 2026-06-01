@@ -8,12 +8,14 @@ import type {
   Database,
   Device,
   EventStatus,
+  GlobalContentItem,
   Role,
   Segment,
   TopUser,
   TrendPoint,
   User,
   UserEvent,
+  GlobalEvent,
 } from "./types.js";
 
 const NAMES = [
@@ -105,7 +107,9 @@ export function buildSeed(): Database {
 
   const activities: Record<number, Activity[]> = {};
   const events: Record<number, UserEvent[]> = {};
+  const global_events: GlobalEvent[] = [];
   const contents: Record<number, ContentItem[]> = {};
+  const global_contents: GlobalContentItem[] = [];
 
   for (const u of users) {
     activities[u.id] = Array.from({ length: 12 + rand(10) }, () => {
@@ -127,6 +131,19 @@ export function buildSeed(): Database {
       status: pick(EVENT_STATUS),
     }));
 
+    for (const e of events[u.id]!) {
+      if (Math.random() < 0.55) {
+        global_events.push({
+          id: global_events.length + 1,
+          title: e.title,
+          date: e.date,
+          attendees: e.attendees,
+          status: e.status,
+          user_id: u.id,
+        });
+      }
+    }
+
     contents[u.id] = Array.from({ length: 10 + rand(12) }, (_, i) => ({
       id: i + 1,
       title: pick(CONTENT_TITLES),
@@ -134,6 +151,23 @@ export function buildSeed(): Database {
       status: pick(CONTENT_STATUS),
       created_at: pastDate(),
     }));
+
+    for (const c of contents[u.id]!) {
+      const candidates = global_events.filter(
+        (event) => event.user_id === u.id,
+      );
+      const linkedEvent =
+        candidates.length > 0 && Math.random() < 0.45 ? pick(candidates) : null;
+      global_contents.push({
+        id: global_contents.length + 1,
+        title: c.title,
+        type: c.type,
+        status: c.status,
+        created_at: c.created_at,
+        user_id: u.id,
+        event_id: linkedEvent?.id ?? null,
+      });
+    }
   }
 
   const trend: TrendPoint[] = Array.from({ length: 14 }, (_, i) => {
@@ -156,5 +190,55 @@ export function buildSeed(): Database {
     score: 200 + rand(800),
   }));
 
-  return { users, activities, events, contents, trend, alerts, topUsers };
+  global_events.push(
+    {
+      id: global_events.length + 1,
+      title: "MediaHub Product Launch",
+      date: futureDate(),
+      attendees: 350,
+      status: "upcoming",
+      user_id: null,
+    },
+    {
+      id: global_events.length + 2,
+      title: "Community Live Q&A",
+      date: futureDate(),
+      attendees: 120,
+      status: "live",
+      user_id: null,
+    },
+  );
+
+  global_contents.push(
+    {
+      id: global_contents.length + 1,
+      title: "Summer Campaign Hero Video",
+      type: "video",
+      status: "draft",
+      created_at: pastDate(),
+      user_id: null,
+      event_id: null,
+    },
+    {
+      id: global_contents.length + 2,
+      title: "Product Launch Social Carousel",
+      type: "image",
+      status: "published",
+      created_at: pastDate(),
+      user_id: null,
+      event_id: global_events[0]?.id ?? null,
+    },
+  );
+
+  return {
+    users,
+    activities,
+    events,
+    global_events,
+    contents,
+    global_contents,
+    trend,
+    alerts,
+    topUsers,
+  };
 }
