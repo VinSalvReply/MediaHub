@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/data/repositories/dashboard_repository.dart';
 import 'package:mediahub/features/dashboard/models/dashboard_data.dart';
+import 'package:mediahub/features/users/widgets/user_detail/shimmer.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -447,7 +448,7 @@ class _MetricCardState extends State<_MetricCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         transform: hovered
-          ? (Matrix4.identity()..translateByDouble(0.0, -4.0, 0.0, 1.0))
+            ? (Matrix4.identity()..translateByDouble(0.0, -4.0, 0.0, 1.0))
             : Matrix4.identity(),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -1562,12 +1563,14 @@ class _SkeletonBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE6E6E6),
-        borderRadius: BorderRadius.circular(12),
+    return Shimmer(
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE6E6E6),
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }
@@ -1581,12 +1584,14 @@ class _SkeletonPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE6E6E6),
-        borderRadius: BorderRadius.circular(999),
+    return Shimmer(
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE6E6E6),
+          borderRadius: BorderRadius.circular(999),
+        ),
       ),
     );
   }
