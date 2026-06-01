@@ -11,6 +11,8 @@ const _textMuted = Color(0xFF6B7280);
 
 enum ContentSortMode { nameAsc, nameDesc, dateAsc, dateDesc }
 
+enum _SplitLane { all, assigned, unassigned }
+
 class ContentsPage extends StatefulWidget {
   const ContentsPage({super.key});
 
@@ -26,6 +28,7 @@ class _ContentsPageState extends State<ContentsPage> {
   bool _dragFromEventDropZone = false;
   ContentSortMode _sortMode = ContentSortMode.dateDesc;
   bool _splitAssigned = false;
+  bool _previousSplitAssigned = false;
   int _sortTick = 0;
   Map<int, int> _previousAllContentIndexes = const {};
   Map<int, int> _previousAssignedContentIndexes = const {};
@@ -67,6 +70,8 @@ class _ContentsPageState extends State<ContentsPage> {
         .where((item) => item.eventId == null)
         .toList();
     setState(() {
+      // A pure sort change should not trigger split lane transition animation.
+      _previousSplitAssigned = _splitAssigned;
       _previousAllContentIndexes = _indexByContentId(before);
       _previousAssignedContentIndexes = _indexByContentId(beforeAssigned);
       _previousUnassignedContentIndexes = _indexByContentId(beforeUnassigned);
@@ -96,7 +101,11 @@ class _ContentsPageState extends State<ContentsPage> {
 
   void _setSplitAssigned(bool value) {
     if (_splitAssigned == value) return;
-    setState(() => _splitAssigned = value);
+    setState(() {
+      _previousSplitAssigned = _splitAssigned;
+      _splitAssigned = value;
+      _sortTick++;
+    });
   }
 
   @override
@@ -216,6 +225,7 @@ class _ContentsPageState extends State<ContentsPage> {
                   sortMode: _sortMode,
                   onSortChanged: _setSortMode,
                   splitAssigned: _splitAssigned,
+                  previousSplitAssigned: _previousSplitAssigned,
                   onSplitChanged: _setSplitAssigned,
                   sortTick: _sortTick,
                   previousAllContentIndexes: _previousAllContentIndexes,
@@ -322,6 +332,7 @@ class _ContentsWorkspace extends StatelessWidget {
   final ContentSortMode sortMode;
   final ValueChanged<ContentSortMode?> onSortChanged;
   final bool splitAssigned;
+  final bool previousSplitAssigned;
   final ValueChanged<bool> onSplitChanged;
   final int sortTick;
   final Map<int, int> previousAllContentIndexes;
@@ -345,6 +356,7 @@ class _ContentsWorkspace extends StatelessWidget {
     required this.sortMode,
     required this.onSortChanged,
     required this.splitAssigned,
+    required this.previousSplitAssigned,
     required this.onSplitChanged,
     required this.sortTick,
     required this.previousAllContentIndexes,
@@ -374,6 +386,7 @@ class _ContentsWorkspace extends StatelessWidget {
                 sortMode: sortMode,
                 onSortChanged: onSortChanged,
                 splitAssigned: splitAssigned,
+                previousSplitAssigned: previousSplitAssigned,
                 onSplitChanged: onSplitChanged,
                 sortTick: sortTick,
                 previousAllContentIndexes: previousAllContentIndexes,
@@ -412,6 +425,7 @@ class _ContentsWorkspace extends StatelessWidget {
                 sortMode: sortMode,
                 onSortChanged: onSortChanged,
                 splitAssigned: splitAssigned,
+                previousSplitAssigned: previousSplitAssigned,
                 onSplitChanged: onSplitChanged,
                 sortTick: sortTick,
                 previousAllContentIndexes: previousAllContentIndexes,
@@ -777,6 +791,7 @@ class _ContentsBody extends StatelessWidget {
   final ContentSortMode sortMode;
   final ValueChanged<ContentSortMode?> onSortChanged;
   final bool splitAssigned;
+  final bool previousSplitAssigned;
   final ValueChanged<bool> onSplitChanged;
   final int sortTick;
   final Map<int, int> previousAllContentIndexes;
@@ -794,6 +809,7 @@ class _ContentsBody extends StatelessWidget {
     required this.sortMode,
     required this.onSortChanged,
     required this.splitAssigned,
+    required this.previousSplitAssigned,
     required this.onSplitChanged,
     required this.sortTick,
     required this.previousAllContentIndexes,
@@ -927,18 +943,26 @@ class _ContentsBody extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          SwitchListTile.adaptive(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            value: splitAssigned,
-            onChanged: onSplitChanged,
-            title: const Text('Split assegnati / non assegnati'),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Dividi vista: assegnati a sinistra, non assegnati a destra',
+                  style: TextStyle(fontSize: 12, color: _textMuted),
+                ),
+              ),
+              Switch.adaptive(value: splitAssigned, onChanged: onSplitChanged),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           if (!splitAssigned)
             Column(
-              children: _buildContentCards(sorted, previousAllContentIndexes),
+              children: _buildContentCards(
+                sorted,
+                previousAllContentIndexes,
+                lane: _SplitLane.all,
+              ),
             )
           else
             LayoutBuilder(
@@ -951,6 +975,7 @@ class _ContentsBody extends StatelessWidget {
                       ..._buildContentCards(
                         assigned,
                         previousAssignedContentIndexes,
+                        lane: _SplitLane.assigned,
                       ),
                       const SizedBox(height: 10),
                       _SplitSection(
@@ -960,6 +985,7 @@ class _ContentsBody extends StatelessWidget {
                       ..._buildContentCards(
                         unassigned,
                         previousUnassignedContentIndexes,
+                        lane: _SplitLane.unassigned,
                       ),
                     ],
                   );
@@ -977,6 +1003,7 @@ class _ContentsBody extends StatelessWidget {
                           ..._buildContentCards(
                             assigned,
                             previousAssignedContentIndexes,
+                            lane: _SplitLane.assigned,
                           ),
                         ],
                       ),
@@ -992,6 +1019,7 @@ class _ContentsBody extends StatelessWidget {
                           ..._buildContentCards(
                             unassigned,
                             previousUnassignedContentIndexes,
+                            lane: _SplitLane.unassigned,
                           ),
                         ],
                       ),
@@ -1012,8 +1040,9 @@ class _ContentsBody extends StatelessWidget {
 
   List<Widget> _buildContentCards(
     List<ContentItem> source,
-    Map<int, int> previousIndexes,
-  ) {
+    Map<int, int> previousIndexes, {
+    required _SplitLane lane,
+  }) {
     const itemStep = 122.0;
     return [
       for (var i = 0; i < source.length; i++)
@@ -1029,8 +1058,19 @@ class _ContentsBody extends StatelessWidget {
               final fromOffsetY = previousIndex == null
                   ? 0.0
                   : (previousIndex - i) * itemStep;
+              final toggledSplit = splitAssigned != previousSplitAssigned;
+              var fromOffsetX = 0.0;
+              if (toggledSplit) {
+                final isAssigned = source[i].eventId != null;
+                if (splitAssigned && lane == _SplitLane.unassigned) {
+                  fromOffsetX = -220;
+                }
+                if (!splitAssigned && lane == _SplitLane.all && !isAssigned) {
+                  fromOffsetX = 220;
+                }
+              }
               return Transform.translate(
-                offset: Offset(0, fromOffsetY * value),
+                offset: Offset(fromOffsetX * value, fromOffsetY * value),
                 child: child,
               );
             },
