@@ -23,6 +23,7 @@ class _ContentsPageState extends State<ContentsPage> {
   final GlobalKey<_ContentAssignmentSidebarState> _assignmentSidebarKey =
       GlobalKey<_ContentAssignmentSidebarState>();
   bool _isDraggingContent = false;
+  bool _dragFromEventDropZone = false;
   ContentSortMode _sortMode = ContentSortMode.dateDesc;
   bool _splitAssigned = false;
   int _sortTick = 0;
@@ -30,9 +31,30 @@ class _ContentsPageState extends State<ContentsPage> {
   Map<int, int> _previousAssignedContentIndexes = const {};
   Map<int, int> _previousUnassignedContentIndexes = const {};
 
-  void _setDraggingContent(bool value) {
-    if (_isDraggingContent == value) return;
-    setState(() => _isDraggingContent = value);
+  void _startContentDragFromGlobalList() {
+    if (_isDraggingContent && !_dragFromEventDropZone) return;
+    setState(() {
+      _isDraggingContent = true;
+      _dragFromEventDropZone = false;
+    });
+  }
+
+  void _startContentDragFromEventDropZone() {
+    if (_isDraggingContent && _dragFromEventDropZone) return;
+    setState(() {
+      _isDraggingContent = true;
+      _dragFromEventDropZone = true;
+    });
+  }
+
+  void _endContentDrag() {
+    if (!_isDraggingContent && !_dragFromEventDropZone) {
+      return;
+    }
+    setState(() {
+      _isDraggingContent = false;
+      _dragFromEventDropZone = false;
+    });
   }
 
   void _setSortMode(ContentSortMode? mode) {
@@ -132,6 +154,12 @@ class _ContentsPageState extends State<ContentsPage> {
     _toast('Contenuto collegato all\'evento');
   }
 
+  Future<void> _unassignContent(ContentItem item) async {
+    await controller.assignContentToEvent(item, null);
+    if (!mounted) return;
+    _toast('Contenuto disassegnato');
+  }
+
   Future<void> _confirmDelete(ContentItem item) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -183,6 +211,8 @@ class _ContentsPageState extends State<ContentsPage> {
                 _ContentsWorkspace(
                   controller: controller,
                   onAssign: _assignContent,
+                  onUnassign: _unassignContent,
+                  canUnassignFromCurrentDrag: _dragFromEventDropZone,
                   sortMode: _sortMode,
                   onSortChanged: _setSortMode,
                   splitAssigned: _splitAssigned,
@@ -194,7 +224,9 @@ class _ContentsPageState extends State<ContentsPage> {
                   previousUnassignedContentIndexes:
                       _previousUnassignedContentIndexes,
                   isDragging: _isDraggingContent,
-                  onDragStateChange: _setDraggingContent,
+                  onGlobalListDragStart: _startContentDragFromGlobalList,
+                  onSidebarDragStart: _startContentDragFromEventDropZone,
+                  onDragEnd: _endContentDrag,
                   onDragCursorMove: (position) {
                     _assignmentSidebarKey.currentState?.autoScrollAt(position);
                   },
@@ -285,6 +317,8 @@ class _Card extends StatelessWidget {
 class _ContentsWorkspace extends StatelessWidget {
   final ContentsController controller;
   final Future<void> Function(ContentItem item, int? eventId) onAssign;
+  final Future<void> Function(ContentItem item) onUnassign;
+  final bool canUnassignFromCurrentDrag;
   final ContentSortMode sortMode;
   final ValueChanged<ContentSortMode?> onSortChanged;
   final bool splitAssigned;
@@ -294,7 +328,9 @@ class _ContentsWorkspace extends StatelessWidget {
   final Map<int, int> previousAssignedContentIndexes;
   final Map<int, int> previousUnassignedContentIndexes;
   final bool isDragging;
-  final ValueChanged<bool> onDragStateChange;
+  final VoidCallback onGlobalListDragStart;
+  final VoidCallback onSidebarDragStart;
+  final VoidCallback onDragEnd;
   final ValueChanged<Offset> onDragCursorMove;
   final GlobalKey<_ContentAssignmentSidebarState> assignmentSidebarKey;
   final VoidCallback onCreate;
@@ -304,6 +340,8 @@ class _ContentsWorkspace extends StatelessWidget {
   const _ContentsWorkspace({
     required this.controller,
     required this.onAssign,
+    required this.onUnassign,
+    required this.canUnassignFromCurrentDrag,
     required this.sortMode,
     required this.onSortChanged,
     required this.splitAssigned,
@@ -313,7 +351,9 @@ class _ContentsWorkspace extends StatelessWidget {
     required this.previousAssignedContentIndexes,
     required this.previousUnassignedContentIndexes,
     required this.isDragging,
-    required this.onDragStateChange,
+    required this.onGlobalListDragStart,
+    required this.onSidebarDragStart,
+    required this.onDragEnd,
     required this.onDragCursorMove,
     required this.assignmentSidebarKey,
     required this.onCreate,
@@ -340,7 +380,8 @@ class _ContentsWorkspace extends StatelessWidget {
                 previousAssignedContentIndexes: previousAssignedContentIndexes,
                 previousUnassignedContentIndexes:
                     previousUnassignedContentIndexes,
-                onDragStateChange: onDragStateChange,
+                onGlobalListDragStart: onGlobalListDragStart,
+                onDragEnd: onDragEnd,
                 onDragCursorMove: onDragCursorMove,
                 onCreate: onCreate,
                 onEdit: onEdit,
@@ -351,6 +392,11 @@ class _ContentsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
+                onUnassign: onUnassign,
+                canUnassignFromCurrentDrag: canUnassignFromCurrentDrag,
+                onSidebarDragStart: onSidebarDragStart,
+                onDragEnd: onDragEnd,
+                onDragCursorMove: onDragCursorMove,
                 dragActive: isDragging,
               ),
             ],
@@ -372,7 +418,8 @@ class _ContentsWorkspace extends StatelessWidget {
                 previousAssignedContentIndexes: previousAssignedContentIndexes,
                 previousUnassignedContentIndexes:
                     previousUnassignedContentIndexes,
-                onDragStateChange: onDragStateChange,
+                onGlobalListDragStart: onGlobalListDragStart,
+                onDragEnd: onDragEnd,
                 onDragCursorMove: onDragCursorMove,
                 onCreate: onCreate,
                 onEdit: onEdit,
@@ -386,6 +433,11 @@ class _ContentsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
+                onUnassign: onUnassign,
+                canUnassignFromCurrentDrag: canUnassignFromCurrentDrag,
+                onSidebarDragStart: onSidebarDragStart,
+                onDragEnd: onDragEnd,
+                onDragCursorMove: onDragCursorMove,
                 dragActive: isDragging,
               ),
             ),
@@ -399,12 +451,22 @@ class _ContentsWorkspace extends StatelessWidget {
 class _ContentAssignmentSidebar extends StatefulWidget {
   final ContentsController controller;
   final Future<void> Function(ContentItem item, int? eventId) onAssign;
+  final Future<void> Function(ContentItem item) onUnassign;
+  final bool canUnassignFromCurrentDrag;
+  final VoidCallback onSidebarDragStart;
+  final VoidCallback onDragEnd;
+  final ValueChanged<Offset> onDragCursorMove;
   final bool dragActive;
 
   const _ContentAssignmentSidebar({
     super.key,
     required this.controller,
     required this.onAssign,
+    required this.onUnassign,
+    required this.canUnassignFromCurrentDrag,
+    required this.onSidebarDragStart,
+    required this.onDragEnd,
+    required this.onDragCursorMove,
     required this.dragActive,
   });
 
@@ -489,12 +551,20 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
                           subtitle: 'Evento #${event.id}',
                           icon: Icons.event_rounded,
                           items: items,
+                          onDragStart: widget.onSidebarDragStart,
+                          onDragEnd: widget.onDragEnd,
+                          onDragCursorMove: widget.onDragCursorMove,
                           onAccept: (item) => widget.onAssign(item, event.id),
                         ),
                       );
                     }),
                   ],
                 ),
+              ),
+              const SizedBox(height: 10),
+              _ScopedContentUnassignZone(
+                enabled: widget.canUnassignFromCurrentDrag,
+                onAccept: widget.onUnassign,
               ),
             ],
           ),
@@ -509,6 +579,9 @@ class _ContentDropZone extends StatelessWidget {
   final String? subtitle;
   final IconData icon;
   final List<ContentItem> items;
+  final VoidCallback onDragStart;
+  final VoidCallback onDragEnd;
+  final ValueChanged<Offset> onDragCursorMove;
   final ValueChanged<ContentItem> onAccept;
 
   const _ContentDropZone({
@@ -516,6 +589,9 @@ class _ContentDropZone extends StatelessWidget {
     this.subtitle,
     required this.icon,
     required this.items,
+    required this.onDragStart,
+    required this.onDragEnd,
+    required this.onDragCursorMove,
     required this.onAccept,
   });
 
@@ -576,6 +652,12 @@ class _ContentDropZone extends StatelessWidget {
                       .map(
                         (item) => Draggable<ContentItem>(
                           data: item,
+                          onDragStarted: onDragStart,
+                          onDragUpdate: (details) =>
+                              onDragCursorMove(details.globalPosition),
+                          onDragEnd: (_) => onDragEnd(),
+                          onDragCompleted: onDragEnd,
+                          onDraggableCanceled: (_, _) => onDragEnd(),
                           feedback: Material(
                             color: Colors.transparent,
                             child: _ContentChip(item: item, dragging: true),
@@ -589,6 +671,65 @@ class _ContentDropZone extends StatelessWidget {
                       )
                       .toList(),
                 ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ScopedContentUnassignZone extends StatelessWidget {
+  final bool enabled;
+  final Future<void> Function(ContentItem item) onAccept;
+
+  const _ScopedContentUnassignZone({
+    required this.enabled,
+    required this.onAccept,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DragTarget<ContentItem>(
+      onWillAcceptWithDetails: (_) => enabled,
+      onAcceptWithDetails: (details) => onAccept(details.data),
+      builder: (context, candidateData, _) {
+        final active = enabled && candidateData.isNotEmpty;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: active ? const Color(0xFFFFEDD5) : const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: active ? const Color(0xFFEA580C) : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.link_off_rounded,
+                size: 18,
+                color: enabled
+                    ? const Color(0xFF9A3412)
+                    : const Color(0xFF9CA3AF),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  enabled
+                      ? 'Rilascia qui per disassegnare contenuto'
+                      : 'Disassegna disponibile solo dal drag interno eventi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: enabled
+                        ? const Color(0xFF7C2D12)
+                        : const Color(0xFF6B7280),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -641,7 +782,8 @@ class _ContentsBody extends StatelessWidget {
   final Map<int, int> previousAllContentIndexes;
   final Map<int, int> previousAssignedContentIndexes;
   final Map<int, int> previousUnassignedContentIndexes;
-  final ValueChanged<bool> onDragStateChange;
+  final VoidCallback onGlobalListDragStart;
+  final VoidCallback onDragEnd;
   final ValueChanged<Offset> onDragCursorMove;
   final VoidCallback onCreate;
   final ValueChanged<ContentItem> onEdit;
@@ -657,7 +799,8 @@ class _ContentsBody extends StatelessWidget {
     required this.previousAllContentIndexes,
     required this.previousAssignedContentIndexes,
     required this.previousUnassignedContentIndexes,
-    required this.onDragStateChange,
+    required this.onGlobalListDragStart,
+    required this.onDragEnd,
     required this.onDragCursorMove,
     required this.onCreate,
     required this.onEdit,
@@ -893,12 +1036,12 @@ class _ContentsBody extends StatelessWidget {
             },
             child: Draggable<ContentItem>(
               data: source[i],
-              onDragStarted: () => onDragStateChange(true),
+              onDragStarted: onGlobalListDragStart,
               onDragUpdate: (details) =>
                   onDragCursorMove(details.globalPosition),
-              onDragEnd: (_) => onDragStateChange(false),
-              onDragCompleted: () => onDragStateChange(false),
-              onDraggableCanceled: (_, _) => onDragStateChange(false),
+              onDragEnd: (_) => onDragEnd(),
+              onDragCompleted: onDragEnd,
+              onDraggableCanceled: (_, _) => onDragEnd(),
               feedback: Material(
                 color: Colors.transparent,
                 child: SizedBox(
