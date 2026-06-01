@@ -133,11 +133,29 @@ class UserRepository {
   };
 
   Future<UserDetailData> getUserDetail(int userId) async {
+    final user = await getUser(userId);
+    final activities = await getUserActivity(userId);
+    final events = await getEvents(userId);
+    final userContents = await getUserContent(userId);
+
+    // Include contents linked to the user's events even when they are not
+    // directly linked to the user.
+    final allContents = await getGlobalContents();
+    final eventIds = events.map((e) => e.id).toSet();
+    final eventContents = allContents
+        .where((c) => c.eventId != null && eventIds.contains(c.eventId))
+        .toList();
+
+    final mergedById = <int, ContentItem>{
+      for (final c in userContents) c.id: c,
+      for (final c in eventContents) c.id: c,
+    };
+
     return UserDetailData(
-      user: await getUser(userId),
-      activities: await getUserActivity(userId),
-      events: await getEvents(userId),
-      contents: await getUserContent(userId),
+      user: user,
+      activities: activities,
+      events: events,
+      contents: mergedById.values.toList(),
     );
   }
 }

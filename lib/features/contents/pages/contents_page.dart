@@ -9,6 +9,8 @@ const _bgColor = Color(0xFFF5F7FB);
 const _borderColor = Color(0xFFE7EAF0);
 const _textMuted = Color(0xFF6B7280);
 
+enum ContentSortMode { nameAsc, nameDesc, dateAsc, dateDesc }
+
 class ContentsPage extends StatefulWidget {
   const ContentsPage({super.key});
 
@@ -20,6 +22,60 @@ class _ContentsPageState extends State<ContentsPage> {
   late final ContentsController controller;
   final GlobalKey<_ContentAssignmentSidebarState> _assignmentSidebarKey =
       GlobalKey<_ContentAssignmentSidebarState>();
+  bool _isDraggingContent = false;
+  ContentSortMode _sortMode = ContentSortMode.dateDesc;
+  bool _splitAssigned = false;
+  int _sortTick = 0;
+  Map<int, int> _previousAllContentIndexes = const {};
+  Map<int, int> _previousAssignedContentIndexes = const {};
+  Map<int, int> _previousUnassignedContentIndexes = const {};
+
+  void _setDraggingContent(bool value) {
+    if (_isDraggingContent == value) return;
+    setState(() => _isDraggingContent = value);
+  }
+
+  void _setSortMode(ContentSortMode? mode) {
+    if (mode == null || mode == _sortMode) return;
+    final before = _sortedContentsFor(_sortMode);
+    final beforeAssigned = before
+        .where((item) => item.eventId != null)
+        .toList();
+    final beforeUnassigned = before
+        .where((item) => item.eventId == null)
+        .toList();
+    setState(() {
+      _previousAllContentIndexes = _indexByContentId(before);
+      _previousAssignedContentIndexes = _indexByContentId(beforeAssigned);
+      _previousUnassignedContentIndexes = _indexByContentId(beforeUnassigned);
+      _sortMode = mode;
+      _sortTick++;
+    });
+  }
+
+  List<ContentItem> _sortedContentsFor(ContentSortMode mode) {
+    return [...controller.contents]..sort((a, b) {
+      switch (mode) {
+        case ContentSortMode.nameAsc:
+          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+        case ContentSortMode.nameDesc:
+          return b.title.toLowerCase().compareTo(a.title.toLowerCase());
+        case ContentSortMode.dateAsc:
+          return a.createdAt.compareTo(b.createdAt);
+        case ContentSortMode.dateDesc:
+          return b.createdAt.compareTo(a.createdAt);
+      }
+    });
+  }
+
+  Map<int, int> _indexByContentId(List<ContentItem> items) {
+    return {for (var i = 0; i < items.length; i++) items[i].id: i};
+  }
+
+  void _setSplitAssigned(bool value) {
+    if (_splitAssigned == value) return;
+    setState(() => _splitAssigned = value);
+  }
 
   @override
   void initState() {
@@ -127,6 +183,18 @@ class _ContentsPageState extends State<ContentsPage> {
                 _ContentsWorkspace(
                   controller: controller,
                   onAssign: _assignContent,
+                  sortMode: _sortMode,
+                  onSortChanged: _setSortMode,
+                  splitAssigned: _splitAssigned,
+                  onSplitChanged: _setSplitAssigned,
+                  sortTick: _sortTick,
+                  previousAllContentIndexes: _previousAllContentIndexes,
+                  previousAssignedContentIndexes:
+                      _previousAssignedContentIndexes,
+                  previousUnassignedContentIndexes:
+                      _previousUnassignedContentIndexes,
+                  isDragging: _isDraggingContent,
+                  onDragStateChange: _setDraggingContent,
                   onDragCursorMove: (position) {
                     _assignmentSidebarKey.currentState?.autoScrollAt(position);
                   },
@@ -217,6 +285,16 @@ class _Card extends StatelessWidget {
 class _ContentsWorkspace extends StatelessWidget {
   final ContentsController controller;
   final Future<void> Function(ContentItem item, int? eventId) onAssign;
+  final ContentSortMode sortMode;
+  final ValueChanged<ContentSortMode?> onSortChanged;
+  final bool splitAssigned;
+  final ValueChanged<bool> onSplitChanged;
+  final int sortTick;
+  final Map<int, int> previousAllContentIndexes;
+  final Map<int, int> previousAssignedContentIndexes;
+  final Map<int, int> previousUnassignedContentIndexes;
+  final bool isDragging;
+  final ValueChanged<bool> onDragStateChange;
   final ValueChanged<Offset> onDragCursorMove;
   final GlobalKey<_ContentAssignmentSidebarState> assignmentSidebarKey;
   final VoidCallback onCreate;
@@ -226,6 +304,16 @@ class _ContentsWorkspace extends StatelessWidget {
   const _ContentsWorkspace({
     required this.controller,
     required this.onAssign,
+    required this.sortMode,
+    required this.onSortChanged,
+    required this.splitAssigned,
+    required this.onSplitChanged,
+    required this.sortTick,
+    required this.previousAllContentIndexes,
+    required this.previousAssignedContentIndexes,
+    required this.previousUnassignedContentIndexes,
+    required this.isDragging,
+    required this.onDragStateChange,
     required this.onDragCursorMove,
     required this.assignmentSidebarKey,
     required this.onCreate,
@@ -243,6 +331,16 @@ class _ContentsWorkspace extends StatelessWidget {
             children: [
               _ContentsBody(
                 controller: controller,
+                sortMode: sortMode,
+                onSortChanged: onSortChanged,
+                splitAssigned: splitAssigned,
+                onSplitChanged: onSplitChanged,
+                sortTick: sortTick,
+                previousAllContentIndexes: previousAllContentIndexes,
+                previousAssignedContentIndexes: previousAssignedContentIndexes,
+                previousUnassignedContentIndexes:
+                    previousUnassignedContentIndexes,
+                onDragStateChange: onDragStateChange,
                 onDragCursorMove: onDragCursorMove,
                 onCreate: onCreate,
                 onEdit: onEdit,
@@ -253,6 +351,7 @@ class _ContentsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
+                dragActive: isDragging,
               ),
             ],
           );
@@ -264,6 +363,16 @@ class _ContentsWorkspace extends StatelessWidget {
               flex: 7,
               child: _ContentsBody(
                 controller: controller,
+                sortMode: sortMode,
+                onSortChanged: onSortChanged,
+                splitAssigned: splitAssigned,
+                onSplitChanged: onSplitChanged,
+                sortTick: sortTick,
+                previousAllContentIndexes: previousAllContentIndexes,
+                previousAssignedContentIndexes: previousAssignedContentIndexes,
+                previousUnassignedContentIndexes:
+                    previousUnassignedContentIndexes,
+                onDragStateChange: onDragStateChange,
                 onDragCursorMove: onDragCursorMove,
                 onCreate: onCreate,
                 onEdit: onEdit,
@@ -277,6 +386,7 @@ class _ContentsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
+                dragActive: isDragging,
               ),
             ),
           ],
@@ -289,11 +399,13 @@ class _ContentsWorkspace extends StatelessWidget {
 class _ContentAssignmentSidebar extends StatefulWidget {
   final ContentsController controller;
   final Future<void> Function(ContentItem item, int? eventId) onAssign;
+  final bool dragActive;
 
   const _ContentAssignmentSidebar({
     super.key,
     required this.controller,
     required this.onAssign,
+    required this.dragActive,
   });
 
   @override
@@ -315,6 +427,7 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
   }
 
   void autoScrollAt(Offset globalPosition) {
+    if (!widget.dragActive) return;
     if (!_scrollController.hasClients) return;
     final box = context.findRenderObject();
     if (box is! RenderBox) return;
@@ -347,9 +460,8 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
         padding: const EdgeInsets.all(14),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 420, maxHeight: 680),
-          child: ListView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Eventi (drop target)',
@@ -361,21 +473,29 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
                 style: TextStyle(fontSize: 12, color: _textMuted),
               ),
               const SizedBox(height: 10),
-              ...controller.events.map((event) {
-                final items = controller.contents
-                    .where((item) => item.eventId == event.id)
-                    .toList();
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _ContentDropZone(
-                    title: event.title,
-                    subtitle: 'Evento #${event.id}',
-                    icon: Icons.event_rounded,
-                    items: items,
-                    onAccept: (item) => widget.onAssign(item, event.id),
-                  ),
-                );
-              }),
+              Expanded(
+                child: ListView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    ...controller.events.map((event) {
+                      final items = controller.contents
+                          .where((item) => item.eventId == event.id)
+                          .toList();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _ContentDropZone(
+                          title: event.title,
+                          subtitle: 'Evento #${event.id}',
+                          icon: Icons.event_rounded,
+                          items: items,
+                          onAccept: (item) => widget.onAssign(item, event.id),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -513,6 +633,15 @@ class _ContentChip extends StatelessWidget {
 
 class _ContentsBody extends StatelessWidget {
   final ContentsController controller;
+  final ContentSortMode sortMode;
+  final ValueChanged<ContentSortMode?> onSortChanged;
+  final bool splitAssigned;
+  final ValueChanged<bool> onSplitChanged;
+  final int sortTick;
+  final Map<int, int> previousAllContentIndexes;
+  final Map<int, int> previousAssignedContentIndexes;
+  final Map<int, int> previousUnassignedContentIndexes;
+  final ValueChanged<bool> onDragStateChange;
   final ValueChanged<Offset> onDragCursorMove;
   final VoidCallback onCreate;
   final ValueChanged<ContentItem> onEdit;
@@ -520,6 +649,15 @@ class _ContentsBody extends StatelessWidget {
 
   const _ContentsBody({
     required this.controller,
+    required this.sortMode,
+    required this.onSortChanged,
+    required this.splitAssigned,
+    required this.onSplitChanged,
+    required this.sortTick,
+    required this.previousAllContentIndexes,
+    required this.previousAssignedContentIndexes,
+    required this.previousUnassignedContentIndexes,
+    required this.onDragStateChange,
     required this.onDragCursorMove,
     required this.onCreate,
     required this.onEdit,
@@ -582,57 +720,241 @@ class _ContentsBody extends StatelessWidget {
       );
     }
 
+    final sorted = [...controller.contents]
+      ..sort((a, b) {
+        switch (sortMode) {
+          case ContentSortMode.nameAsc:
+            return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+          case ContentSortMode.nameDesc:
+            return b.title.toLowerCase().compareTo(a.title.toLowerCase());
+          case ContentSortMode.dateAsc:
+            return a.createdAt.compareTo(b.createdAt);
+          case ContentSortMode.dateDesc:
+            return b.createdAt.compareTo(a.createdAt);
+        }
+      });
+
+    final assigned = sorted.where((item) => item.eventId != null).toList();
+    final unassigned = sorted.where((item) => item.eventId == null).toList();
+
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Contenuti globali',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-          ),
-          const SizedBox(height: 12),
-          Column(
+          Row(
             children: [
-              for (final item in controller.contents)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Draggable<ContentItem>(
-                    data: item,
-                    onDragUpdate: (details) =>
-                        onDragCursorMove(details.globalPosition),
-                    feedback: Material(
-                      color: Colors.transparent,
-                      child: SizedBox(
-                        width: 480,
-                        child: ContentListTile(
-                          content: item,
-                          onEdit: () {},
-                          onDelete: () {},
-                        ),
-                      ),
-                    ),
-                    childWhenDragging: Opacity(
-                      opacity: 0.45,
-                      child: ContentListTile(
-                        content: item,
-                        onEdit: () => onEdit(item),
-                        onDelete: () => onDelete(item),
-                      ),
-                    ),
-                    child: ContentListTile(
-                      content: item,
-                      onEdit: () => onEdit(item),
-                      onDelete: () => onDelete(item),
+              const Expanded(
+                child: Text(
+                  'Contenuti globali',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+              ),
+              SizedBox(
+                width: 210,
+                child: DropdownButtonFormField<ContentSortMode>(
+                  initialValue: sortMode,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
                     ),
                   ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: ContentSortMode.nameAsc,
+                      child: Text('Nome A-Z'),
+                    ),
+                    DropdownMenuItem(
+                      value: ContentSortMode.nameDesc,
+                      child: Text('Nome Z-A'),
+                    ),
+                    DropdownMenuItem(
+                      value: ContentSortMode.dateAsc,
+                      child: Text('Data crescente'),
+                    ),
+                    DropdownMenuItem(
+                      value: ContentSortMode.dateDesc,
+                      child: Text('Data decrescente'),
+                    ),
+                  ],
+                  onChanged: onSortChanged,
                 ),
+              ),
             ],
           ),
+          const SizedBox(height: 10),
+          SwitchListTile.adaptive(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            value: splitAssigned,
+            onChanged: onSplitChanged,
+            title: const Text('Split assegnati / non assegnati'),
+          ),
+          const SizedBox(height: 8),
+          if (!splitAssigned)
+            Column(
+              children: _buildContentCards(sorted, previousAllContentIndexes),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compactSplit = constraints.maxWidth < 900;
+                if (compactSplit) {
+                  return Column(
+                    children: [
+                      _SplitSection(title: 'Assegnati', count: assigned.length),
+                      ..._buildContentCards(
+                        assigned,
+                        previousAssignedContentIndexes,
+                      ),
+                      const SizedBox(height: 10),
+                      _SplitSection(
+                        title: 'Non assegnati',
+                        count: unassigned.length,
+                      ),
+                      ..._buildContentCards(
+                        unassigned,
+                        previousUnassignedContentIndexes,
+                      ),
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _SplitSection(
+                            title: 'Assegnati',
+                            count: assigned.length,
+                          ),
+                          ..._buildContentCards(
+                            assigned,
+                            previousAssignedContentIndexes,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _SplitSection(
+                            title: 'Non assegnati',
+                            count: unassigned.length,
+                          ),
+                          ..._buildContentCards(
+                            unassigned,
+                            previousUnassignedContentIndexes,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           if (controller.isMutating)
             const Padding(
               padding: EdgeInsets.all(12),
               child: LinearProgressIndicator(),
             ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildContentCards(
+    List<ContentItem> source,
+    Map<int, int> previousIndexes,
+  ) {
+    const itemStep = 122.0;
+    return [
+      for (var i = 0; i < source.length; i++)
+        Padding(
+          key: ValueKey('content-${source[i].id}-$sortTick'),
+          padding: const EdgeInsets.only(bottom: 12),
+          child: TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 700 + (i * 35).clamp(0, 260)),
+            tween: Tween(begin: 1, end: 0),
+            curve: Curves.easeInOutCubicEmphasized,
+            builder: (context, value, child) {
+              final previousIndex = previousIndexes[source[i].id];
+              final fromOffsetY = previousIndex == null
+                  ? 0.0
+                  : (previousIndex - i) * itemStep;
+              return Transform.translate(
+                offset: Offset(0, fromOffsetY * value),
+                child: child,
+              );
+            },
+            child: Draggable<ContentItem>(
+              data: source[i],
+              onDragStarted: () => onDragStateChange(true),
+              onDragUpdate: (details) =>
+                  onDragCursorMove(details.globalPosition),
+              onDragEnd: (_) => onDragStateChange(false),
+              onDragCompleted: () => onDragStateChange(false),
+              onDraggableCanceled: (_, _) => onDragStateChange(false),
+              feedback: Material(
+                color: Colors.transparent,
+                child: SizedBox(
+                  width: 480,
+                  child: ContentListTile(
+                    content: source[i],
+                    onEdit: () {},
+                    onDelete: () {},
+                  ),
+                ),
+              ),
+              childWhenDragging: Opacity(
+                opacity: 0.45,
+                child: ContentListTile(
+                  content: source[i],
+                  onEdit: () => onEdit(source[i]),
+                  onDelete: () => onDelete(source[i]),
+                ),
+              ),
+              child: ContentListTile(
+                content: source[i],
+                onEdit: () => onEdit(source[i]),
+                onDelete: () => onDelete(source[i]),
+              ),
+            ),
+          ),
+        ),
+    ];
+  }
+}
+
+class _SplitSection extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const _SplitSection({required this.title, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          Text('$count', style: const TextStyle(color: _textMuted)),
         ],
       ),
     );

@@ -9,6 +9,8 @@ const _bgColor = Color(0xFFF5F7FB);
 const _borderColor = Color(0xFFE7EAF0);
 const _textMuted = Color(0xFF6B7280);
 
+enum EventSortMode { nameAsc, nameDesc, dateAsc, dateDesc }
+
 class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
 
@@ -20,6 +22,60 @@ class _EventsPageState extends State<EventsPage> {
   late final EventsController controller;
   final GlobalKey<_AssignmentSidebarState> _assignmentSidebarKey =
       GlobalKey<_AssignmentSidebarState>();
+  bool _isDraggingEvent = false;
+  EventSortMode _sortMode = EventSortMode.dateAsc;
+  bool _splitAssigned = false;
+  int _sortTick = 0;
+  Map<int, int> _previousAllEventIndexes = const {};
+  Map<int, int> _previousAssignedEventIndexes = const {};
+  Map<int, int> _previousUnassignedEventIndexes = const {};
+
+  void _setDraggingEvent(bool value) {
+    if (_isDraggingEvent == value) return;
+    setState(() => _isDraggingEvent = value);
+  }
+
+  void _setSortMode(EventSortMode? mode) {
+    if (mode == null || mode == _sortMode) return;
+    final before = _sortedEventsFor(_sortMode);
+    final beforeAssigned = before
+        .where((event) => event.userId != null)
+        .toList();
+    final beforeUnassigned = before
+        .where((event) => event.userId == null)
+        .toList();
+    setState(() {
+      _previousAllEventIndexes = _indexByEventId(before);
+      _previousAssignedEventIndexes = _indexByEventId(beforeAssigned);
+      _previousUnassignedEventIndexes = _indexByEventId(beforeUnassigned);
+      _sortMode = mode;
+      _sortTick++;
+    });
+  }
+
+  List<Event> _sortedEventsFor(EventSortMode mode) {
+    return [...controller.events]..sort((a, b) {
+      switch (mode) {
+        case EventSortMode.nameAsc:
+          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+        case EventSortMode.nameDesc:
+          return b.title.toLowerCase().compareTo(a.title.toLowerCase());
+        case EventSortMode.dateAsc:
+          return a.date.compareTo(b.date);
+        case EventSortMode.dateDesc:
+          return b.date.compareTo(a.date);
+      }
+    });
+  }
+
+  Map<int, int> _indexByEventId(List<Event> events) {
+    return {for (var i = 0; i < events.length; i++) events[i].id: i};
+  }
+
+  void _setSplitAssigned(bool value) {
+    if (_splitAssigned == value) return;
+    setState(() => _splitAssigned = value);
+  }
 
   @override
   void initState() {
@@ -122,6 +178,17 @@ class _EventsPageState extends State<EventsPage> {
                 _EventsWorkspace(
                   controller: controller,
                   onAssign: _assign,
+                  sortMode: _sortMode,
+                  onSortChanged: _setSortMode,
+                  splitAssigned: _splitAssigned,
+                  onSplitChanged: _setSplitAssigned,
+                  sortTick: _sortTick,
+                  previousAllEventIndexes: _previousAllEventIndexes,
+                  previousAssignedEventIndexes: _previousAssignedEventIndexes,
+                  previousUnassignedEventIndexes:
+                      _previousUnassignedEventIndexes,
+                  isDragging: _isDraggingEvent,
+                  onDragStateChange: _setDraggingEvent,
                   onDragCursorMove: (position) {
                     _assignmentSidebarKey.currentState?.autoScrollAt(position);
                   },
@@ -212,6 +279,16 @@ class _Card extends StatelessWidget {
 class _EventsWorkspace extends StatelessWidget {
   final EventsController controller;
   final Future<void> Function(Event event, int? userId) onAssign;
+  final EventSortMode sortMode;
+  final ValueChanged<EventSortMode?> onSortChanged;
+  final bool splitAssigned;
+  final ValueChanged<bool> onSplitChanged;
+  final int sortTick;
+  final Map<int, int> previousAllEventIndexes;
+  final Map<int, int> previousAssignedEventIndexes;
+  final Map<int, int> previousUnassignedEventIndexes;
+  final bool isDragging;
+  final ValueChanged<bool> onDragStateChange;
   final ValueChanged<Offset> onDragCursorMove;
   final GlobalKey<_AssignmentSidebarState> assignmentSidebarKey;
   final ValueChanged<Event> onEdit;
@@ -221,6 +298,16 @@ class _EventsWorkspace extends StatelessWidget {
   const _EventsWorkspace({
     required this.controller,
     required this.onAssign,
+    required this.sortMode,
+    required this.onSortChanged,
+    required this.splitAssigned,
+    required this.onSplitChanged,
+    required this.sortTick,
+    required this.previousAllEventIndexes,
+    required this.previousAssignedEventIndexes,
+    required this.previousUnassignedEventIndexes,
+    required this.isDragging,
+    required this.onDragStateChange,
     required this.onDragCursorMove,
     required this.assignmentSidebarKey,
     required this.onEdit,
@@ -238,6 +325,15 @@ class _EventsWorkspace extends StatelessWidget {
             children: [
               _EventsBody(
                 controller: controller,
+                sortMode: sortMode,
+                onSortChanged: onSortChanged,
+                splitAssigned: splitAssigned,
+                onSplitChanged: onSplitChanged,
+                sortTick: sortTick,
+                previousAllEventIndexes: previousAllEventIndexes,
+                previousAssignedEventIndexes: previousAssignedEventIndexes,
+                previousUnassignedEventIndexes: previousUnassignedEventIndexes,
+                onDragStateChange: onDragStateChange,
                 onDragCursorMove: onDragCursorMove,
                 onEdit: onEdit,
                 onDelete: onDelete,
@@ -248,6 +344,7 @@ class _EventsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
+                dragActive: isDragging,
               ),
             ],
           );
@@ -260,6 +357,15 @@ class _EventsWorkspace extends StatelessWidget {
               flex: 7,
               child: _EventsBody(
                 controller: controller,
+                sortMode: sortMode,
+                onSortChanged: onSortChanged,
+                splitAssigned: splitAssigned,
+                onSplitChanged: onSplitChanged,
+                sortTick: sortTick,
+                previousAllEventIndexes: previousAllEventIndexes,
+                previousAssignedEventIndexes: previousAssignedEventIndexes,
+                previousUnassignedEventIndexes: previousUnassignedEventIndexes,
+                onDragStateChange: onDragStateChange,
                 onDragCursorMove: onDragCursorMove,
                 onEdit: onEdit,
                 onDelete: onDelete,
@@ -273,6 +379,7 @@ class _EventsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
+                dragActive: isDragging,
               ),
             ),
           ],
@@ -285,11 +392,13 @@ class _EventsWorkspace extends StatelessWidget {
 class _AssignmentSidebar extends StatefulWidget {
   final EventsController controller;
   final Future<void> Function(Event event, int? userId) onAssign;
+  final bool dragActive;
 
   const _AssignmentSidebar({
     super.key,
     required this.controller,
     required this.onAssign,
+    required this.dragActive,
   });
 
   @override
@@ -310,6 +419,7 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
   }
 
   void autoScrollAt(Offset globalPosition) {
+    if (!widget.dragActive) return;
     if (!_scrollController.hasClients) return;
     final box = context.findRenderObject();
     if (box is! RenderBox) return;
@@ -342,9 +452,8 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
         padding: const EdgeInsets.all(14),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 420, maxHeight: 680),
-          child: ListView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Utenti (drop target)',
@@ -356,21 +465,29 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
                 style: TextStyle(fontSize: 12, color: _textMuted),
               ),
               const SizedBox(height: 10),
-              ...controller.users.map((user) {
-                final userEvents = controller.events
-                    .where((event) => event.userId == user.id)
-                    .toList();
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _EventDropZone(
-                    title: '${user.name} ${user.lastName}',
-                    subtitle: user.email,
-                    icon: Icons.person_rounded,
-                    events: userEvents,
-                    onAccept: (event) => widget.onAssign(event, user.id),
-                  ),
-                );
-              }),
+              Expanded(
+                child: ListView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    ...controller.users.map((user) {
+                      final userEvents = controller.events
+                          .where((event) => event.userId == user.id)
+                          .toList();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _EventDropZone(
+                          title: '${user.name} ${user.lastName}',
+                          subtitle: user.email,
+                          icon: Icons.person_rounded,
+                          events: userEvents,
+                          onAccept: (event) => widget.onAssign(event, user.id),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -508,6 +625,15 @@ class _EventChip extends StatelessWidget {
 
 class _EventsBody extends StatelessWidget {
   final EventsController controller;
+  final EventSortMode sortMode;
+  final ValueChanged<EventSortMode?> onSortChanged;
+  final bool splitAssigned;
+  final ValueChanged<bool> onSplitChanged;
+  final int sortTick;
+  final Map<int, int> previousAllEventIndexes;
+  final Map<int, int> previousAssignedEventIndexes;
+  final Map<int, int> previousUnassignedEventIndexes;
+  final ValueChanged<bool> onDragStateChange;
   final ValueChanged<Offset> onDragCursorMove;
   final ValueChanged<Event> onEdit;
   final ValueChanged<Event> onDelete;
@@ -515,6 +641,15 @@ class _EventsBody extends StatelessWidget {
 
   const _EventsBody({
     required this.controller,
+    required this.sortMode,
+    required this.onSortChanged,
+    required this.splitAssigned,
+    required this.onSplitChanged,
+    required this.sortTick,
+    required this.previousAllEventIndexes,
+    required this.previousAssignedEventIndexes,
+    required this.previousUnassignedEventIndexes,
+    required this.onDragStateChange,
     required this.onDragCursorMove,
     required this.onEdit,
     required this.onDelete,
@@ -577,57 +712,239 @@ class _EventsBody extends StatelessWidget {
       );
     }
 
+    final sorted = [...controller.events]
+      ..sort((a, b) {
+        switch (sortMode) {
+          case EventSortMode.nameAsc:
+            return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+          case EventSortMode.nameDesc:
+            return b.title.toLowerCase().compareTo(a.title.toLowerCase());
+          case EventSortMode.dateAsc:
+            return a.date.compareTo(b.date);
+          case EventSortMode.dateDesc:
+            return b.date.compareTo(a.date);
+        }
+      });
+
+    final assigned = sorted.where((e) => e.userId != null).toList();
+    final unassigned = sorted.where((e) => e.userId == null).toList();
+
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Eventi globali',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-          ),
-          const SizedBox(height: 12),
-          Column(
+          Row(
             children: [
-              for (final event in controller.events)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Draggable<Event>(
-                    data: event,
-                    onDragUpdate: (details) =>
-                        onDragCursorMove(details.globalPosition),
-                    feedback: Material(
-                      color: Colors.transparent,
-                      child: SizedBox(
-                        width: 480,
-                        child: EventListTile(
-                          event: event,
-                          onEdit: () {},
-                          onDelete: () {},
-                        ),
-                      ),
-                    ),
-                    childWhenDragging: Opacity(
-                      opacity: 0.45,
-                      child: EventListTile(
-                        event: event,
-                        onEdit: () => onEdit(event),
-                        onDelete: () => onDelete(event),
-                      ),
-                    ),
-                    child: EventListTile(
-                      event: event,
-                      onEdit: () => onEdit(event),
-                      onDelete: () => onDelete(event),
+              const Expanded(
+                child: Text(
+                  'Eventi globali',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+              ),
+              SizedBox(
+                width: 210,
+                child: DropdownButtonFormField<EventSortMode>(
+                  initialValue: sortMode,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
                     ),
                   ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: EventSortMode.nameAsc,
+                      child: Text('Nome A-Z'),
+                    ),
+                    DropdownMenuItem(
+                      value: EventSortMode.nameDesc,
+                      child: Text('Nome Z-A'),
+                    ),
+                    DropdownMenuItem(
+                      value: EventSortMode.dateAsc,
+                      child: Text('Data crescente'),
+                    ),
+                    DropdownMenuItem(
+                      value: EventSortMode.dateDesc,
+                      child: Text('Data decrescente'),
+                    ),
+                  ],
+                  onChanged: onSortChanged,
                 ),
+              ),
             ],
           ),
+          const SizedBox(height: 10),
+          SwitchListTile.adaptive(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            value: splitAssigned,
+            onChanged: onSplitChanged,
+            title: const Text('Split assegnati / non assegnati'),
+          ),
+          const SizedBox(height: 8),
+          if (!splitAssigned)
+            Column(children: _buildEventCards(sorted, previousAllEventIndexes))
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compactSplit = constraints.maxWidth < 900;
+                if (compactSplit) {
+                  return Column(
+                    children: [
+                      _SplitSection(title: 'Assegnati', count: assigned.length),
+                      ..._buildEventCards(
+                        assigned,
+                        previousAssignedEventIndexes,
+                      ),
+                      const SizedBox(height: 10),
+                      _SplitSection(
+                        title: 'Non assegnati',
+                        count: unassigned.length,
+                      ),
+                      ..._buildEventCards(
+                        unassigned,
+                        previousUnassignedEventIndexes,
+                      ),
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _SplitSection(
+                            title: 'Assegnati',
+                            count: assigned.length,
+                          ),
+                          ..._buildEventCards(
+                            assigned,
+                            previousAssignedEventIndexes,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _SplitSection(
+                            title: 'Non assegnati',
+                            count: unassigned.length,
+                          ),
+                          ..._buildEventCards(
+                            unassigned,
+                            previousUnassignedEventIndexes,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           if (controller.isMutating)
             const Padding(
               padding: EdgeInsets.all(12),
               child: LinearProgressIndicator(),
             ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildEventCards(
+    List<Event> source,
+    Map<int, int> previousIndexes,
+  ) {
+    const itemStep = 122.0;
+    return [
+      for (var i = 0; i < source.length; i++)
+        Padding(
+          key: ValueKey('event-${source[i].id}-$sortTick'),
+          padding: const EdgeInsets.only(bottom: 12),
+          child: TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 700 + (i * 35).clamp(0, 260)),
+            tween: Tween(begin: 1, end: 0),
+            curve: Curves.easeInOutCubicEmphasized,
+            builder: (context, value, child) {
+              final previousIndex = previousIndexes[source[i].id];
+              final fromOffsetY = previousIndex == null
+                  ? 0.0
+                  : (previousIndex - i) * itemStep;
+              return Transform.translate(
+                offset: Offset(0, fromOffsetY * value),
+                child: child,
+              );
+            },
+            child: Draggable<Event>(
+              data: source[i],
+              onDragStarted: () => onDragStateChange(true),
+              onDragUpdate: (details) =>
+                  onDragCursorMove(details.globalPosition),
+              onDragEnd: (_) => onDragStateChange(false),
+              onDragCompleted: () => onDragStateChange(false),
+              onDraggableCanceled: (_, _) => onDragStateChange(false),
+              feedback: Material(
+                color: Colors.transparent,
+                child: SizedBox(
+                  width: 480,
+                  child: EventListTile(
+                    event: source[i],
+                    onEdit: () {},
+                    onDelete: () {},
+                  ),
+                ),
+              ),
+              childWhenDragging: Opacity(
+                opacity: 0.45,
+                child: EventListTile(
+                  event: source[i],
+                  onEdit: () => onEdit(source[i]),
+                  onDelete: () => onDelete(source[i]),
+                ),
+              ),
+              child: EventListTile(
+                event: source[i],
+                onEdit: () => onEdit(source[i]),
+                onDelete: () => onDelete(source[i]),
+              ),
+            ),
+          ),
+        ),
+    ];
+  }
+}
+
+class _SplitSection extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const _SplitSection({required this.title, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          Text('$count', style: const TextStyle(color: _textMuted)),
         ],
       ),
     );

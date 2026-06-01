@@ -4,7 +4,6 @@ import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
 import 'package:mediahub/features/users/widgets/user_detail/shimmer.dart';
 import 'package:mediahub/features/users/widgets/user_detail/tabs/activity_tab.dart';
-import 'package:mediahub/features/users/widgets/user_detail/tabs/content_tab.dart';
 import 'package:mediahub/features/users/widgets/user_detail/tabs/events_tab.dart';
 import 'package:mediahub/features/users/widgets/user_detail/tabs/overview_tab.dart';
 
@@ -184,8 +183,6 @@ class _UserDetailSkeleton extends StatelessWidget {
                   ),
                   child: Row(
                     children: const [
-                      Expanded(child: ShimmerBar(width: double.infinity)),
-                      SizedBox(width: 8),
                       Expanded(child: ShimmerBar(width: double.infinity)),
                       SizedBox(width: 8),
                       Expanded(child: ShimmerBar(width: double.infinity)),
@@ -372,7 +369,7 @@ class _UserTabs extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: DefaultTabController(
-          length: 4,
+          length: 3,
           child: Column(
             children: [
               Container(
@@ -400,7 +397,6 @@ class _UserTabs extends StatelessWidget {
                       Tab(text: "Overview"),
                       Tab(text: "Activity"),
                       Tab(text: "Events"),
-                      Tab(text: "Content"),
                     ],
                   ),
                 ),
@@ -412,7 +408,6 @@ class _UserTabs extends StatelessWidget {
                     OverviewTab(data: data),
                     ActivityTab(data: data),
                     EventsTab(data: data),
-                    ContentTab(data: data),
                   ],
                 ),
               ),
