@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import 'package:mediahub/features/contents/pages/contents_page.dart';
 import 'package:mediahub/layout/main_layout.dart';
 import 'package:mediahub/features/dashboard/pages/dashboard_page.dart';
 import 'package:mediahub/features/events/pages/events_page.dart';
@@ -9,7 +8,6 @@ class AppRoutes {
   static const dashboard = '/';
   static const users = '/users';
   static const events = '/events';
-  static const contents = '/contents';
   static const profile = '/profile';
 }
 
@@ -31,10 +29,6 @@ final router = GoRouter(
         GoRoute(
           path: AppRoutes.events,
           builder: (context, state) => const EventsPage(),
-        ),
-        GoRoute(
-          path: AppRoutes.contents,
-          builder: (context, state) => const ContentsPage(),
         ),
       ],
     ),

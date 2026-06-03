@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 
+String _contentStatusLabel(String status) {
+  switch (status) {
+    case 'published':
+      return 'Pubblicato';
+    case 'archived':
+      return 'Archiviato';
+    case 'draft':
+    default:
+      return 'Bozza';
+  }
+}
+
 class ContentListTile extends StatelessWidget {
   final ContentItem content;
   final VoidCallback onEdit;
@@ -55,13 +67,23 @@ class ContentListTile extends StatelessWidget {
                     fontSize: 13,
                   ),
                 ),
+                if (content.type == 'post' &&
+                    (content.postBody?.trim().isNotEmpty ?? false)) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    content.postBody!.trim(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: [
                     _Badge(
-                      label: content.status,
+                      label: _contentStatusLabel(content.status),
                       background: const Color(
                         0xFF4F46E5,
                       ).withValues(alpha: 0.12),
@@ -82,6 +104,24 @@ class ContentListTile extends StatelessWidget {
                           0xFFF59E0B,
                         ).withValues(alpha: 0.15),
                         foreground: const Color(0xFFB45309),
+                      ),
+                    if (content.mediaUrls.isNotEmpty)
+                      _Badge(
+                        label: content.mediaUrls.length == 1
+                            ? '1 media'
+                            : '${content.mediaUrls.length} media',
+                        background: const Color(
+                          0xFF0EA5E9,
+                        ).withValues(alpha: 0.15),
+                        foreground: const Color(0xFF0369A1),
+                      ),
+                    if (content.tags.isNotEmpty)
+                      _Badge(
+                        label: '#${content.tags.take(2).join(' #')}',
+                        background: const Color(
+                          0xFF10B981,
+                        ).withValues(alpha: 0.15),
+                        foreground: const Color(0xFF047857),
                       ),
                   ],
                 ),

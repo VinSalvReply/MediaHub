@@ -33,6 +33,7 @@ export interface UserEvent {
   date: string;
   attendees: number;
   status: EventStatus;
+  contents?: ContentItem[];
 }
 
 export interface GlobalEvent extends UserEvent {
@@ -45,6 +46,11 @@ export interface ContentItem {
   type: ContentType;
   status: ContentStatus;
   created_at: string;
+  media_urls?: string[];
+  post_body?: string | null;
+  cta_label?: string | null;
+  cta_url?: string | null;
+  tags?: string[];
 }
 
 export interface GlobalContentItem extends ContentItem {

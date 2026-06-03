@@ -126,13 +126,14 @@ class _EventsPageState extends State<EventsPage> {
       builder: (_) => const EventFormDialog(),
     );
     if (result == null) return;
-    await controller.addEvent(
+    final ok = await controller.addEvent(
       title: result.title,
       date: result.date,
       attendees: result.attendees,
       status: result.status,
+      contents: result.contents,
     );
-    _toast('Evento creato');
+    _toast(ok ? 'Evento creato' : (controller.error ?? 'Salvataggio fallito'));
   }
 
   Future<void> _openEditDialog(Event event) async {
@@ -141,27 +142,36 @@ class _EventsPageState extends State<EventsPage> {
       builder: (_) => EventFormDialog(initial: event),
     );
     if (result == null) return;
-    await controller.editEvent(
+    final ok = await controller.editEvent(
       original: event,
       title: result.title,
       date: result.date,
       attendees: result.attendees,
       status: result.status,
+      contents: result.contents,
     );
-    _toast('Evento aggiornato');
+    _toast(
+      ok ? 'Evento aggiornato' : (controller.error ?? 'Aggiornamento fallito'),
+    );
   }
 
   Future<void> _assign(Event event, int? userId) async {
     if (userId == null) return;
-    await controller.assignEventToUser(event, userId);
+    final ok = await controller.assignEventToUser(event, userId);
     if (!mounted) return;
-    _toast('Evento assegnato all\'utente');
+    _toast(
+      ok
+          ? 'Evento assegnato all\'utente'
+          : (controller.error ?? 'Assegnazione fallita'),
+    );
   }
 
   Future<void> _unassign(Event event) async {
-    await controller.assignEventToUser(event, null);
+    final ok = await controller.assignEventToUser(event, null);
     if (!mounted) return;
-    _toast('Evento disassegnato');
+    _toast(
+      ok ? 'Evento disassegnato' : (controller.error ?? 'Operazione fallita'),
+    );
   }
 
   Future<void> _confirmDelete(Event event) async {
@@ -183,8 +193,10 @@ class _EventsPageState extends State<EventsPage> {
       ),
     );
     if (confirm != true) return;
-    await controller.removeEvent(event);
-    _toast('Evento eliminato');
+    final ok = await controller.removeEvent(event);
+    _toast(
+      ok ? 'Evento eliminato' : (controller.error ?? 'Eliminazione fallita'),
+    );
   }
 
   void _toast(String message) {

@@ -11,6 +11,11 @@ extension ContentItemMapper on ContentItemDto {
       createdAt: DateTime.parse(createdAt),
       userId: userId,
       eventId: eventId,
+      mediaUrls: mediaUrls,
+      postBody: postBody,
+      callToActionLabel: callToActionLabel,
+      callToActionUrl: callToActionUrl,
+      tags: tags,
     );
   }
 }

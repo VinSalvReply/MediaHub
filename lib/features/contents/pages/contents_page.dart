@@ -123,16 +123,18 @@ class _ContentsPageState extends State<ContentsPage> {
   Future<void> _openCreateDialog() async {
     final result = await showDialog<ContentFormResult>(
       context: context,
-      builder: (_) => const ContentFormDialog(
-        enableUserLink: false,
-        enableEventLink: false,
-      ),
+      builder: (_) => const ContentFormDialog(),
     );
     if (result == null) return;
     await controller.addContent(
       title: result.title,
       type: result.type,
       status: result.status,
+      mediaUrls: result.mediaUrls,
+      postBody: result.postBody,
+      callToActionLabel: result.callToActionLabel,
+      callToActionUrl: result.callToActionUrl,
+      tags: result.tags,
     );
     _toast('Contenuto creato');
   }
@@ -140,11 +142,7 @@ class _ContentsPageState extends State<ContentsPage> {
   Future<void> _openEditDialog(ContentItem item) async {
     final result = await showDialog<ContentFormResult>(
       context: context,
-      builder: (_) => ContentFormDialog(
-        initial: item,
-        enableUserLink: false,
-        enableEventLink: false,
-      ),
+      builder: (_) => ContentFormDialog(initial: item),
     );
     if (result == null) return;
     await controller.editContent(
@@ -152,6 +150,11 @@ class _ContentsPageState extends State<ContentsPage> {
       title: result.title,
       type: result.type,
       status: result.status,
+      mediaUrls: result.mediaUrls,
+      postBody: result.postBody,
+      callToActionLabel: result.callToActionLabel,
+      callToActionUrl: result.callToActionUrl,
+      tags: result.tags,
     );
     _toast('Contenuto aggiornato');
   }
@@ -270,7 +273,7 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Contents',
+                'Contenuti',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 6),
@@ -540,7 +543,7 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Eventi (drop target)',
+                'Eventi (area di rilascio)',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
               ),
               const SizedBox(height: 8),
@@ -904,7 +907,7 @@ class _ContentsBody extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Contenuti globali',
+                  'Contenuti',
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                 ),
               ),

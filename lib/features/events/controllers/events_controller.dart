@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
+import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
 import 'package:mediahub/features/users/models/user.dart';
 
@@ -46,13 +47,14 @@ class EventsController extends ChangeNotifier {
     }
   }
 
-  Future<void> addEvent({
+  Future<bool> addEvent({
     required String title,
     required DateTime date,
     required int attendees,
     required EventStatus status,
+    List<ContentItem> contents = const [],
   }) async {
-    await _mutate(() async {
+    return _mutate(() async {
       await _repository.createGlobalEvent(
         Event(
           id: 0,
@@ -61,19 +63,21 @@ class EventsController extends ChangeNotifier {
           attendees: attendees,
           status: status,
           userId: null,
+          contents: contents,
         ),
       );
     });
   }
 
-  Future<void> editEvent({
+  Future<bool> editEvent({
     required Event original,
     required String title,
     required DateTime date,
     required int attendees,
     required EventStatus status,
+    List<ContentItem> contents = const [],
   }) async {
-    await _mutate(() async {
+    return _mutate(() async {
       await _repository.updateGlobalEvent(
         Event(
           id: original.id,
@@ -82,13 +86,14 @@ class EventsController extends ChangeNotifier {
           attendees: attendees,
           status: status,
           userId: original.userId,
+          contents: contents,
         ),
       );
     });
   }
 
-  Future<void> assignEventToUser(Event event, int? userId) async {
-    await _mutate(() async {
+  Future<bool> assignEventToUser(Event event, int? userId) async {
+    return _mutate(() async {
       await _repository.updateGlobalEvent(
         Event(
           id: event.id,
@@ -97,26 +102,29 @@ class EventsController extends ChangeNotifier {
           attendees: event.attendees,
           status: event.status,
           userId: userId,
+          contents: event.contents,
         ),
       );
     });
   }
 
-  Future<void> removeEvent(Event event) async {
-    await _mutate(() async {
+  Future<bool> removeEvent(Event event) async {
+    return _mutate(() async {
       await _repository.deleteGlobalEvent(event.id);
     });
   }
 
-  Future<void> _mutate(Future<void> Function() action) async {
+  Future<bool> _mutate(Future<void> Function() action) async {
     try {
       isMutating = true;
       notifyListeners();
       await action();
       await loadEvents();
+      return true;
     } catch (e) {
       error = 'Operazione fallita';
       notifyListeners();
+      return false;
     } finally {
       isMutating = false;
       notifyListeners();

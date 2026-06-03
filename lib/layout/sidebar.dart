@@ -55,13 +55,6 @@ class Sidebar extends StatelessWidget {
             ),
 
             _SidebarTile(
-              icon: Icons.layers_rounded,
-              label: 'Contents',
-              selected: location == AppRoutes.contents,
-              onTap: () => context.go(AppRoutes.contents),
-            ),
-
-            _SidebarTile(
               icon: Icons.person_rounded,
               label: 'Profile',
               selected: location == AppRoutes.profile,

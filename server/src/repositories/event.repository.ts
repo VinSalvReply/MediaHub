@@ -1,6 +1,6 @@
 import { nextId } from "../db.js";
 import { store } from "../store.js";
-import type { GlobalEvent, UserEvent } from "../types.js";
+import type { ContentItem, GlobalEvent, UserEvent } from "../types.js";
 
 export type EventCreateInput = Partial<Omit<UserEvent, "id">>;
 export type EventUpdateInput = Partial<Omit<UserEvent, "id">>;
@@ -8,6 +8,21 @@ export type GlobalEventCreateInput = Partial<Omit<GlobalEvent, "id">>;
 export type GlobalEventUpdateInput = Partial<Omit<GlobalEvent, "id">>;
 
 export const eventRepository = {
+  normalizeContents(inputContents: ContentItem[] | undefined): ContentItem[] {
+    return (inputContents ?? []).map((content, index) => ({
+      id: content.id ?? index + 1,
+      title: content.title ?? "Contenuto senza titolo",
+      type: content.type ?? "post",
+      status: content.status ?? "draft",
+      created_at: content.created_at ?? new Date().toISOString(),
+      media_urls: content.media_urls ?? [],
+      post_body: content.post_body ?? null,
+      cta_label: content.cta_label ?? null,
+      cta_url: content.cta_url ?? null,
+      tags: content.tags ?? [],
+    }));
+  },
+
   list(userId: number): UserEvent[] {
     return store.data.events[userId] ?? [];
   },
@@ -20,6 +35,7 @@ export const eventRepository = {
       date: input.date ?? new Date().toISOString(),
       attendees: input.attendees ?? 0,
       status: input.status ?? "upcoming",
+      contents: eventRepository.normalizeContents(input.contents),
     };
     list.push(event);
     store.persist();
@@ -65,6 +81,7 @@ export const eventRepository = {
       attendees: input.attendees ?? 0,
       status: input.status ?? "upcoming",
       user_id: input.user_id ?? null,
+      contents: eventRepository.normalizeContents(input.contents),
     };
     store.data.global_events.push(event);
     store.persist();
@@ -90,9 +107,6 @@ export const eventRepository = {
       (e) => e.id !== eventId,
     );
     if (store.data.global_events.length === before) return false;
-    store.data.global_contents = store.data.global_contents.map((item) =>
-      item.event_id === eventId ? { ...item, event_id: null } : item,
-    );
     store.persist();
     return true;
   },

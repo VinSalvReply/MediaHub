@@ -53,6 +53,11 @@ class ContentsController extends ChangeNotifier {
     required String title,
     required String type,
     required String status,
+    List<String> mediaUrls = const [],
+    String? postBody,
+    String? callToActionLabel,
+    String? callToActionUrl,
+    List<String> tags = const [],
   }) async {
     await _mutate(() async {
       await _repository.createGlobalContent(
@@ -64,6 +69,11 @@ class ContentsController extends ChangeNotifier {
           createdAt: DateTime.now(),
           userId: null,
           eventId: null,
+          mediaUrls: mediaUrls,
+          postBody: postBody,
+          callToActionLabel: callToActionLabel,
+          callToActionUrl: callToActionUrl,
+          tags: tags,
         ),
       );
     });
@@ -74,6 +84,11 @@ class ContentsController extends ChangeNotifier {
     required String title,
     required String type,
     required String status,
+    List<String> mediaUrls = const [],
+    String? postBody,
+    String? callToActionLabel,
+    String? callToActionUrl,
+    List<String> tags = const [],
   }) async {
     await _mutate(() async {
       await _repository.updateGlobalContent(
@@ -85,6 +100,11 @@ class ContentsController extends ChangeNotifier {
           createdAt: original.createdAt,
           userId: original.userId,
           eventId: original.eventId,
+          mediaUrls: mediaUrls,
+          postBody: postBody,
+          callToActionLabel: callToActionLabel,
+          callToActionUrl: callToActionUrl,
+          tags: tags,
         ),
       );
     });
@@ -101,6 +121,11 @@ class ContentsController extends ChangeNotifier {
           createdAt: item.createdAt,
           userId: item.userId,
           eventId: eventId,
+          mediaUrls: item.mediaUrls,
+          postBody: item.postBody,
+          callToActionLabel: item.callToActionLabel,
+          callToActionUrl: item.callToActionUrl,
+          tags: item.tags,
         ),
       );
     });

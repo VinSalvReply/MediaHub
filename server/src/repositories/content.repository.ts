@@ -20,6 +20,11 @@ export const contentRepository = {
       type: input.type ?? "post",
       status: input.status ?? "draft",
       created_at: input.created_at ?? new Date().toISOString(),
+      media_urls: input.media_urls ?? [],
+      post_body: input.post_body ?? null,
+      cta_label: input.cta_label ?? null,
+      cta_url: input.cta_url ?? null,
+      tags: input.tags ?? [],
     };
     list.push(item);
     store.persist();
@@ -74,6 +79,11 @@ export const contentRepository = {
       created_at: input.created_at ?? new Date().toISOString(),
       user_id: input.user_id ?? null,
       event_id: input.event_id ?? null,
+      media_urls: input.media_urls ?? [],
+      post_body: input.post_body ?? null,
+      cta_label: input.cta_label ?? null,
+      cta_url: input.cta_url ?? null,
+      tags: input.tags ?? [],
     };
     store.data.global_contents.push(item);
     store.persist();

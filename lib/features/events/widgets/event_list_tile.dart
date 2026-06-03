@@ -63,6 +63,55 @@ class EventListTile extends StatelessWidget {
                     fontSize: 13,
                   ),
                 ),
+                if (event.contents.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFFEC4899,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          event.contents.length == 1
+                              ? '1 contenuto'
+                              : '${event.contents.length} contenuti',
+                          style: const TextStyle(
+                            color: Color(0xFFBE185D),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      ...event.contents
+                          .take(2)
+                          .map(
+                            (content) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                content.title,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                    ],
+                  ),
+                ],
                 if (event.userId != null) ...[
                   const SizedBox(height: 6),
                   Container(

@@ -64,7 +64,7 @@ class EventsTab extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, i) {
         final e = data.events[i];
-        final linked = data.contents.where((c) => c.eventId == e.id).toList();
+        final linked = e.contents;
 
         return TweenAnimationBuilder<double>(
           duration: Duration(milliseconds: 220 + i * 50),

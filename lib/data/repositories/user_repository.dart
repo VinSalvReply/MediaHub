@@ -84,6 +84,7 @@ class UserRepository {
     'attendees': event.attendees,
     'status': event.status.name,
     'user_id': event.userId,
+    'contents': event.contents.map(_contentToJson).toList(),
   };
 
   Future<List<ContentItem>> getUserContent(int userId) async {
@@ -130,32 +131,43 @@ class UserRepository {
     'created_at': content.createdAt.toIso8601String(),
     'user_id': content.userId,
     'event_id': content.eventId,
+    'media_urls': content.mediaUrls,
+    'post_body': content.postBody,
+    'cta_label': content.callToActionLabel,
+    'cta_url': content.callToActionUrl,
+    'tags': content.tags,
   };
 
   Future<UserDetailData> getUserDetail(int userId) async {
     final user = await getUser(userId);
     final activities = await getUserActivity(userId);
     final events = await getEvents(userId);
-    final userContents = await getUserContent(userId);
-
-    // Include contents linked to the user's events even when they are not
-    // directly linked to the user.
-    final allContents = await getGlobalContents();
-    final eventIds = events.map((e) => e.id).toSet();
-    final eventContents = allContents
-        .where((c) => c.eventId != null && eventIds.contains(c.eventId))
+    final eventContents = events
+        .expand(
+          (event) => event.contents.map(
+            (content) => ContentItem(
+              id: content.id,
+              title: content.title,
+              type: content.type,
+              status: content.status,
+              createdAt: content.createdAt,
+              userId: userId,
+              eventId: event.id,
+              mediaUrls: content.mediaUrls,
+              postBody: content.postBody,
+              callToActionLabel: content.callToActionLabel,
+              callToActionUrl: content.callToActionUrl,
+              tags: content.tags,
+            ),
+          ),
+        )
         .toList();
-
-    final mergedById = <int, ContentItem>{
-      for (final c in userContents) c.id: c,
-      for (final c in eventContents) c.id: c,
-    };
 
     return UserDetailData(
       user: user,
       activities: activities,
       events: events,
-      contents: mergedById.values.toList(),
+      contents: eventContents,
     );
   }
 }
