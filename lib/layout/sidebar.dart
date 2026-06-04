@@ -138,25 +138,27 @@ class _SidebarTileState extends State<_SidebarTile> {
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: ListTile(
-          dense: true,
-          leading: Icon(widget.icon, color: fg),
-          title: Text(
-            widget.label,
-            style: TextStyle(
-              color: fg,
-              fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-            ),
+      child: RepaintBoundary(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(16),
           ),
-          onTap: widget.onTap,
+          child: ListTile(
+            dense: true,
+            leading: Icon(widget.icon, color: fg),
+            title: Text(
+              widget.label,
+              style: TextStyle(
+                color: fg,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+            onTap: widget.onTap,
+          ),
         ),
       ),
     );
@@ -198,80 +200,82 @@ class _SidebarFooterState extends State<_SidebarFooter> {
   Widget build(BuildContext context) {
     final accent = const Color(0xFF4F46E5);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: hovered ? Colors.white : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: hovered
-            ? const [
-                BoxShadow(
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                  color: Color(0x12000000),
-                ),
-              ]
-            : const [],
-      ),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => hovered = true),
-        onExit: (_) => setState(() => hovered = false),
-        cursor: SystemMouseCursors.click,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: _openProfilePopup,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Hero(
-                  tag: 'sidebar-profile-avatar',
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: accent.withValues(alpha: 0.12),
-                    child: const Text(
-                      'A',
-                      style: TextStyle(
-                        color: Color(0xFF4F46E5),
-                        fontWeight: FontWeight.w800,
+    return RepaintBoundary(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: hovered ? Colors.white : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE7EAF0)),
+          boxShadow: hovered
+              ? const [
+                  BoxShadow(
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                    color: Color(0x12000000),
+                  ),
+                ]
+              : const [],
+        ),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => hovered = true),
+          onExit: (_) => setState(() => hovered = false),
+          cursor: SystemMouseCursors.click,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: _openProfilePopup,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Hero(
+                    tag: 'sidebar-profile-avatar',
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: accent.withValues(alpha: 0.12),
+                      child: const Text(
+                        'A',
+                        style: TextStyle(
+                          color: Color(0xFF4F46E5),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Admin user',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        'Profilo e impostazioni',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Admin user',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Profilo e impostazioni',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                AnimatedSlide(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  offset: hovered ? const Offset(0.08, 0) : Offset.zero,
-                  child: Icon(
-                    Icons.open_in_new_rounded,
-                    size: 18,
-                    color: hovered ? accent : const Color(0xFF6B7280),
+                  AnimatedSlide(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    offset: hovered ? const Offset(0.08, 0) : Offset.zero,
+                    child: Icon(
+                      Icons.open_in_new_rounded,
+                      size: 18,
+                      color: hovered ? accent : const Color(0xFF6B7280),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
