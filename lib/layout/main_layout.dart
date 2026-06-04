@@ -8,6 +8,8 @@ class MainLayout extends StatelessWidget {
 
   const MainLayout({super.key, required this.child});
 
+  static const _mobileBreakpoint = 768.0;
+
   void _showMobileMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -50,7 +52,7 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 768;
+        final isMobile = constraints.maxWidth < _mobileBreakpoint;
 
         return Scaffold(
           body: Row(
