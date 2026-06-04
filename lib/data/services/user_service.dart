@@ -6,13 +6,35 @@ import 'package:mediahub/data/services/api_client.dart';
 /// e i mapper esistenti continuano a funzionare senza modifiche.
 class UserService {
   final ApiClient _api;
+  final Map<String, _CacheEntry> _cache = {};
+  static const Duration _cacheDuration = Duration(minutes: 5);
 
   UserService({ApiClient? api}) : _api = api ?? ApiClient();
+
+  void _cacheResult(String key, dynamic value) {
+    _cache[key] = _CacheEntry(value, DateTime.now());
+  }
+
+  dynamic _getCached(String key) {
+    final entry = _cache[key];
+    if (entry == null) return null;
+    if (DateTime.now().difference(entry.timestamp) > _cacheDuration) {
+      _cache.remove(key);
+      return null;
+    }
+    return entry.value;
+  }
+
+  void clearCache() => _cache.clear();
 
   // ================= USERS =================
 
   Future<List<Map<String, dynamic>>> getUsers() async {
-    return _listJson(await _api.get('/users'));
+    final cached = _getCached('users');
+    if (cached != null) return cached;
+    final result = _listJson(await _api.get('/users'));
+    _cacheResult('users', result);
+    return result;
   }
 
   Future<Map<String, dynamic>> getUser(int userId) async {
@@ -70,7 +92,15 @@ class UserService {
       _api.delete('/users/$userId/events/$eventId');
 
   Future<List<Map<String, dynamic>>> getEvents({int? userId}) async {
-    final query = userId == null ? '' : '?userId=$userId';
+    if (userId == null) {
+      final cached = _getCached('events');
+      if (cached != null) return cached;
+      final query = '';
+      final result = _listJson(await _api.get('/events$query'));
+      _cacheResult('events', result);
+      return result;
+    }
+    final query = '?userId=$userId';
     return _listJson(await _api.get('/events$query'));
   }
 
@@ -115,6 +145,13 @@ class UserService {
     int? userId,
     int? eventId,
   }) async {
+    if (userId == null && eventId == null) {
+      final cached = _getCached('contents');
+      if (cached != null) return cached;
+      final result = _listJson(await _api.get('/contents'));
+      _cacheResult('contents', result);
+      return result;
+    }
     final params = <String>[];
     if (userId != null) params.add('userId=$userId');
     if (eventId != null) params.add('eventId=$eventId');
@@ -139,11 +176,19 @@ class UserService {
   // ================= DASHBOARD =================
 
   Future<List<Map<String, dynamic>>> getUsageTrend() async {
-    return _listJson(await _api.get('/dashboard/trend'));
+    final cached = _getCached('trend');
+    if (cached != null) return cached;
+    final result = _listJson(await _api.get('/dashboard/trend'));
+    _cacheResult('trend', result);
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getAlerts() async {
-    return _listJson(await _api.get('/dashboard/alerts'));
+    final cached = _getCached('alerts');
+    if (cached != null) return cached;
+    final result = _listJson(await _api.get('/dashboard/alerts'));
+    _cacheResult('alerts', result);
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getTopUsers() async {
@@ -159,4 +204,11 @@ class UserService {
   Map<String, dynamic> _mapJson(dynamic raw) {
     return Map<String, dynamic>.from(raw as Map);
   }
+}
+
+class _CacheEntry {
+  final dynamic value;
+  final DateTime timestamp;
+
+  _CacheEntry(this.value, this.timestamp);
 }

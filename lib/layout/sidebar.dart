@@ -8,7 +8,12 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
+    String location = AppRoutes.dashboard;
+    try {
+      location = GoRouterState.of(context).matchedLocation;
+    } catch (_) {
+      // GoRouter not available in widget tree, use default
+    }
 
     return Container(
       width: 280,
@@ -28,6 +33,7 @@ class Sidebar extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const _BrandHeader(),
