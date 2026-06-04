@@ -229,12 +229,12 @@ class _TopBar extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
+                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               Text(
                 subtitle,
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
               ),
             ],
           ),
@@ -521,7 +521,7 @@ class _MetricCardState extends State<_MetricCard> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: metric.accent,
+                            color: widget.metric.accent,
                           ),
                         ),
                       ],
@@ -585,14 +585,14 @@ class _ActivityFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: false,
-      physics: const BouncingScrollPhysics(),
-      itemCount: items.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        return _ActivityRow(item: items[index]);
-      },
+    return Column(
+      children: items.asMap().entries.map((entry) {
+        final isLast = entry.key == items.length - 1;
+        return Padding(
+          padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+          child: _ActivityRow(item: entry.value),
+        );
+      }).toList(),
     );
   }
 }
@@ -614,51 +614,53 @@ class _ActivityRowState extends State<_ActivityRow> {
     final item = widget.item;
     final color = _activityColor(item.type);
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => hovered = true),
-      onExit: (_) => setState(() => hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: hovered ? const Color(0xFFF8FAFC) : const Color(0xFFFDFDFE),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE7EAF0)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                color: color.withValues(alpha: 0.12),
+    return RepaintBoundary(
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => hovered = true),
+        onExit: (_) => setState(() => hovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: hovered ? const Color(0xFFF8FAFC) : const Color(0xFFFDFDFE),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE7EAF0)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: color.withValues(alpha: 0.12),
+                ),
+                child: Icon(_activityIcon(item.type), color: color, size: 20),
               ),
-              child: Icon(_activityIcon(item.type), color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.subtitle,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.subtitle,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              _formatShortDateTime(item.date),
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-          ],
+              Text(
+                _formatShortDateTime(item.date),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
         ),
       ),
     );
