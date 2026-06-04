@@ -4,7 +4,7 @@ class DashboardData {
   final List<DashboardInsight> insights;
   final List<DashboardTrendPoint> trend;
   final List<DashboardAlert> alerts;
-  final List<TopUser> topUsers;
+  final List<DashboardFocusEvent> focusEvents;
 
   DashboardData({
     required this.metrics,
@@ -12,27 +12,29 @@ class DashboardData {
     required this.insights,
     required this.trend,
     required this.alerts,
-    required this.topUsers,
+    required this.focusEvents,
   });
 }
 
 // ================= METRICS =================
 
 class DashboardMetrics {
-  final int totalUsers;
-  final int activeUsers;
-  final int events;
-  final int content;
-  final double usersDelta;
-  final double activeDelta;
+  final int totalEvents;
+  final int liveEvents;
+  final int upcomingThisWeek;
+  final int totalContents;
+  final int publishedContents;
+  final int totalMediaAssets;
+  final int eventsWithoutContents;
 
   DashboardMetrics({
-    required this.totalUsers,
-    required this.activeUsers,
-    required this.events,
-    required this.content,
-    required this.usersDelta,
-    required this.activeDelta,
+    required this.totalEvents,
+    required this.liveEvents,
+    required this.upcomingThisWeek,
+    required this.totalContents,
+    required this.publishedContents,
+    required this.totalMediaAssets,
+    required this.eventsWithoutContents,
   });
 }
 
@@ -84,11 +86,24 @@ class DashboardAlert {
   DashboardAlert({required this.type, required this.message});
 }
 
-// ================= TOP USERS =================
+// ================= FOCUS EVENTS =================
 
-class TopUser {
-  final String name;
-  final int score;
+class DashboardFocusEvent {
+  final String title;
+  final DateTime date;
+  final String status;
+  final int contentCount;
+  final int publishedCount;
+  final int mediaCount;
+  final bool needsAttention;
 
-  TopUser({required this.name, required this.score});
+  DashboardFocusEvent({
+    required this.title,
+    required this.date,
+    required this.status,
+    required this.contentCount,
+    required this.publishedCount,
+    required this.mediaCount,
+    required this.needsAttention,
+  });
 }

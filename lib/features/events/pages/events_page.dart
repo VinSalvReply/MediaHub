@@ -281,7 +281,7 @@ class _Header extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Crea e modifica eventi globali',
+                'Crea e modifica eventi',
                 style: TextStyle(color: _textMuted, fontSize: 14),
               ),
             ],
@@ -544,7 +544,7 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Utenti (drop target)',
+                'Utenti',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
               ),
               const SizedBox(height: 8),
@@ -909,7 +909,7 @@ class _EventsBody extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Eventi globali',
+                  'Eventi',
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                 ),
               ),

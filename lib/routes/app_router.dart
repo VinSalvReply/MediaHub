@@ -8,7 +8,6 @@ class AppRoutes {
   static const dashboard = '/';
   static const users = '/users';
   static const events = '/events';
-  static const profile = '/profile';
 }
 
 final router = GoRouter(

@@ -1,48 +1,127 @@
 import 'package:mediahub/features/dashboard/models/dashboard_data.dart';
 import 'package:mediahub/data/dtos/dashboard_data_dto.dart';
 import 'package:mediahub/features/users/models/user.dart';
-import 'package:mediahub/features/users/models/user_activity.dart';
 import 'package:mediahub/features/users/models/event.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
 
 class DashboardMapper {
   static DashboardData toDashboard({
     required List<User> users,
-    required List<UserActivity> activities,
     required List<Event> events,
-    required List<ContentItem> contents,
     required List<DashboardTrendDto> trend,
     required List<DashboardAlertDto> alerts,
-    required List<TopUserDto> topUsers,
   }) {
-    final activeUsers = users.where((u) => u.isActive).length;
+    final now = DateTime.now();
+    final weekLimit = now.add(const Duration(days: 7));
+    final contents = events.expand((event) => event.contents).toList();
+    final liveEvents = events
+        .where((event) => event.status == EventStatus.live)
+        .length;
+    final upcomingThisWeek = events
+        .where(
+          (event) =>
+              event.date.isAfter(now) &&
+              event.date.isBefore(weekLimit) &&
+              event.status != EventStatus.ended,
+        )
+        .length;
+    final publishedContents = contents
+        .where((content) => content.status == 'published')
+        .length;
+    final totalMediaAssets = contents.fold<int>(
+      0,
+      (sum, content) => sum + content.mediaUrls.length,
+    );
+    final eventsWithoutContents = events
+        .where((event) => event.contents.isEmpty)
+        .length;
+
+    final recentContentActivities = events
+        .expand(
+          (event) => event.contents.map(
+            (content) => DashboardActivity(
+              title: content.title,
+              subtitle:
+                  'Contenuto ${_contentTypeLabel(content.type)} in ${event.title}',
+              type: content.type,
+              date: content.createdAt,
+            ),
+          ),
+        )
+        .toList();
+
+    final recentEventActivities = events
+        .map(
+          (event) => DashboardActivity(
+            title: event.title,
+            subtitle: event.status == EventStatus.live
+                ? 'Evento live in corso'
+                : 'Evento pianificato',
+            type: event.status == EventStatus.live ? 'live' : 'event',
+            date: event.date,
+          ),
+        )
+        .toList();
+
+    final activityFeed = [...recentContentActivities, ...recentEventActivities]
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    final eventsWithContents = events
+        .where((event) => event.contents.isNotEmpty)
+        .length;
+    final eventsLiveCovered = events
+        .where(
+          (event) =>
+              event.status == EventStatus.live && event.contents.isNotEmpty,
+        )
+        .length;
+    final contentsWithMedia = contents
+        .where((content) => content.mediaUrls.isNotEmpty)
+        .length;
+
+    final focusEvents = [...events]
+      ..sort((a, b) {
+        int score(Event event) {
+          final missingContents = event.contents.isEmpty ? 3 : 0;
+          final draftContents = event.contents
+              .where((content) => content.status != 'published')
+              .length;
+          final upcomingBoost = event.date.isAfter(now) ? 1 : 0;
+          return missingContents + draftContents + upcomingBoost;
+        }
+
+        return score(b).compareTo(score(a));
+      });
 
     return DashboardData(
       metrics: DashboardMetrics(
-        totalUsers: users.length,
-        activeUsers: activeUsers,
-        events: events.length,
-        content: contents.length,
-        usersDelta: 0.12,
-        activeDelta: 0.06,
+        totalEvents: events.length,
+        liveEvents: liveEvents,
+        upcomingThisWeek: upcomingThisWeek,
+        totalContents: contents.length,
+        publishedContents: publishedContents,
+        totalMediaAssets: totalMediaAssets,
+        eventsWithoutContents: eventsWithoutContents,
       ),
 
-      activities: activities.map((a) {
-        return DashboardActivity(
-          title: a.description,
-          subtitle: a.type,
-          type: a.type,
-          date: a.date,
-        );
-      }).toList(),
+      activities: activityFeed.take(8).toList(),
 
       insights: [
         DashboardInsight(
-          label: "Active users",
-          value: activeUsers / users.length,
+          label: 'Eventi con contenuti',
+          value: events.isEmpty ? 0 : eventsWithContents / events.length,
         ),
-        DashboardInsight(label: "Content growth", value: contents.length / 300),
-        DashboardInsight(label: "Events coverage", value: events.length / 50),
+        DashboardInsight(
+          label: 'Contenuti pubblicati',
+          value: contents.isEmpty ? 0 : publishedContents / contents.length,
+        ),
+        DashboardInsight(
+          label: 'Eventi live coperti',
+          value: liveEvents == 0 ? 0 : eventsLiveCovered / liveEvents,
+        ),
+        DashboardInsight(
+          label: 'Contenuti con media',
+          value: contents.isEmpty ? 0 : contentsWithMedia / contents.length,
+        ),
       ],
 
       trend: trend
@@ -59,9 +138,41 @@ class DashboardMapper {
           .map((a) => DashboardAlert(type: a.type, message: a.message))
           .toList(),
 
-      topUsers: topUsers
-          .map((u) => TopUser(name: u.name, score: u.score))
+      focusEvents: focusEvents
+          .take(5)
+          .map(
+            (event) => DashboardFocusEvent(
+              title: event.title,
+              date: event.date,
+              status: event.status.name,
+              contentCount: event.contents.length,
+              publishedCount: event.contents
+                  .where((content) => content.status == 'published')
+                  .length,
+              mediaCount: event.contents.fold<int>(
+                0,
+                (sum, content) => sum + content.mediaUrls.length,
+              ),
+              needsAttention:
+                  event.contents.isEmpty ||
+                  event.contents.any(
+                    (content) => content.status != 'published',
+                  ),
+            ),
+          )
           .toList(),
     );
+  }
+}
+
+String _contentTypeLabel(String type) {
+  switch (type) {
+    case 'image':
+      return 'immagine';
+    case 'video':
+      return 'video';
+    case 'post':
+    default:
+      return 'post';
   }
 }

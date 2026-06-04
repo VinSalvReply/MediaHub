@@ -103,8 +103,9 @@ class _DashboardView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _TopBar(
-                  title: 'MediaHub Dashboard',
-                  subtitle: 'Operations overview and system insights',
+                  title: 'Dashboard MediaHub',
+                  subtitle:
+                      'Controllo operativo di eventi, contenuti e copertura media',
                   onSearchTap: () {},
                   onRefreshTap: onRefreshTap,
                 ),
@@ -123,12 +124,11 @@ class _DashboardView extends StatelessWidget {
                           flex: 3,
 
                           child: _SectionCard(
-                            title: 'Recent activity',
-                            subtitle: 'What is happening right now',
-                            child: SizedBox(
-                              height: 795,
-                              child: _ActivityFeed(items: data.activities),
-                            ),
+                            title: 'Attività recenti',
+                            subtitle:
+                                'Eventi e contenuti che stanno muovendo la pipeline',
+                            expandChild: true,
+                            child: _ActivityFeed(items: data.activities),
                           ),
                         ),
                         const SizedBox(width: 20),
@@ -138,17 +138,20 @@ class _DashboardView extends StatelessWidget {
                             child: Column(
                               children: [
                                 _SectionCard(
-                                  title: 'Insights',
+                                  title: 'Copertura operativa',
                                   subtitle:
-                                      'Derived from users, events and content',
+                                      'Indicatori rapidi sulla qualità del piano editoriale',
                                   child: _InsightsPanel(items: data.insights),
                                 ),
 
                                 const SizedBox(height: 20),
                                 _SectionCard(
-                                  title: 'Top users',
-                                  subtitle: 'Most engaged profiles',
-                                  child: _TopUsersPanel(users: data.topUsers),
+                                  title: 'Eventi da attenzionare',
+                                  subtitle:
+                                      'Priorità operative tra contenuti mancanti, draft e media',
+                                  child: _FocusEventsPanel(
+                                    events: data.focusEvents,
+                                  ),
                                 ),
                               ],
                             ),
@@ -159,33 +162,38 @@ class _DashboardView extends StatelessWidget {
                   )
                 else ...[
                   _SectionCard(
-                    title: 'Recent activity',
-                    subtitle: 'What is happening right now',
+                    title: 'Attività recenti',
+                    subtitle:
+                        'Eventi e contenuti che stanno muovendo la pipeline',
                     child: _ActivityFeed(items: data.activities),
                   ),
                   const SizedBox(height: 20),
                   _SectionCard(
-                    title: 'Insights',
-                    subtitle: 'Derived from users, events and content',
+                    title: 'Copertura operativa',
+                    subtitle:
+                        'Indicatori rapidi sulla qualità del piano editoriale',
                     child: _InsightsPanel(items: data.insights),
                   ),
                   const SizedBox(height: 20),
                   _SectionCard(
-                    title: 'Top users',
-                    subtitle: 'Most engaged profiles',
-                    child: _TopUsersPanel(users: data.topUsers),
+                    title: 'Eventi da attenzionare',
+                    subtitle:
+                        'Priorità operative tra contenuti mancanti, draft e media',
+                    child: _FocusEventsPanel(events: data.focusEvents),
                   ),
                 ],
                 const SizedBox(height: 20),
                 _SectionCard(
-                  title: 'Usage trend',
-                  subtitle: 'Active users and content created over time',
+                  title: 'Trend operativo',
+                  subtitle:
+                      'Andamento di utenti attivi e contenuti creati nel tempo',
                   child: _TrendPanel(trend: data.trend),
                 ),
                 const SizedBox(height: 20),
                 _SectionCard(
-                  title: 'Quick actions',
-                  subtitle: 'Start from common operations',
+                  title: 'Azioni rapide',
+                  subtitle:
+                      'Le operazioni più frequenti per tenere vivo il calendario',
                   child: const _QuickActionsGrid(),
                 ),
               ],
@@ -215,17 +223,17 @@ class _TopBar extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'MediaHub Dashboard',
+                title,
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
               ),
               SizedBox(height: 6),
               Text(
-                'Operations overview and system insights',
+                subtitle,
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
             ],
@@ -369,31 +377,31 @@ class _MetricsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final cards = <_MetricCardData>[
       _MetricCardData(
-        title: 'Users',
-        value: metrics.totalUsers.toString(),
-        detail: _formatPercent(metrics.usersDelta),
-        icon: Icons.people_alt_rounded,
+        title: 'Eventi',
+        value: metrics.totalEvents.toString(),
+        detail: '${metrics.upcomingThisWeek} nei prossimi 7g',
+        icon: Icons.event_rounded,
         accent: const Color(0xFF4F46E5),
       ),
       _MetricCardData(
-        title: 'Active',
-        value: metrics.activeUsers.toString(),
-        detail: _formatPercent(metrics.activeDelta),
+        title: 'Live ora',
+        value: metrics.liveEvents.toString(),
+        detail: '${metrics.eventsWithoutContents} senza contenuti',
         icon: Icons.bolt_rounded,
         accent: const Color(0xFF14B8A6),
       ),
       _MetricCardData(
-        title: 'Events',
-        value: metrics.events.toString(),
-        detail: 'Tracked',
-        icon: Icons.event_rounded,
+        title: 'Contenuti',
+        value: metrics.totalContents.toString(),
+        detail: '${metrics.publishedContents} pubblicati',
+        icon: Icons.article_rounded,
         accent: const Color(0xFFF59E0B),
       ),
       _MetricCardData(
-        title: 'Content',
-        value: metrics.content.toString(),
-        detail: 'Assets',
-        icon: Icons.layers_rounded,
+        title: 'Media',
+        value: metrics.totalMediaAssets.toString(),
+        detail: 'asset collegati agli eventi',
+        icon: Icons.perm_media_rounded,
         accent: const Color(0xFFEC4899),
       ),
     ];
@@ -533,11 +541,13 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget child;
+  final bool expandChild;
 
   const _SectionCard({
     required this.title,
     required this.subtitle,
     required this.child,
+    this.expandChild = false,
   });
 
   @override
@@ -552,7 +562,16 @@ class _SectionCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [Text(title), const SizedBox(height: 16), child],
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+            ),
+            const SizedBox(height: 16),
+            if (expandChild) Expanded(child: child) else child,
+          ],
         ),
       ),
     );
@@ -567,8 +586,8 @@ class _ActivityFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      shrinkWrap: true,
-      physics: const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: false,
+      physics: const BouncingScrollPhysics(),
       itemCount: items.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -725,31 +744,23 @@ class _InsightBar extends StatelessWidget {
   }
 }
 
-class _TopUsersPanel extends StatelessWidget {
-  final List<TopUser> users;
+class _FocusEventsPanel extends StatelessWidget {
+  final List<DashboardFocusEvent> events;
 
-  const _TopUsersPanel({required this.users});
+  const _FocusEventsPanel({required this.events});
 
   @override
   Widget build(BuildContext context) {
-    final maxScore = users.isEmpty
-        ? 1
-        : users.map((u) => u.score).reduce(math.max);
-
     return Column(
-      children: users
+      children: events
           .asMap()
           .entries
           .map(
             (entry) => Padding(
               padding: EdgeInsets.only(
-                bottom: entry.key == users.length - 1 ? 0 : 12,
+                bottom: entry.key == events.length - 1 ? 0 : 12,
               ),
-              child: _TopUserTile(
-                user: entry.value,
-                index: entry.key + 1,
-                maxScore: maxScore,
-              ),
+              child: _FocusEventTile(event: entry.value),
             ),
           )
           .toList(),
@@ -757,20 +768,17 @@ class _TopUsersPanel extends StatelessWidget {
   }
 }
 
-class _TopUserTile extends StatelessWidget {
-  final TopUser user;
-  final int index;
-  final int maxScore;
+class _FocusEventTile extends StatelessWidget {
+  final DashboardFocusEvent event;
 
-  const _TopUserTile({
-    required this.user,
-    required this.index,
-    required this.maxScore,
-  });
+  const _FocusEventTile({required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final progress = maxScore == 0 ? 0.0 : user.score / maxScore;
+    final progress = event.contentCount == 0
+        ? 0.0
+        : event.publishedCount / event.contentCount;
+    final statusColor = _focusStatusColor(event.status, event.needsAttention);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -784,31 +792,45 @@ class _TopUserTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: const Color(
-                  0xFF4F46E5,
-                ).withValues(alpha: 0.12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
                 child: Text(
-                  '$index',
-                  style: const TextStyle(
-                    color: Color(0xFF4F46E5),
+                  _focusStatusLabel(event.status, event.needsAttention),
+                  style: TextStyle(
+                    color: statusColor,
                     fontWeight: FontWeight.w700,
+                    fontSize: 12,
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  user.name,
+                  event.title,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
-                '${user.score}',
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                formatDate(event.date, format: 'dd/MM HH:mm'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: Color(0xFF6B7280),
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${event.contentCount} contenuti, ${event.publishedCount} pubblicati, ${event.mediaCount} media collegati',
+            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
           ),
           const SizedBox(height: 10),
           ClipRRect(
@@ -817,9 +839,7 @@ class _TopUserTile extends StatelessWidget {
               minHeight: 8,
               value: progress,
               backgroundColor: Colors.grey.shade300,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF4F46E5),
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
             ),
           ),
         ],
@@ -883,9 +903,9 @@ class _TrendPanelState extends State<_TrendPanel> {
       children: [
         const Row(
           children: [
-            _TrendLegend(color: Color(0xFF4F46E5), label: 'Active users'),
+            _TrendLegend(color: Color(0xFF4F46E5), label: 'Utenti attivi'),
             SizedBox(width: 16),
-            _TrendLegend(color: Color(0xFFEC4899), label: 'Content created'),
+            _TrendLegend(color: Color(0xFFEC4899), label: 'Contenuti creati'),
           ],
         ),
 
@@ -1109,9 +1129,9 @@ class _TrendInfoCard extends StatelessWidget {
           ),
 
           const SizedBox(width: 18),
-          _MiniStat(label: "Active", value: p.activeUsers),
+          _MiniStat(label: 'Attivi', value: p.activeUsers),
           const SizedBox(width: 6),
-          _MiniStat(label: "Content", value: p.contentCreated),
+          _MiniStat(label: 'Contenuti', value: p.contentCreated),
         ],
       ),
     );
@@ -1263,20 +1283,20 @@ class _QuickActionsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final actions = const [
       _QuickAction(
-        title: 'Create user',
-        subtitle: 'Add a new operator or editor',
+        title: 'Crea utente',
+        subtitle: 'Aggiungi un operatore o un editor',
         icon: Icons.person_add_alt_1_rounded,
         color: Color(0xFF4F46E5),
       ),
       _QuickAction(
-        title: 'Create event',
-        subtitle: 'Schedule a new live session',
+        title: 'Crea evento',
+        subtitle: 'Pianifica una nuova diretta o campagna',
         icon: Icons.event_available_rounded,
         color: Color(0xFF14B8A6),
       ),
       _QuickAction(
-        title: 'Upload content',
-        subtitle: 'Push a new asset or campaign',
+        title: 'Aggiungi contenuto',
+        subtitle: 'Collega media o post a un evento',
         icon: Icons.upload_rounded,
         color: Color(0xFFEC4899),
       ),
@@ -1667,11 +1687,6 @@ class _QuickAction {
   });
 }
 
-String _formatPercent(double value) {
-  final pct = (value * 100).round();
-  return value >= 0 ? '+$pct%' : '$pct%';
-}
-
 String _dayLabel(DateTime date) {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   return days[date.weekday - 1];
@@ -1687,6 +1702,16 @@ String _formatShortDateTime(DateTime date) {
 
 IconData _activityIcon(String type) {
   switch (type) {
+    case 'live':
+      return Icons.podcasts_rounded;
+    case 'event':
+      return Icons.event_rounded;
+    case 'image':
+      return Icons.image_rounded;
+    case 'video':
+      return Icons.videocam_rounded;
+    case 'post':
+      return Icons.article_rounded;
     case 'login':
       return Icons.login_rounded;
     case 'edit':
@@ -1702,6 +1727,16 @@ IconData _activityIcon(String type) {
 
 Color _activityColor(String type) {
   switch (type) {
+    case 'live':
+      return const Color(0xFFEF4444);
+    case 'event':
+      return const Color(0xFFF59E0B);
+    case 'image':
+      return const Color(0xFF14B8A6);
+    case 'video':
+      return const Color(0xFF4F46E5);
+    case 'post':
+      return const Color(0xFFEC4899);
     case 'login':
       return const Color(0xFF14B8A6);
     case 'edit':
@@ -1712,5 +1747,35 @@ Color _activityColor(String type) {
       return const Color(0xFFEF4444);
     default:
       return const Color(0xFFF59E0B);
+  }
+}
+
+String _focusStatusLabel(String status, bool needsAttention) {
+  if (needsAttention) {
+    return 'Da completare';
+  }
+
+  switch (status) {
+    case 'live':
+      return 'Live';
+    case 'ended':
+      return 'Concluso';
+    default:
+      return 'Pronto';
+  }
+}
+
+Color _focusStatusColor(String status, bool needsAttention) {
+  if (needsAttention) {
+    return const Color(0xFFF59E0B);
+  }
+
+  switch (status) {
+    case 'live':
+      return const Color(0xFFEF4444);
+    case 'ended':
+      return const Color(0xFF64748B);
+    default:
+      return const Color(0xFF22C55E);
   }
 }
