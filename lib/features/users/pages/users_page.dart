@@ -106,30 +106,32 @@ class _TopActionButtonState extends State<_TopActionButton> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => hovered = true),
-      onExit: (_) => setState(() => hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: hovered ? Colors.white : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE7EAF0)),
-          boxShadow: hovered
-              ? const [
-                  BoxShadow(
-                    blurRadius: 18,
-                    offset: Offset(0, 8),
-                    color: Color(0x12000000),
-                  ),
-                ]
-              : [],
-        ),
-        child: IconButton(
-          onPressed: widget.onTap,
-          icon: Icon(widget.icon, size: 20),
+    return RepaintBoundary(
+      child: MouseRegion(
+        onEnter: (_) => setState(() => hovered = true),
+        onExit: (_) => setState(() => hovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: hovered ? Colors.white : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE7EAF0)),
+            boxShadow: hovered
+                ? const [
+                    BoxShadow(
+                      blurRadius: 18,
+                      offset: Offset(0, 8),
+                      color: Color(0x12000000),
+                    ),
+                  ]
+                : const [],
+          ),
+          child: IconButton(
+            onPressed: widget.onTap,
+            icon: Icon(widget.icon, size: 20),
+          ),
         ),
       ),
     );
