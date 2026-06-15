@@ -172,13 +172,22 @@ class _EventFormDialogState extends State<EventFormDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.initial != null;
     final formatter = DateFormat('dd MMM yyyy · HH:mm');
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isCompact = screenWidth < 640;
 
     return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 12 : 24,
+        vertical: isCompact ? 12 : 24,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760, maxHeight: 900),
+        constraints: BoxConstraints(
+          maxWidth: 760,
+          maxHeight: isCompact ? MediaQuery.sizeOf(context).height - 24 : 900,
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(isCompact ? 16 : 24),
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -188,8 +197,8 @@ class _EventFormDialogState extends State<EventFormDialog> {
                 children: [
                   Text(
                     isEdit ? 'Modifica evento' : 'Nuovo evento',
-                    style: const TextStyle(
-                      fontSize: 20,
+                    style: TextStyle(
+                      fontSize: isCompact ? 18 : 20,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -288,20 +297,35 @@ class _EventFormDialogState extends State<EventFormDialog> {
                     ),
                   ],
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Annulla'),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: _submit,
-                        child: Text(isEdit ? 'Salva' : 'Crea'),
-                      ),
-                    ],
-                  ),
+                  isCompact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FilledButton(
+                              onPressed: _submit,
+                              child: Text(isEdit ? 'Salva' : 'Crea'),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Annulla'),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Annulla'),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: _submit,
+                              child: Text(isEdit ? 'Salva' : 'Crea'),
+                            ),
+                          ],
+                        ),
                 ],
               ),
             ),
@@ -327,8 +351,10 @@ class _EventContentsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 640;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(18),
@@ -337,21 +363,42 @@ class _EventContentsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Contenuti dell\'evento',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          if (compact)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                const SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    'Contenuti dell\'evento',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  ),
                 ),
-              ),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Aggiungi contenuto'),
-              ),
-            ],
-          ),
+                FilledButton.icon(
+                  onPressed: onAdd,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Aggiungi contenuto'),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Contenuti dell\'evento',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: onAdd,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Aggiungi contenuto'),
+                ),
+              ],
+            ),
           const SizedBox(height: 6),
           const Text(
             'Ogni evento puo avere piu contenuti di natura diversa, con uno o piu media.',
@@ -404,9 +451,11 @@ class _EventContentRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE7EAF0)),
       ),
-      child: Row(
-        children: [
-          Container(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 460;
+
+          final leading = Container(
             width: 42,
             height: 42,
             decoration: BoxDecoration(
@@ -421,36 +470,76 @@ class _EventContentRow extends StatelessWidget {
                   : Icons.article_rounded,
               color: const Color(0xFF4F46E5),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          );
+
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                content.title,
+                maxLines: compact ? 2 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${_eventContentTypeLabel(content.type)} · ${mediaCount == 1 ? '1 media' : '$mediaCount media'}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          );
+
+          final actions = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: 'Modifica contenuto',
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_rounded),
+              ),
+              IconButton(
+                tooltip: 'Rimuovi contenuto',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline_rounded),
+                color: const Color(0xFFEF4444),
+              ),
+            ],
+          );
+
+          if (!compact) {
+            return Row(
               children: [
-                Text(
-                  content.title,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                leading,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: details,
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_eventContentTypeLabel(content.type)} · ${mediaCount == 1 ? '1 media' : '$mediaCount media'}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
+                actions,
               ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'Modifica contenuto',
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit_rounded),
-          ),
-          IconButton(
-            tooltip: 'Rimuovi contenuto',
-            onPressed: onDelete,
-            icon: const Icon(Icons.delete_outline_rounded),
-            color: const Color(0xFFEF4444),
-          ),
-        ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  leading,
+                  const SizedBox(width: 12),
+                  Expanded(child: details),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Align(alignment: Alignment.centerRight, child: actions),
+            ],
+          );
+        },
       ),
     );
   }
