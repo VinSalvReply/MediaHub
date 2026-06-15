@@ -100,7 +100,11 @@ class _UserDetailState extends State<UserDetail>
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      _Header(user: widget.user, color: widget.color),
+                      _Header(
+                        user: widget.user,
+                        color: widget.color,
+                        onClose: () => Navigator.of(context).maybePop(),
+                      ),
                       const SizedBox(height: 20),
                       Expanded(
                         child: _UserTabs(data: data, color: widget.color),
@@ -240,8 +244,13 @@ class _UserDetailSkeleton extends StatelessWidget {
 class _Header extends StatelessWidget {
   final User user;
   final Color color;
+  final VoidCallback onClose;
 
-  const _Header({required this.user, required this.color});
+  const _Header({
+    required this.user,
+    required this.color,
+    required this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +266,7 @@ class _Header extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7EAF0)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Stack(
             alignment: Alignment.bottomRight,
@@ -319,6 +329,12 @@ class _Header extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filledTonal(
+            tooltip: 'Chiudi',
+            onPressed: onClose,
+            icon: const Icon(Icons.close_rounded),
           ),
         ],
       ),
