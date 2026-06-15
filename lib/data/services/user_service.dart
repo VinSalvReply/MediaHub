@@ -25,6 +25,12 @@ class UserService {
     return entry.value;
   }
 
+  void _invalidateCache(Iterable<String> keys) {
+    for (final key in keys) {
+      _cache.remove(key);
+    }
+  }
+
   void clearCache() => _cache.clear();
 
   // ================= USERS =================
@@ -77,7 +83,9 @@ class UserService {
     int userId,
     Map<String, dynamic> body,
   ) async {
-    return _mapJson(await _api.post('/users/$userId/events', body));
+    final result = _mapJson(await _api.post('/users/$userId/events', body));
+    _invalidateCache(['events']);
+    return result;
   }
 
   Future<Map<String, dynamic>> updateUserEvent(
@@ -85,11 +93,15 @@ class UserService {
     int eventId,
     Map<String, dynamic> body,
   ) async {
-    return _mapJson(await _api.put('/users/$userId/events/$eventId', body));
+    final result = _mapJson(await _api.put('/users/$userId/events/$eventId', body));
+    _invalidateCache(['events']);
+    return result;
   }
 
-  Future<void> deleteUserEvent(int userId, int eventId) =>
-      _api.delete('/users/$userId/events/$eventId');
+  Future<void> deleteUserEvent(int userId, int eventId) async {
+    await _api.delete('/users/$userId/events/$eventId');
+    _invalidateCache(['events']);
+  }
 
   Future<List<Map<String, dynamic>>> getEvents({int? userId}) async {
     if (userId == null) {
@@ -105,17 +117,24 @@ class UserService {
   }
 
   Future<Map<String, dynamic>> addEvent(Map<String, dynamic> body) async {
-    return _mapJson(await _api.post('/events', body));
+    final result = _mapJson(await _api.post('/events', body));
+    _invalidateCache(['events']);
+    return result;
   }
 
   Future<Map<String, dynamic>> updateEvent(
     int eventId,
     Map<String, dynamic> body,
   ) async {
-    return _mapJson(await _api.put('/events/$eventId', body));
+    final result = _mapJson(await _api.put('/events/$eventId', body));
+    _invalidateCache(['events']);
+    return result;
   }
 
-  Future<void> deleteEvent(int eventId) => _api.delete('/events/$eventId');
+  Future<void> deleteEvent(int eventId) async {
+    await _api.delete('/events/$eventId');
+    _invalidateCache(['events']);
+  }
 
   // ================= CONTENT =================
 
