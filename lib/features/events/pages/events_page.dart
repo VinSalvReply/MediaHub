@@ -26,6 +26,7 @@ class _EventsPageState extends State<EventsPage> {
       GlobalKey<_AssignmentSidebarState>();
   bool _isDraggingEvent = false;
   bool _dragFromUserDropZone = false;
+  bool _isHoveringUserDropZone = false;
   EventSortMode _sortMode = EventSortMode.dateAsc;
   bool _splitAssigned = false;
   bool _previousSplitAssigned = false;
@@ -39,6 +40,7 @@ class _EventsPageState extends State<EventsPage> {
     setState(() {
       _isDraggingEvent = true;
       _dragFromUserDropZone = false;
+      _isHoveringUserDropZone = false;
     });
   }
 
@@ -47,6 +49,14 @@ class _EventsPageState extends State<EventsPage> {
     setState(() {
       _isDraggingEvent = true;
       _dragFromUserDropZone = true;
+      _isHoveringUserDropZone = false;
+    });
+  }
+
+  void _setUserDropZoneHover(bool value) {
+    if (_isHoveringUserDropZone == value) return;
+    setState(() {
+      _isHoveringUserDropZone = value;
     });
   }
 
@@ -57,7 +67,15 @@ class _EventsPageState extends State<EventsPage> {
     setState(() {
       _isDraggingEvent = false;
       _dragFromUserDropZone = false;
+      _isHoveringUserDropZone = false;
     });
+  }
+
+  void _handleSidebarItemDragEnd(Event event, DraggableDetails details) {
+    if (!details.wasAccepted) {
+      _unassign(event);
+    }
+    _endEventDrag();
   }
 
   void _setSortMode(EventSortMode? mode) {
@@ -234,7 +252,6 @@ class _EventsPageState extends State<EventsPage> {
                           controller: controller,
                           onAssign: _assign,
                           onUnassign: _unassign,
-                          canUnassignFromCurrentDrag: _dragFromUserDropZone,
                           sortMode: _sortMode,
                           onSortChanged: _setSortMode,
                           splitAssigned: _splitAssigned,
@@ -250,6 +267,8 @@ class _EventsPageState extends State<EventsPage> {
                           onGlobalListDragStart: _startEventDragFromGlobalList,
                           onSidebarDragStart: _startEventDragFromUserDropZone,
                           onDragEnd: _endEventDrag,
+                          onSidebarItemDragEnd: _handleSidebarItemDragEnd,
+                          onUserDropZoneHoverChanged: _setUserDropZoneHover,
                           onDragCursorMove: (position) {
                             _assignmentSidebarKey.currentState?.autoScrollAt(
                               position,
@@ -270,6 +289,10 @@ class _EventsPageState extends State<EventsPage> {
                       onAssign: _assign,
                       onDragEnd: _endEventDrag,
                     ),
+                  if (_isDraggingEvent && _dragFromUserDropZone)
+                    _isHoveringUserDropZone
+                        ? const _GlobalAssignOverlay()
+                        : const _GlobalUnassignOverlay(),
                 ],
               ),
             );
@@ -354,7 +377,6 @@ class _EventsWorkspace extends StatelessWidget {
   final EventsController controller;
   final Future<void> Function(Event event, int? userId) onAssign;
   final Future<void> Function(Event event) onUnassign;
-  final bool canUnassignFromCurrentDrag;
   final EventSortMode sortMode;
   final ValueChanged<EventSortMode?> onSortChanged;
   final bool splitAssigned;
@@ -368,6 +390,9 @@ class _EventsWorkspace extends StatelessWidget {
   final VoidCallback onGlobalListDragStart;
   final VoidCallback onSidebarDragStart;
   final VoidCallback onDragEnd;
+  final void Function(Event event, DraggableDetails details)
+  onSidebarItemDragEnd;
+  final ValueChanged<bool> onUserDropZoneHoverChanged;
   final ValueChanged<Offset> onDragCursorMove;
   final GlobalKey<_AssignmentSidebarState> assignmentSidebarKey;
   final ValueChanged<Event> onEdit;
@@ -378,7 +403,6 @@ class _EventsWorkspace extends StatelessWidget {
     required this.controller,
     required this.onAssign,
     required this.onUnassign,
-    required this.canUnassignFromCurrentDrag,
     required this.sortMode,
     required this.onSortChanged,
     required this.splitAssigned,
@@ -392,6 +416,8 @@ class _EventsWorkspace extends StatelessWidget {
     required this.onGlobalListDragStart,
     required this.onSidebarDragStart,
     required this.onDragEnd,
+    required this.onSidebarItemDragEnd,
+    required this.onUserDropZoneHoverChanged,
     required this.onDragCursorMove,
     required this.assignmentSidebarKey,
     required this.onEdit,
@@ -457,10 +483,10 @@ class _EventsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
-                onUnassign: onUnassign,
-                canUnassignFromCurrentDrag: canUnassignFromCurrentDrag,
                 onSidebarDragStart: onSidebarDragStart,
                 onDragEnd: onDragEnd,
+                onSidebarItemDragEnd: onSidebarItemDragEnd,
+                onUserDropZoneHoverChanged: onUserDropZoneHoverChanged,
                 onDragCursorMove: onDragCursorMove,
                 dragActive: isDragging,
               ),
@@ -502,10 +528,10 @@ class _EventsWorkspace extends StatelessWidget {
                 key: assignmentSidebarKey,
                 controller: controller,
                 onAssign: onAssign,
-                onUnassign: onUnassign,
-                canUnassignFromCurrentDrag: canUnassignFromCurrentDrag,
                 onSidebarDragStart: onSidebarDragStart,
                 onDragEnd: onDragEnd,
+                onSidebarItemDragEnd: onSidebarItemDragEnd,
+                onUserDropZoneHoverChanged: onUserDropZoneHoverChanged,
                 onDragCursorMove: onDragCursorMove,
                 dragActive: isDragging,
               ),
@@ -520,10 +546,11 @@ class _EventsWorkspace extends StatelessWidget {
 class _AssignmentSidebar extends StatefulWidget {
   final EventsController controller;
   final Future<void> Function(Event event, int? userId) onAssign;
-  final Future<void> Function(Event event) onUnassign;
-  final bool canUnassignFromCurrentDrag;
   final VoidCallback onSidebarDragStart;
   final VoidCallback onDragEnd;
+  final void Function(Event event, DraggableDetails details)
+  onSidebarItemDragEnd;
+  final ValueChanged<bool> onUserDropZoneHoverChanged;
   final ValueChanged<Offset> onDragCursorMove;
   final bool dragActive;
 
@@ -531,10 +558,10 @@ class _AssignmentSidebar extends StatefulWidget {
     super.key,
     required this.controller,
     required this.onAssign,
-    required this.onUnassign,
-    required this.canUnassignFromCurrentDrag,
     required this.onSidebarDragStart,
     required this.onDragEnd,
+    required this.onSidebarItemDragEnd,
+    required this.onUserDropZoneHoverChanged,
     required this.onDragCursorMove,
     required this.dragActive,
   });
@@ -620,7 +647,9 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
                           icon: Icons.person_rounded,
                           events: userEvents,
                           onDragStart: widget.onSidebarDragStart,
-                          onDragEnd: widget.onDragEnd,
+                          onDragEnd: widget.onSidebarItemDragEnd,
+                          onUserDropZoneHoverChanged:
+                              widget.onUserDropZoneHoverChanged,
                           onDragCursorMove: widget.onDragCursorMove,
                           onAccept: (event) => widget.onAssign(event, user.id),
                         ),
@@ -628,11 +657,6 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
                     }),
                   ],
                 ),
-              ),
-              const SizedBox(height: 10),
-              _ScopedEventUnassignZone(
-                enabled: widget.canUnassignFromCurrentDrag,
-                onAccept: widget.onUnassign,
               ),
             ],
           ),
@@ -648,7 +672,8 @@ class _EventDropZone extends StatelessWidget {
   final IconData icon;
   final List<Event> events;
   final VoidCallback onDragStart;
-  final VoidCallback onDragEnd;
+  final void Function(Event event, DraggableDetails details) onDragEnd;
+  final ValueChanged<bool> onUserDropZoneHoverChanged;
   final ValueChanged<Offset> onDragCursorMove;
   final ValueChanged<Event> onAccept;
 
@@ -659,6 +684,7 @@ class _EventDropZone extends StatelessWidget {
     required this.events,
     required this.onDragStart,
     required this.onDragEnd,
+    required this.onUserDropZoneHoverChanged,
     required this.onDragCursorMove,
     required this.onAccept,
   });
@@ -666,8 +692,16 @@ class _EventDropZone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DragTarget<Event>(
-      onWillAcceptWithDetails: (_) => true,
-      onAcceptWithDetails: (details) => onAccept(details.data),
+      onWillAcceptWithDetails: (_) {
+        onUserDropZoneHoverChanged(true);
+        return true;
+      },
+      onMove: (_) => onUserDropZoneHoverChanged(true),
+      onLeave: (_) => onUserDropZoneHoverChanged(false),
+      onAcceptWithDetails: (details) {
+        onUserDropZoneHoverChanged(false);
+        onAccept(details.data);
+      },
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
         return AnimatedContainer(
@@ -723,9 +757,7 @@ class _EventDropZone extends StatelessWidget {
                           onDragStarted: onDragStart,
                           onDragUpdate: (details) =>
                               onDragCursorMove(details.globalPosition),
-                          onDragEnd: (_) => onDragEnd(),
-                          onDragCompleted: onDragEnd,
-                          onDraggableCanceled: (_, _) => onDragEnd(),
+                          onDragEnd: (details) => onDragEnd(event, details),
                           feedback: Material(
                             color: Colors.transparent,
                             child: _EventChip(event: event, dragging: true),
@@ -747,62 +779,76 @@ class _EventDropZone extends StatelessWidget {
   }
 }
 
-class _ScopedEventUnassignZone extends StatelessWidget {
-  final bool enabled;
-  final Future<void> Function(Event event) onAccept;
-
-  const _ScopedEventUnassignZone({
-    required this.enabled,
-    required this.onAccept,
-  });
+class _GlobalAssignOverlay extends StatelessWidget {
+  const _GlobalAssignOverlay();
 
   @override
   Widget build(BuildContext context) {
-    return DragTarget<Event>(
-      onWillAcceptWithDetails: (_) => enabled,
-      onAcceptWithDetails: (details) => onAccept(details.data),
-      builder: (context, candidateData, _) {
-        final active = enabled && candidateData.isNotEmpty;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Container(
           decoration: BoxDecoration(
-            color: active ? const Color(0xFFFEE2E2) : const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: active ? const Color(0xFFEF4444) : const Color(0xFFE5E7EB),
-              style: enabled ? BorderStyle.solid : BorderStyle.solid,
-            ),
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.06),
+            border: Border.all(color: const Color(0xFF4F46E5), width: 2),
           ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.link_off_rounded,
-                size: 18,
-                color: enabled
-                    ? const Color(0xFFB91C1C)
-                    : const Color(0xFF9CA3AF),
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3730A3).withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(14),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  enabled
-                      ? 'Rilascia qui per disassegnare evento'
-                      : 'Disassegna disponibile solo dal drag interno utenti',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: enabled
-                        ? const Color(0xFF7F1D1D)
-                        : const Color(0xFF6B7280),
-                    fontSize: 12,
-                  ),
+              child: const Text(
+                'Rilascia su un utente per assegnare l\'evento',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
                 ),
               ),
-            ],
+            ),
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+}
+
+class _GlobalUnassignOverlay extends StatelessWidget {
+  const _GlobalUnassignOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.07),
+            border: Border.all(color: const Color(0xFFEF4444), width: 2),
+          ),
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7F1D1D).withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Text(
+                'Rilascia fuori dagli utenti per disassegnare l\'evento',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
