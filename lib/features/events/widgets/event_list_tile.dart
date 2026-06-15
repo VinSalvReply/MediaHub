@@ -17,6 +17,8 @@ class EventListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat('dd MMM yyyy · HH:mm');
+    final statusChip = _StatusChip(status: event.status);
+    final attendeesChip = _AttendeesChip(count: event.attendees);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -32,9 +34,104 @@ class EventListTile extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 860;
+
+          Widget details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event.title,
+                maxLines: compact ? 2 : 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                formatter.format(event.date),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontSize: 13,
+                ),
+              ),
+              if (event.contents.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEC4899).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        event.contents.length == 1
+                            ? '1 contenuto'
+                            : '${event.contents.length} contenuti',
+                        style: const TextStyle(
+                          color: Color(0xFFBE185D),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    ...event.contents.take(2).map(
+                      (content) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          content.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (event.userId != null) ...[
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Utente #${event.userId}',
+                    style: const TextStyle(
+                      color: Color(0xFF4F46E5),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          );
+
+          Widget leadingIcon = Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
@@ -42,116 +139,61 @@ class EventListTile extends StatelessWidget {
               color: const Color(0xFF14B8A6).withValues(alpha: 0.12),
             ),
             child: const Icon(Icons.event_rounded, color: Color(0xFF14B8A6)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          );
+
+          Widget actions = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: 'Modifica',
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_rounded),
+              ),
+              IconButton(
+                tooltip: 'Elimina',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline_rounded),
+                color: const Color(0xFFEF4444),
+              ),
+            ],
+          );
+
+          if (!compact) {
+            return Row(
               children: [
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  formatter.format(event.date),
-                  style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 13,
-                  ),
-                ),
-                if (event.contents.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFFEC4899,
-                          ).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          event.contents.length == 1
-                              ? '1 contenuto'
-                              : '${event.contents.length} contenuti',
-                          style: const TextStyle(
-                            color: Color(0xFFBE185D),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      ...event.contents
-                          .take(2)
-                          .map(
-                            (content) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                content.title,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ),
-                    ],
-                  ),
-                ],
-                if (event.userId != null) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      'Utente #${event.userId}',
-                      style: const TextStyle(
-                        color: Color(0xFF4F46E5),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
+                leadingIcon,
+                const SizedBox(width: 14),
+                Expanded(child: details),
+                statusChip,
+                const SizedBox(width: 12),
+                attendeesChip,
+                const SizedBox(width: 8),
+                actions,
               ],
-            ),
-          ),
-          _StatusChip(status: event.status),
-          const SizedBox(width: 12),
-          _AttendeesChip(count: event.attendees),
-          const SizedBox(width: 8),
-          IconButton(
-            tooltip: 'Modifica',
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit_rounded),
-          ),
-          IconButton(
-            tooltip: 'Elimina',
-            onPressed: onDelete,
-            icon: const Icon(Icons.delete_outline_rounded),
-            color: const Color(0xFFEF4444),
-          ),
-        ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  leadingIcon,
+                  const SizedBox(width: 12),
+                  Expanded(child: details),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [statusChip, attendeesChip, actions],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
