@@ -229,7 +229,10 @@ class _TopBar extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -894,6 +897,7 @@ class _TrendPanelState extends State<_TrendPanel> {
   @override
   Widget build(BuildContext context) {
     if (widget.trend.isEmpty) return const SizedBox.shrink();
+    final isPhone = MediaQuery.sizeOf(context).width < 700;
 
     final maxValue = widget.trend
         .map((e) => math.max(e.activeUsers, e.contentCreated))
@@ -943,24 +947,41 @@ class _TrendPanelState extends State<_TrendPanel> {
                           final index = entry.key;
                           final point = entry.value;
 
+                          final group = SizedBox(
+                            key: _groupKeyForIndex(index),
+                            width: groupWidth,
+                            child: _TrendGroup(
+                              point: point,
+                              maxValue: maxValue,
+                              hovered: hoveredIndex == index,
+                            ),
+                          );
+
                           return Padding(
                             padding: EdgeInsets.only(
                               right: index == count - 1 ? 0 : spacing,
                             ),
-                            child: MouseRegion(
-                              onEnter: (_) =>
-                                  setState(() => hoveredIndex = index),
-                              onExit: (_) =>
-                                  setState(() => hoveredIndex = null),
-                              child: SizedBox(
-                                key: _groupKeyForIndex(index),
-                                width: groupWidth,
-                                child: _TrendGroup(
-                                  point: point,
-                                  maxValue: maxValue,
-                                  hovered: hoveredIndex == index,
-                                  onHoverChanged: (_) {},
-                                ),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: isPhone
+                                  ? () {
+                                      setState(() {
+                                        hoveredIndex = hoveredIndex == index
+                                            ? null
+                                            : index;
+                                      });
+                                    }
+                                  : null,
+                              child: MouseRegion(
+                                onEnter: isPhone
+                                    ? null
+                                    : (_) =>
+                                          setState(() => hoveredIndex = index),
+                                onExit: isPhone
+                                    ? null
+                                    : (_) =>
+                                          setState(() => hoveredIndex = null),
+                                child: group,
                               ),
                             ),
                           );
@@ -994,6 +1015,14 @@ class _TrendPanelState extends State<_TrendPanel> {
                     ),
                   ),
                 ),
+
+              if (isPhone && hoveredIndex != null)
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () => setState(() => hoveredIndex = null),
+                  ),
+                ),
             ],
           ),
         ),
@@ -1006,13 +1035,11 @@ class _TrendGroup extends StatefulWidget {
   final DashboardTrendPoint point;
   final double maxValue;
   final bool hovered;
-  final ValueChanged<bool> onHoverChanged;
 
   const _TrendGroup({
     required this.point,
     required this.maxValue,
     required this.hovered,
-    required this.onHoverChanged,
   });
 
   @override
@@ -1028,57 +1055,50 @@ class _TrendGroupState extends State<_TrendGroup> {
     final activeHeight = 150 * (point.activeUsers / maxValue);
     final contentHeight = 150 * (point.contentCreated / maxValue);
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => widget.onHoverChanged(true),
-      onExit: (_) => widget.onHoverChanged(false),
-      child: AnimatedScale(
-        scale: widget.hovered ? 1.06 : 1.0,
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: SizedBox(
-            height: 220,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(
-                  height: 170,
-                  alignment: Alignment.bottomCenter,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _TrendBar(
-                        height: activeHeight,
-                        color: const Color(0xFF4F46E5),
-                        highlighted: widget.hovered,
-                      ),
-                      const SizedBox(width: 6),
-                      _TrendBar(
-                        height: contentHeight,
-                        color: const Color(0xFFEC4899),
-                        highlighted: widget.hovered,
-                      ),
-                    ],
-                  ),
+    return AnimatedScale(
+      scale: widget.hovered ? 1.06 : 1.0,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: SizedBox(
+          height: 220,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                height: 170,
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _TrendBar(
+                      height: activeHeight,
+                      color: const Color(0xFF4F46E5),
+                      highlighted: widget.hovered,
+                    ),
+                    const SizedBox(width: 6),
+                    _TrendBar(
+                      height: contentHeight,
+                      color: const Color(0xFFEC4899),
+                      highlighted: widget.hovered,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  _dayLabel(point.date),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: widget.hovered
-                        ? const Color(0xFF111827)
-                        : Colors.grey,
-                    fontWeight: widget.hovered
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                  ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _dayLabel(point.date),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: widget.hovered ? const Color(0xFF111827) : Colors.grey,
+                  fontWeight: widget.hovered
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1306,11 +1326,19 @@ class _QuickActionsGrid extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final width = constraints.maxWidth;
         final crossAxisCount = constraints.maxWidth >= 1000
             ? 3
             : constraints.maxWidth >= 700
             ? 2
             : 1;
+        final childAspectRatio = width >= 1000
+            ? 3.2
+            : width >= 700
+            ? 2.5
+            : width >= 420
+            ? 2.15
+            : 1.65;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -1320,7 +1348,7 @@ class _QuickActionsGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 14,
             mainAxisSpacing: 14,
-            childAspectRatio: 3.2,
+            childAspectRatio: childAspectRatio,
           ),
           itemBuilder: (context, index) {
             return _QuickActionCard(action: actions[index]);
@@ -1346,6 +1374,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
   @override
   Widget build(BuildContext context) {
     final action = widget.action;
+    final compact = MediaQuery.sizeOf(context).width < 430;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1384,42 +1413,93 @@ class _QuickActionCardState extends State<_QuickActionCard> {
               ],
             );
           },
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: action.color.withValues(alpha: 0.14),
-                ),
-                child: Icon(action.icon, color: action.color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
+          child: compact
+              ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: action.color.withValues(alpha: 0.14),
+                          ),
+                          child: Icon(
+                            action.icon,
+                            color: action.color,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
                     Text(
                       action.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       action.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
+                )
+              : Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: action.color.withValues(alpha: 0.14),
+                      ),
+                      child: Icon(action.icon, color: action.color),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            action.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            action.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: Colors.grey,
+                    ),
+                  ],
                 ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: Colors.grey,
-              ),
-            ],
-          ),
         ),
       ),
     );
