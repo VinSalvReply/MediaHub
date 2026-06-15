@@ -290,9 +290,14 @@ class _EventsPageState extends State<EventsPage> {
                       onDragEnd: _endEventDrag,
                     ),
                   if (_isDraggingEvent && _dragFromUserDropZone)
-                    _isHoveringUserDropZone
-                        ? const _GlobalAssignOverlay()
-                        : const _GlobalUnassignOverlay(),
+                    AnimatedCrossFade(
+                      firstChild: const _GlobalAssignOverlay(),
+                      secondChild: const _GlobalUnassignOverlay(),
+                      crossFadeState: _isHoveringUserDropZone
+                          ? CrossFadeState.showFirst
+                          : CrossFadeState.showSecond,
+                      duration: const Duration(milliseconds: 200),
+                    ),
                 ],
               ),
             );
@@ -788,16 +793,23 @@ class _GlobalAssignOverlay extends StatelessWidget {
       child: IgnorePointer(
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.06),
-            border: Border.all(color: const Color(0xFF4F46E5), width: 2),
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+            border: Border.all(color: const Color(0xFF4F46E5), width: 2.5),
           ),
           child: Center(
             child: Container(
               margin: const EdgeInsets.all(20),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF3730A3).withValues(alpha: 0.9),
+                color: const Color(0xFF3730A3).withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: const Text(
                 'Rilascia su un utente per assegnare l\'evento',
@@ -825,16 +837,23 @@ class _GlobalUnassignOverlay extends StatelessWidget {
       child: IgnorePointer(
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.07),
-            border: Border.all(color: const Color(0xFFEF4444), width: 2),
+            color: const Color(0xFFEF4444).withValues(alpha: 0.16),
+            border: Border.all(color: const Color(0xFFEF4444), width: 2.5),
           ),
           child: Center(
             child: Container(
               margin: const EdgeInsets.all(20),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF7F1D1D).withValues(alpha: 0.9),
+                color: const Color(0xFF7F1D1D).withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: const Text(
                 'Rilascia fuori dagli utenti per disassegnare l\'evento',
@@ -929,53 +948,6 @@ class _EventsBody extends StatelessWidget {
     required this.onAssign,
     required this.onUnassign,
   });
-
-  Future<void> _openAssignSheet(BuildContext context, Event event) async {
-    final selectedUserId = await showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text(
-                  'Assegna evento',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                subtitle: Text(
-                  event.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Divider(height: 1),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: controller.users.length,
-                  itemBuilder: (context, index) {
-                    final user = controller.users[index];
-                    return ListTile(
-                      leading: const CircleAvatar(
-                        child: Icon(Icons.person_rounded),
-                      ),
-                      title: Text('${user.name} ${user.lastName}'),
-                      subtitle: Text(user.email),
-                      onTap: () => Navigator.of(context).pop(user.id),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    if (selectedUserId == null) return;
-    await onAssign(event, selectedUserId);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1234,94 +1206,298 @@ class _EventsBody extends StatelessWidget {
                 child: child,
               );
             },
-            child: enableDragDrop
-                ? Draggable<Event>(
-                    data: source[i],
-                    onDragStarted: onGlobalListDragStart,
-                    onDragUpdate: (details) =>
-                        onDragCursorMove(details.globalPosition),
-                    onDragEnd: (_) => onDragEnd(),
-                    onDragCompleted: onDragEnd,
-                    onDraggableCanceled: (_, _) => onDragEnd(),
-                    feedback: Material(
-                      color: Colors.transparent,
-                      child: SizedBox(
-                        width: 480,
-                        child: EventListTile(
-                          event: source[i],
-                          onEdit: () {},
-                          onDelete: () {},
-                        ),
-                      ),
-                    ),
-                    childWhenDragging: Opacity(
-                      opacity: 0.45,
-                      child: EventListTile(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 700;
+                return isMobile
+                    ? _SwipeableEventCard(
                         event: source[i],
                         onEdit: () => onEdit(source[i]),
                         onDelete: () => onDelete(source[i]),
-                      ),
-                    ),
-                    child: EventListTile(
-                      event: source[i],
-                      onEdit: () => onEdit(source[i]),
-                      onDelete: () => onDelete(source[i]),
-                    ),
-                  )
-                : _MobileEventAssignmentCard(
-                    event: source[i],
-                    onEdit: () => onEdit(source[i]),
-                    onDelete: () => onDelete(source[i]),
-                    onAssignTap: () => _openAssignSheet(context, source[i]),
-                    onUnassignTap: source[i].userId == null
-                        ? null
-                        : () => onUnassign(source[i]),
-                  ),
+                        onAssign: onAssign,
+                        onUnassign: onUnassign,
+                        controller: controller,
+                      )
+                    : Draggable<Event>(
+                        data: source[i],
+                        onDragStarted: onGlobalListDragStart,
+                        onDragUpdate: (details) =>
+                            onDragCursorMove(details.globalPosition),
+                        onDragEnd: (_) => onDragEnd(),
+                        onDragCompleted: onDragEnd,
+                        onDraggableCanceled: (_, _) => onDragEnd(),
+                        feedback: Material(
+                          color: Colors.transparent,
+                          child: SizedBox(
+                            width: 480,
+                            child: EventListTile(
+                              event: source[i],
+                              onEdit: () {},
+                              onDelete: () {},
+                            ),
+                          ),
+                        ),
+                        childWhenDragging: Opacity(
+                          opacity: 0.45,
+                          child: EventListTile(
+                            event: source[i],
+                            onEdit: () => onEdit(source[i]),
+                            onDelete: () => onDelete(source[i]),
+                          ),
+                        ),
+                        child: EventListTile(
+                          event: source[i],
+                          onEdit: () => onEdit(source[i]),
+                          onDelete: () => onDelete(source[i]),
+                        ),
+                      );
+              },
+            ),
           ),
         ),
     ];
   }
 }
 
-class _MobileEventAssignmentCard extends StatelessWidget {
+class _SwipeableEventCard extends StatefulWidget {
   final Event event;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  final VoidCallback onAssignTap;
-  final VoidCallback? onUnassignTap;
+  final Future<void> Function(Event event, int? userId) onAssign;
+  final Future<void> Function(Event event) onUnassign;
+  final EventsController controller;
 
-  const _MobileEventAssignmentCard({
+  const _SwipeableEventCard({
     required this.event,
     required this.onEdit,
     required this.onDelete,
-    required this.onAssignTap,
-    required this.onUnassignTap,
+    required this.onAssign,
+    required this.onUnassign,
+    required this.controller,
   });
 
   @override
+  State<_SwipeableEventCard> createState() => _SwipeableEventCardState();
+}
+
+class _SwipeableEventCardState extends State<_SwipeableEventCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _springController;
+  late Animation<double> _springAnimation;
+  double _dragOffset = 0;
+  bool _isAnimating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _springController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _springAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _springController, curve: Curves.elasticOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _springController.dispose();
+    super.dispose();
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    if (_isAnimating) return;
+
+    final velocity = details.velocity.pixelsPerSecond.dx;
+    final threshold = 60.0;
+
+    if (_dragOffset.abs() < threshold && velocity.abs() < 300) {
+      _animateBack();
+      return;
+    }
+
+    if (_dragOffset > threshold || velocity > 300) {
+      _handleSwipeRight();
+    } else if (_dragOffset < -threshold || velocity < -300) {
+      _handleSwipeLeft();
+    } else {
+      _animateBack();
+    }
+  }
+
+  Future<void> _handleSwipeRight() async {
+    _isAnimating = true;
+    final userId = await _showAssignBottomSheet();
+
+    if (userId != null && mounted) {
+      await widget.onAssign(widget.event, userId);
+      if (mounted) {
+        _animateBack();
+      }
+    } else {
+      if (mounted) {
+        _animateBack();
+      }
+    }
+    _isAnimating = false;
+  }
+
+  Future<void> _handleSwipeLeft() async {
+    _isAnimating = true;
+    await widget.onUnassign(widget.event);
+    if (mounted) {
+      _animateBack();
+    }
+    _isAnimating = false;
+  }
+
+  void _animateBack() {
+    _isAnimating = true;
+
+    _springAnimation = Tween<double>(begin: _dragOffset, end: 0).animate(
+      CurvedAnimation(parent: _springController, curve: Curves.elasticOut),
+    );
+
+    _springController.forward(from: 0).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          _dragOffset = 0;
+          _isAnimating = false;
+        });
+      }
+    });
+  }
+
+  Future<int?> _showAssignBottomSheet() {
+    return showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text(
+                  'Assegna evento',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(
+                  widget.event.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Divider(height: 1),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.controller.users.length,
+                  itemBuilder: (context, index) {
+                    final user = widget.controller.users[index];
+                    return ListTile(
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.person_rounded),
+                      ),
+                      title: Text('${user.name} ${user.lastName}'),
+                      subtitle: Text(user.email),
+                      onTap: () => Navigator.of(context).pop(user.id),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        EventListTile(event: event, onEdit: onEdit, onDelete: onDelete),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            FilledButton.tonalIcon(
-              onPressed: onAssignTap,
-              icon: const Icon(Icons.person_add_alt_1_rounded),
-              label: const Text('Assegna'),
-            ),
-            OutlinedButton.icon(
-              onPressed: onUnassignTap,
-              icon: const Icon(Icons.link_off_rounded),
-              label: const Text('Disassegna'),
-            ),
-          ],
-        ),
-      ],
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        if (_isAnimating) return;
+
+        setState(() {
+          _dragOffset += details.delta.dx;
+          _dragOffset = _dragOffset.clamp(-120.0, 120.0);
+
+        });
+      },
+      onHorizontalDragEnd: _handleDragEnd,
+      child: AnimatedBuilder(
+        animation: _springController,
+        builder: (context, child) {
+          final offset = _isAnimating ? _springAnimation.value : _dragOffset;
+          final normalizedOffset = (offset.abs() / 120).clamp(0.0, 1.0);
+
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: offset > 0
+                        ? const Color(0xFFEEF2FF)
+                        : offset < 0
+                        ? const Color(0xFFFEE2E2)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Builder(
+                    builder: (context) {
+                      if (offset > 10) {
+                        return Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 16),
+                            child: Opacity(
+                              opacity: normalizedOffset,
+                              child: const Icon(
+                                Icons.person_add_alt_rounded,
+                                color: Color(0xFF4F46E5),
+                                size: 48,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (offset < -10) {
+                        return Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: Opacity(
+                              opacity: normalizedOffset,
+                              child: const Icon(
+                                Icons.link_off_rounded,
+                                color: Color(0xFFEF4444),
+                                size: 48,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return const SizedBox();
+                    },
+                  ),
+                ),
+              ),
+
+              Transform.translate(
+                offset: Offset(offset, 0),
+                child: EventListTile(
+                  event: widget.event,
+                  onEdit: widget.onEdit,
+                  onDelete: widget.onDelete,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
