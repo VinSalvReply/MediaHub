@@ -93,7 +93,9 @@ class UserService {
     int eventId,
     Map<String, dynamic> body,
   ) async {
-    final result = _mapJson(await _api.put('/users/$userId/events/$eventId', body));
+    final result = _mapJson(
+      await _api.put('/users/$userId/events/$eventId', body),
+    );
     _invalidateCache(['events']);
     return result;
   }
