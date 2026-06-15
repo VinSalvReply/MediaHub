@@ -290,12 +290,21 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initial != null;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isCompact = screenWidth < 640;
     return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 12 : 24,
+        vertical: isCompact ? 12 : 24,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620, maxHeight: 860),
+        constraints: BoxConstraints(
+          maxWidth: 620,
+          maxHeight: isCompact ? MediaQuery.sizeOf(context).height - 24 : 860,
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(isCompact ? 16 : 24),
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -305,8 +314,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                 children: [
                   Text(
                     isEdit ? 'Modifica contenuto' : 'Nuovo contenuto',
-                    style: const TextStyle(
-                      fontSize: 20,
+                    style: TextStyle(
+                      fontSize: isCompact ? 18 : 20,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -328,10 +337,10 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                         : null,
                   ),
                   const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
+                  if (isCompact)
+                    Column(
+                      children: [
+                        DropdownButtonFormField<String>(
                           initialValue: _type,
                           decoration: const InputDecoration(
                             labelText: 'Tipo',
@@ -349,10 +358,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                             if (value != null) _onTypeChanged(value);
                           },
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
                           initialValue: _status,
                           decoration: const InputDecoration(
                             labelText: 'Stato',
@@ -369,9 +376,53 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                           onChanged: (value) =>
                               setState(() => _status = value ?? _status),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _type,
+                            decoration: const InputDecoration(
+                              labelText: 'Tipo',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: _contentTypes
+                                .map(
+                                  (type) => DropdownMenuItem(
+                                    value: type,
+                                    child: Text(_contentTypeLabel(type)),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) _onTypeChanged(value);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _status,
+                            decoration: const InputDecoration(
+                              labelText: 'Stato',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: _contentStatuses
+                                .map(
+                                  (status) => DropdownMenuItem(
+                                    value: status,
+                                    child: Text(_contentStatusLabel(status)),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => _status = value ?? _status),
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 18),
                   _MediaSection(
                     type: _type,
@@ -413,10 +464,10 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
+                    if (isCompact)
+                      Column(
+                        children: [
+                          TextFormField(
                             controller: _ctaLabelCtrl,
                             decoration: const InputDecoration(
                               labelText: 'Testo CTA',
@@ -424,10 +475,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                               border: OutlineInputBorder(),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
+                          const SizedBox(height: 12),
+                          TextFormField(
                             controller: _ctaUrlCtrl,
                             decoration: const InputDecoration(
                               labelText: 'URL CTA',
@@ -436,25 +485,66 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                             ),
                             validator: _optionalUrlValidator,
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _ctaLabelCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Testo CTA',
+                                hintText: 'Es. Scopri di più',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _ctaUrlCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'URL CTA',
+                                hintText: 'https://esempio.it',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: _optionalUrlValidator,
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Annulla'),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: _submit,
-                        child: Text(isEdit ? 'Salva' : 'Aggiungi'),
-                      ),
-                    ],
-                  ),
+                  isCompact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FilledButton(
+                              onPressed: _submit,
+                              child: Text(isEdit ? 'Salva' : 'Aggiungi'),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Annulla'),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Annulla'),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: _submit,
+                              child: Text(isEdit ? 'Salva' : 'Aggiungi'),
+                            ),
+                          ],
+                        ),
                 ],
               ),
             ),
@@ -511,25 +601,52 @@ class _MediaSection extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: mediaUrlController,
-                  decoration: const InputDecoration(
-                    labelText: 'Aggiungi URL media',
-                    hintText: 'https://cdn.esempio.it/file.jpg',
-                    border: OutlineInputBorder(),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 520;
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: mediaUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Aggiungi URL media',
+                        hintText: 'https://cdn.esempio.it/file.jpg',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: onAddMediaUrl,
+                      icon: const Icon(Icons.link_rounded),
+                      label: const Text('Aggiungi'),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: mediaUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Aggiungi URL media',
+                        hintText: 'https://cdn.esempio.it/file.jpg',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                onPressed: onAddMediaUrl,
-                icon: const Icon(Icons.link_rounded),
-                label: const Text('Aggiungi'),
-              ),
-            ],
+                  const SizedBox(width: 8),
+                  FilledButton.tonalIcon(
+                    onPressed: onAddMediaUrl,
+                    icon: const Icon(Icons.link_rounded),
+                    label: const Text('Aggiungi'),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 10),
           OutlinedButton.icon(
@@ -550,18 +667,24 @@ class _MediaSection extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: Colors.grey),
             )
           else
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (var i = 0; i < selectedMedia.length; i++)
-                  _MediaPreviewCard(
-                    media: selectedMedia[i],
-                    onRemove: () => onRemoveMedia(i),
-                    looksLikeImage: looksLikeImage,
-                    looksLikeVideo: looksLikeVideo,
-                  ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cardWidth = constraints.maxWidth < 520 ? 140.0 : 160.0;
+                return Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    for (var i = 0; i < selectedMedia.length; i++)
+                      _MediaPreviewCard(
+                        width: cardWidth,
+                        media: selectedMedia[i],
+                        onRemove: () => onRemoveMedia(i),
+                        looksLikeImage: looksLikeImage,
+                        looksLikeVideo: looksLikeVideo,
+                      ),
+                  ],
+                );
+              },
             ),
         ],
       ),
@@ -570,12 +693,14 @@ class _MediaSection extends StatelessWidget {
 }
 
 class _MediaPreviewCard extends StatelessWidget {
+  final double width;
   final _SelectedMedia media;
   final VoidCallback onRemove;
   final bool Function(String reference) looksLikeImage;
   final bool Function(String reference) looksLikeVideo;
 
   const _MediaPreviewCard({
+    required this.width,
     required this.media,
     required this.onRemove,
     required this.looksLikeImage,
@@ -588,7 +713,7 @@ class _MediaPreviewCard extends StatelessWidget {
     final isVideo = looksLikeVideo(media.reference);
 
     return Container(
-      width: 160,
+      width: width,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,

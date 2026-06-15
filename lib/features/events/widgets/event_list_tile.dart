@@ -6,12 +6,14 @@ class EventListTile extends StatelessWidget {
   final Event event;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final Widget? footer;
 
   const EventListTile({
     super.key,
     required this.event,
     required this.onEdit,
     required this.onDelete,
+    this.footer,
   });
 
   @override
@@ -140,63 +142,110 @@ class EventListTile extends StatelessWidget {
             child: const Icon(Icons.event_rounded, color: Color(0xFF14B8A6)),
           );
 
-          Widget actions = Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: 'Modifica',
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_rounded),
-              ),
-              IconButton(
-                tooltip: 'Elimina',
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded),
-                color: const Color(0xFFEF4444),
-              ),
-            ],
+          Widget menuButton = _EventMenuButton(
+            onEdit: onEdit,
+            onDelete: onDelete,
           );
 
-          if (!compact) {
-            return Row(
-              children: [
-                leadingIcon,
-                const SizedBox(width: 14),
-                Expanded(child: details),
-                statusChip,
-                const SizedBox(width: 12),
-                attendeesChip,
-                const SizedBox(width: 8),
-                actions,
-              ],
-            );
+          final body = !compact
+              ? Row(
+                  children: [
+                    leadingIcon,
+                    const SizedBox(width: 14),
+                    Expanded(child: details),
+                    statusChip,
+                    const SizedBox(width: 12),
+                    attendeesChip,
+                    const SizedBox(width: 4),
+                    menuButton,
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        leadingIcon,
+                        const SizedBox(width: 12),
+                        Expanded(child: details),
+                        menuButton,
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 8,
+                      children: [statusChip, attendeesChip],
+                    ),
+                  ],
+                );
+
+          if (footer == null) {
+            return body;
           }
 
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  leadingIcon,
-                  const SizedBox(width: 12),
-                  Expanded(child: details),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 10,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [statusChip, attendeesChip, actions],
-              ),
-            ],
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [body, const SizedBox(height: 12), footer!],
           );
         },
       ),
     );
   }
 }
+
+class _EventMenuButton extends StatelessWidget {
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _EventMenuButton({required this.onEdit, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_EventAction>(
+      onSelected: (action) {
+        if (action == _EventAction.edit) onEdit();
+        if (action == _EventAction.delete) onDelete();
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem(
+          value: _EventAction.edit,
+          child: Row(
+            children: [
+              Icon(Icons.edit_rounded, size: 18),
+              SizedBox(width: 10),
+              Text('Modifica'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: _EventAction.delete,
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                size: 18,
+                color: Color(0xFFEF4444),
+              ),
+              SizedBox(width: 10),
+              Text('Elimina', style: TextStyle(color: Color(0xFFEF4444))),
+            ],
+          ),
+        ),
+      ],
+      icon: const Icon(
+        Icons.more_vert_rounded,
+        size: 20,
+        color: Color(0xFF9CA3AF),
+      ),
+      tooltip: '',
+      splashRadius: 18,
+    );
+  }
+}
+
+enum _EventAction { edit, delete }
 
 class _StatusChip extends StatelessWidget {
   final EventStatus status;
