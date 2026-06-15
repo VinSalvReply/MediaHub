@@ -242,7 +242,8 @@ class _EventsPageState extends State<EventsPage> {
                           onSplitChanged: _setSplitAssigned,
                           sortTick: _sortTick,
                           previousAllEventIndexes: _previousAllEventIndexes,
-                          previousAssignedEventIndexes: _previousAssignedEventIndexes,
+                          previousAssignedEventIndexes:
+                              _previousAssignedEventIndexes,
                           previousUnassignedEventIndexes:
                               _previousUnassignedEventIndexes,
                           isDragging: _isDraggingEvent,
@@ -250,7 +251,9 @@ class _EventsPageState extends State<EventsPage> {
                           onSidebarDragStart: _startEventDragFromUserDropZone,
                           onDragEnd: _endEventDrag,
                           onDragCursorMove: (position) {
-                            _assignmentSidebarKey.currentState?.autoScrollAt(position);
+                            _assignmentSidebarKey.currentState?.autoScrollAt(
+                              position,
+                            );
                           },
                           assignmentSidebarKey: _assignmentSidebarKey,
                           onEdit: _openEditDialog,
@@ -1414,7 +1417,9 @@ class _MobileUserOverlayState extends State<_MobileUserOverlay>
                           Expanded(
                             child: ListView(
                               physics: const BouncingScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               children: [
                                 ...widget.controller.users.map((user) {
                                   final userEvents = widget.controller.events
@@ -1432,10 +1437,12 @@ class _MobileUserOverlayState extends State<_MobileUserOverlay>
                                         );
                                       },
                                       builder: (context, candidateData, _) {
-                                        final isActive = candidateData.isNotEmpty;
+                                        final isActive =
+                                            candidateData.isNotEmpty;
                                         return AnimatedContainer(
-                                          duration:
-                                              const Duration(milliseconds: 140),
+                                          duration: const Duration(
+                                            milliseconds: 140,
+                                          ),
                                           padding: const EdgeInsets.all(14),
                                           decoration: BoxDecoration(
                                             color: isActive
@@ -1446,8 +1453,9 @@ class _MobileUserOverlayState extends State<_MobileUserOverlay>
                                                   ? const Color(0xFF4F46E5)
                                                   : _borderColor,
                                             ),
-                                            borderRadius:
-                                                BorderRadius.circular(14),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                           ),
                                           child: Row(
                                             children: [
@@ -1456,8 +1464,9 @@ class _MobileUserOverlayState extends State<_MobileUserOverlay>
                                                 height: 40,
                                                 decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: const Color(0xFF4F46E5)
-                                                      .withValues(alpha: 0.12),
+                                                  color: const Color(
+                                                    0xFF4F46E5,
+                                                  ).withValues(alpha: 0.12),
                                                 ),
                                                 child: const Icon(
                                                   Icons.person_rounded,
@@ -1495,12 +1504,15 @@ class _MobileUserOverlayState extends State<_MobileUserOverlay>
                                                 ),
                                               ),
                                               Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 4,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  color: const Color(0xFFF3F4F6),
+                                                  color: const Color(
+                                                    0xFFF3F4F6,
+                                                  ),
                                                   borderRadius:
                                                       BorderRadius.circular(8),
                                                 ),

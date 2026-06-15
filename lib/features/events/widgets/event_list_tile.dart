@@ -55,10 +55,7 @@ class EventListTile extends StatelessWidget {
                 formatter.format(event.date),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 13,
-                ),
+                style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
               ),
               if (event.contents.isNotEmpty) ...[
                 const SizedBox(height: 6),
@@ -86,24 +83,26 @@ class EventListTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    ...event.contents.take(2).map(
-                      (content) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                    ...event.contents
+                        .take(2)
+                        .map(
+                          (content) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              content.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          content.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ],
