@@ -282,13 +282,6 @@ class _EventsPageState extends State<EventsPage> {
                       ],
                     ),
                   ),
-                  if (isMobile && _isDraggingEvent && !_dragFromUserDropZone)
-                    _MobileUserOverlay(
-                      controller: controller,
-                      isDragging: _isDraggingEvent,
-                      onAssign: _assign,
-                      onDragEnd: _endEventDrag,
-                    ),
                   if (_isDraggingEvent && _dragFromUserDropZone)
                     AnimatedCrossFade(
                       firstChild: const _GlobalAssignOverlay(),
@@ -436,66 +429,45 @@ class _EventsWorkspace extends StatelessWidget {
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 1120;
         final enableDragDrop = constraints.maxWidth >= 700;
+
+        // Always show sidebar on all screen sizes
+        final Widget eventsBody = _EventsBody(
+          controller: controller,
+          sortMode: sortMode,
+          onSortChanged: onSortChanged,
+          splitAssigned: splitAssigned,
+          previousSplitAssigned: previousSplitAssigned,
+          onSplitChanged: onSplitChanged,
+          sortTick: sortTick,
+          previousAllEventIndexes: previousAllEventIndexes,
+          previousAssignedEventIndexes: previousAssignedEventIndexes,
+          previousUnassignedEventIndexes: previousUnassignedEventIndexes,
+          onGlobalListDragStart: onGlobalListDragStart,
+          onDragEnd: onDragEnd,
+          onDragCursorMove: onDragCursorMove,
+          onEdit: onEdit,
+          onDelete: onDelete,
+          onCreate: onCreate,
+          enableDragDrop: enableDragDrop,
+          onAssign: onAssign,
+          onUnassign: onUnassign,
+        );
+
+        final Widget sidebar = _AssignmentSidebar(
+          key: assignmentSidebarKey,
+          controller: controller,
+          onAssign: onAssign,
+          onSidebarDragStart: onSidebarDragStart,
+          onDragEnd: onDragEnd,
+          onSidebarItemDragEnd: onSidebarItemDragEnd,
+          onUserDropZoneHoverChanged: onUserDropZoneHoverChanged,
+          onDragCursorMove: onDragCursorMove,
+          dragActive: isDragging,
+        );
+
         if (compact) {
-          if (!enableDragDrop) {
-            return _EventsBody(
-              controller: controller,
-              sortMode: sortMode,
-              onSortChanged: onSortChanged,
-              splitAssigned: splitAssigned,
-              previousSplitAssigned: previousSplitAssigned,
-              onSplitChanged: onSplitChanged,
-              sortTick: sortTick,
-              previousAllEventIndexes: previousAllEventIndexes,
-              previousAssignedEventIndexes: previousAssignedEventIndexes,
-              previousUnassignedEventIndexes: previousUnassignedEventIndexes,
-              onGlobalListDragStart: onGlobalListDragStart,
-              onDragEnd: onDragEnd,
-              onDragCursorMove: onDragCursorMove,
-              onEdit: onEdit,
-              onDelete: onDelete,
-              onCreate: onCreate,
-              enableDragDrop: false,
-              onAssign: onAssign,
-              onUnassign: onUnassign,
-            );
-          }
           return Column(
-            children: [
-              _EventsBody(
-                controller: controller,
-                sortMode: sortMode,
-                onSortChanged: onSortChanged,
-                splitAssigned: splitAssigned,
-                previousSplitAssigned: previousSplitAssigned,
-                onSplitChanged: onSplitChanged,
-                sortTick: sortTick,
-                previousAllEventIndexes: previousAllEventIndexes,
-                previousAssignedEventIndexes: previousAssignedEventIndexes,
-                previousUnassignedEventIndexes: previousUnassignedEventIndexes,
-                onGlobalListDragStart: onGlobalListDragStart,
-                onDragEnd: onDragEnd,
-                onDragCursorMove: onDragCursorMove,
-                onEdit: onEdit,
-                onDelete: onDelete,
-                onCreate: onCreate,
-                enableDragDrop: true,
-                onAssign: onAssign,
-                onUnassign: onUnassign,
-              ),
-              const SizedBox(height: 16),
-              _AssignmentSidebar(
-                key: assignmentSidebarKey,
-                controller: controller,
-                onAssign: onAssign,
-                onSidebarDragStart: onSidebarDragStart,
-                onDragEnd: onDragEnd,
-                onSidebarItemDragEnd: onSidebarItemDragEnd,
-                onUserDropZoneHoverChanged: onUserDropZoneHoverChanged,
-                onDragCursorMove: onDragCursorMove,
-                dragActive: isDragging,
-              ),
-            ],
+            children: [eventsBody, const SizedBox(height: 16), sidebar],
           );
         }
 
@@ -1206,299 +1178,42 @@ class _EventsBody extends StatelessWidget {
                 child: child,
               );
             },
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isMobile = constraints.maxWidth < 700;
-                return isMobile
-                    ? _SwipeableEventCard(
-                        event: source[i],
-                        onEdit: () => onEdit(source[i]),
-                        onDelete: () => onDelete(source[i]),
-                        onAssign: onAssign,
-                        onUnassign: onUnassign,
-                        controller: controller,
-                      )
-                    : Draggable<Event>(
-                        data: source[i],
-                        onDragStarted: onGlobalListDragStart,
-                        onDragUpdate: (details) =>
-                            onDragCursorMove(details.globalPosition),
-                        onDragEnd: (_) => onDragEnd(),
-                        onDragCompleted: onDragEnd,
-                        onDraggableCanceled: (_, _) => onDragEnd(),
-                        feedback: Material(
-                          color: Colors.transparent,
-                          child: SizedBox(
-                            width: 480,
-                            child: EventListTile(
-                              event: source[i],
-                              onEdit: () {},
-                              onDelete: () {},
-                            ),
-                          ),
-                        ),
-                        childWhenDragging: Opacity(
-                          opacity: 0.45,
-                          child: EventListTile(
-                            event: source[i],
-                            onEdit: () => onEdit(source[i]),
-                            onDelete: () => onDelete(source[i]),
-                          ),
-                        ),
-                        child: EventListTile(
-                          event: source[i],
-                          onEdit: () => onEdit(source[i]),
-                          onDelete: () => onDelete(source[i]),
-                        ),
-                      );
-              },
+            child: Draggable<Event>(
+              data: source[i],
+              onDragStarted: onGlobalListDragStart,
+              onDragUpdate: (details) =>
+                  onDragCursorMove(details.globalPosition),
+              onDragEnd: (_) => onDragEnd(),
+              onDragCompleted: onDragEnd,
+              onDraggableCanceled: (_, _) => onDragEnd(),
+              feedback: Material(
+                color: Colors.transparent,
+                child: SizedBox(
+                  width: 480,
+                  child: EventListTile(
+                    event: source[i],
+                    onEdit: () {},
+                    onDelete: () {},
+                  ),
+                ),
+              ),
+              childWhenDragging: Opacity(
+                opacity: 0.45,
+                child: EventListTile(
+                  event: source[i],
+                  onEdit: () => onEdit(source[i]),
+                  onDelete: () => onDelete(source[i]),
+                ),
+              ),
+              child: EventListTile(
+                event: source[i],
+                onEdit: () => onEdit(source[i]),
+                onDelete: () => onDelete(source[i]),
+              ),
             ),
           ),
         ),
     ];
-  }
-}
-
-class _SwipeableEventCard extends StatefulWidget {
-  final Event event;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-  final Future<void> Function(Event event, int? userId) onAssign;
-  final Future<void> Function(Event event) onUnassign;
-  final EventsController controller;
-
-  const _SwipeableEventCard({
-    required this.event,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onAssign,
-    required this.onUnassign,
-    required this.controller,
-  });
-
-  @override
-  State<_SwipeableEventCard> createState() => _SwipeableEventCardState();
-}
-
-class _SwipeableEventCardState extends State<_SwipeableEventCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _springController;
-  late Animation<double> _springAnimation;
-  double _dragOffset = 0;
-  bool _isAnimating = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _springController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _springAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _springController, curve: Curves.elasticOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _springController.dispose();
-    super.dispose();
-  }
-
-  void _handleDragEnd(DragEndDetails details) {
-    if (_isAnimating) return;
-
-    final velocity = details.velocity.pixelsPerSecond.dx;
-    final threshold = 60.0;
-
-    if (_dragOffset.abs() < threshold && velocity.abs() < 300) {
-      _animateBack();
-      return;
-    }
-
-    if (_dragOffset > threshold || velocity > 300) {
-      _handleSwipeRight();
-    } else if (_dragOffset < -threshold || velocity < -300) {
-      _handleSwipeLeft();
-    } else {
-      _animateBack();
-    }
-  }
-
-  Future<void> _handleSwipeRight() async {
-    _isAnimating = true;
-    final userId = await _showAssignBottomSheet();
-
-    if (userId != null && mounted) {
-      await widget.onAssign(widget.event, userId);
-      if (mounted) {
-        _animateBack();
-      }
-    } else {
-      if (mounted) {
-        _animateBack();
-      }
-    }
-    _isAnimating = false;
-  }
-
-  Future<void> _handleSwipeLeft() async {
-    _isAnimating = true;
-    await widget.onUnassign(widget.event);
-    if (mounted) {
-      _animateBack();
-    }
-    _isAnimating = false;
-  }
-
-  void _animateBack() {
-    _isAnimating = true;
-
-    _springAnimation = Tween<double>(begin: _dragOffset, end: 0).animate(
-      CurvedAnimation(parent: _springController, curve: Curves.elasticOut),
-    );
-
-    _springController.forward(from: 0).whenComplete(() {
-      if (mounted) {
-        setState(() {
-          _dragOffset = 0;
-          _isAnimating = false;
-        });
-      }
-    });
-  }
-
-  Future<int?> _showAssignBottomSheet() {
-    return showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text(
-                  'Assegna evento',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                subtitle: Text(
-                  widget.event.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Divider(height: 1),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: widget.controller.users.length,
-                  itemBuilder: (context, index) {
-                    final user = widget.controller.users[index];
-                    return ListTile(
-                      leading: const CircleAvatar(
-                        child: Icon(Icons.person_rounded),
-                      ),
-                      title: Text('${user.name} ${user.lastName}'),
-                      subtitle: Text(user.email),
-                      onTap: () => Navigator.of(context).pop(user.id),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onHorizontalDragUpdate: (details) {
-        if (_isAnimating) return;
-
-        setState(() {
-          _dragOffset += details.delta.dx;
-          _dragOffset = _dragOffset.clamp(-120.0, 120.0);
-
-        });
-      },
-      onHorizontalDragEnd: _handleDragEnd,
-      child: AnimatedBuilder(
-        animation: _springController,
-        builder: (context, child) {
-          final offset = _isAnimating ? _springAnimation.value : _dragOffset;
-          final normalizedOffset = (offset.abs() / 120).clamp(0.0, 1.0);
-
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: offset > 0
-                        ? const Color(0xFFEEF2FF)
-                        : offset < 0
-                        ? const Color(0xFFFEE2E2)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Builder(
-                    builder: (context) {
-                      if (offset > 10) {
-                        return Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 16),
-                            child: Opacity(
-                              opacity: normalizedOffset,
-                              child: const Icon(
-                                Icons.person_add_alt_rounded,
-                                color: Color(0xFF4F46E5),
-                                size: 48,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (offset < -10) {
-                        return Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 16),
-                            child: Opacity(
-                              opacity: normalizedOffset,
-                              child: const Icon(
-                                Icons.link_off_rounded,
-                                color: Color(0xFFEF4444),
-                                size: 48,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      return const SizedBox();
-                    },
-                  ),
-                ),
-              ),
-
-              Transform.translate(
-                offset: Offset(offset, 0),
-                child: EventListTile(
-                  event: widget.event,
-                  onEdit: widget.onEdit,
-                  onDelete: widget.onDelete,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
   }
 }
 
@@ -1529,254 +1244,6 @@ class _SplitSection extends StatelessWidget {
           Text('$count', style: const TextStyle(color: _textMuted)),
         ],
       ),
-    );
-  }
-}
-
-class _MobileUserOverlay extends StatefulWidget {
-  final EventsController controller;
-  final bool isDragging;
-  final Future<void> Function(Event event, int? userId) onAssign;
-  final VoidCallback onDragEnd;
-
-  const _MobileUserOverlay({
-    required this.controller,
-    required this.isDragging,
-    required this.onAssign,
-    required this.onDragEnd,
-  });
-
-  @override
-  State<_MobileUserOverlay> createState() => _MobileUserOverlayState();
-}
-
-class _MobileUserOverlayState extends State<_MobileUserOverlay>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-  late Animation<double> _slideUp;
-  late Animation<double> _fade;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _slideUp = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-    );
-    _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-    );
-    _animController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animController,
-      builder: (context, _) {
-        return Transform.translate(
-          offset: Offset(0, 100 * _slideUp.value),
-          child: Opacity(
-            opacity: _fade.value,
-            child: Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: widget.onDragEnd,
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.0),
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      margin: const EdgeInsets.all(16),
-                      constraints: const BoxConstraints(maxHeight: 400),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: _borderColor),
-                        boxShadow: const [
-                          BoxShadow(
-                            blurRadius: 30,
-                            offset: Offset(0, 12),
-                            color: Color(0x1A000000),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Assegna a utente',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Rilascia su un utente per assegnare l\'evento',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: _textMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: ListView(
-                              physics: const BouncingScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              children: [
-                                ...widget.controller.users.map((user) {
-                                  final userEvents = widget.controller.events
-                                      .where((event) => event.userId == user.id)
-                                      .length;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: DragTarget<Event>(
-                                      onWillAcceptWithDetails: (_) => true,
-                                      onAcceptWithDetails: (details) {
-                                        widget.onAssign(details.data, user.id);
-                                        Future.delayed(
-                                          const Duration(milliseconds: 200),
-                                          widget.onDragEnd,
-                                        );
-                                      },
-                                      builder: (context, candidateData, _) {
-                                        final isActive =
-                                            candidateData.isNotEmpty;
-                                        return AnimatedContainer(
-                                          duration: const Duration(
-                                            milliseconds: 140,
-                                          ),
-                                          padding: const EdgeInsets.all(14),
-                                          decoration: BoxDecoration(
-                                            color: isActive
-                                                ? const Color(0xFFEEF2FF)
-                                                : const Color(0xFFF8FAFC),
-                                            border: Border.all(
-                                              color: isActive
-                                                  ? const Color(0xFF4F46E5)
-                                                  : _borderColor,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Container(
-                                                width: 40,
-                                                height: 40,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: const Color(
-                                                    0xFF4F46E5,
-                                                  ).withValues(alpha: 0.12),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.person_rounded,
-                                                  color: Color(0xFF4F46E5),
-                                                  size: 20,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      '${user.name} ${user.lastName}',
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                    Text(
-                                                      user.email,
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: _textMuted,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 4,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(
-                                                    0xFFF3F4F6,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: Text(
-                                                  '$userEvents',
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: _textMuted,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.tonal(
-                                onPressed: widget.onDragEnd,
-                                child: const Text('Chiudi'),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
