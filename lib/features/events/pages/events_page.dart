@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:mediahub/features/events/controllers/events_controller.dart';
@@ -22,11 +23,6 @@ class EventsPage extends StatefulWidget {
 
 class _EventsPageState extends State<EventsPage> {
   late final EventsController controller;
-  final GlobalKey<_AssignmentSidebarState> _assignmentSidebarKey =
-      GlobalKey<_AssignmentSidebarState>();
-  bool _isDraggingEvent = false;
-  bool _dragFromUserDropZone = false;
-  bool _isHoveringUserDropZone = false;
   EventSortMode _sortMode = EventSortMode.dateAsc;
   bool _splitAssigned = false;
   bool _previousSplitAssigned = false;
@@ -34,49 +30,6 @@ class _EventsPageState extends State<EventsPage> {
   Map<int, int> _previousAllEventIndexes = const {};
   Map<int, int> _previousAssignedEventIndexes = const {};
   Map<int, int> _previousUnassignedEventIndexes = const {};
-
-  void _startEventDragFromGlobalList() {
-    if (_isDraggingEvent && !_dragFromUserDropZone) return;
-    setState(() {
-      _isDraggingEvent = true;
-      _dragFromUserDropZone = false;
-      _isHoveringUserDropZone = false;
-    });
-  }
-
-  void _startEventDragFromUserDropZone() {
-    if (_isDraggingEvent && _dragFromUserDropZone) return;
-    setState(() {
-      _isDraggingEvent = true;
-      _dragFromUserDropZone = true;
-      _isHoveringUserDropZone = false;
-    });
-  }
-
-  void _setUserDropZoneHover(bool value) {
-    if (_isHoveringUserDropZone == value) return;
-    setState(() {
-      _isHoveringUserDropZone = value;
-    });
-  }
-
-  void _endEventDrag() {
-    if (!_isDraggingEvent && !_dragFromUserDropZone) {
-      return;
-    }
-    setState(() {
-      _isDraggingEvent = false;
-      _dragFromUserDropZone = false;
-      _isHoveringUserDropZone = false;
-    });
-  }
-
-  void _handleSidebarItemDragEnd(Event event, DraggableDetails details) {
-    if (!details.wasAccepted) {
-      _unassign(event);
-    }
-    _endEventDrag();
-  }
 
   void _setSortMode(EventSortMode? mode) {
     if (mode == null || mode == _sortMode) return;
@@ -192,6 +145,26 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
+  Future<void> _openQuickAssignSheet(Event event) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      barrierColor: Colors.transparent,
+      builder: (ctx) => _QuickAssignBottomSheet(
+        event: event,
+        users: controller.users,
+        onAssign: (userId) {
+          if (userId == null) {
+            _unassign(event);
+          } else {
+            _assign(event, userId);
+          }
+          Navigator.pop(ctx);
+        },
+      ),
+    );
+  }
+
   Future<void> _confirmDelete(Event event) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -263,34 +236,14 @@ class _EventsPageState extends State<EventsPage> {
                               _previousAssignedEventIndexes,
                           previousUnassignedEventIndexes:
                               _previousUnassignedEventIndexes,
-                          isDragging: _isDraggingEvent,
-                          onGlobalListDragStart: _startEventDragFromGlobalList,
-                          onSidebarDragStart: _startEventDragFromUserDropZone,
-                          onDragEnd: _endEventDrag,
-                          onSidebarItemDragEnd: _handleSidebarItemDragEnd,
-                          onUserDropZoneHoverChanged: _setUserDropZoneHover,
-                          onDragCursorMove: (position) {
-                            _assignmentSidebarKey.currentState?.autoScrollAt(
-                              position,
-                            );
-                          },
-                          assignmentSidebarKey: _assignmentSidebarKey,
                           onEdit: _openEditDialog,
                           onDelete: _confirmDelete,
                           onCreate: _openCreateDialog,
+                          onOpenQuickAssign: _openQuickAssignSheet,
                         ),
                       ],
                     ),
                   ),
-                  if (_isDraggingEvent && _dragFromUserDropZone)
-                    AnimatedCrossFade(
-                      firstChild: const _GlobalAssignOverlay(),
-                      secondChild: const _GlobalUnassignOverlay(),
-                      crossFadeState: _isHoveringUserDropZone
-                          ? CrossFadeState.showFirst
-                          : CrossFadeState.showSecond,
-                      duration: const Duration(milliseconds: 200),
-                    ),
                 ],
               ),
             );
@@ -384,18 +337,10 @@ class _EventsWorkspace extends StatelessWidget {
   final Map<int, int> previousAllEventIndexes;
   final Map<int, int> previousAssignedEventIndexes;
   final Map<int, int> previousUnassignedEventIndexes;
-  final bool isDragging;
-  final VoidCallback onGlobalListDragStart;
-  final VoidCallback onSidebarDragStart;
-  final VoidCallback onDragEnd;
-  final void Function(Event event, DraggableDetails details)
-  onSidebarItemDragEnd;
-  final ValueChanged<bool> onUserDropZoneHoverChanged;
-  final ValueChanged<Offset> onDragCursorMove;
-  final GlobalKey<_AssignmentSidebarState> assignmentSidebarKey;
   final ValueChanged<Event> onEdit;
   final ValueChanged<Event> onDelete;
   final VoidCallback onCreate;
+  final ValueChanged<Event> onOpenQuickAssign;
 
   const _EventsWorkspace({
     required this.controller,
@@ -410,28 +355,19 @@ class _EventsWorkspace extends StatelessWidget {
     required this.previousAllEventIndexes,
     required this.previousAssignedEventIndexes,
     required this.previousUnassignedEventIndexes,
-    required this.isDragging,
-    required this.onGlobalListDragStart,
-    required this.onSidebarDragStart,
-    required this.onDragEnd,
-    required this.onSidebarItemDragEnd,
-    required this.onUserDropZoneHoverChanged,
-    required this.onDragCursorMove,
-    required this.assignmentSidebarKey,
     required this.onEdit,
     required this.onDelete,
     required this.onCreate,
+    required this.onOpenQuickAssign,
   });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 1120;
         final enableDragDrop = constraints.maxWidth >= 700;
 
-        // Always show sidebar on all screen sizes
-        final Widget eventsBody = _EventsBody(
+        return _EventsBody(
           controller: controller,
           sortMode: sortMode,
           onSortChanged: onSortChanged,
@@ -442,78 +378,13 @@ class _EventsWorkspace extends StatelessWidget {
           previousAllEventIndexes: previousAllEventIndexes,
           previousAssignedEventIndexes: previousAssignedEventIndexes,
           previousUnassignedEventIndexes: previousUnassignedEventIndexes,
-          onGlobalListDragStart: onGlobalListDragStart,
-          onDragEnd: onDragEnd,
-          onDragCursorMove: onDragCursorMove,
           onEdit: onEdit,
           onDelete: onDelete,
           onCreate: onCreate,
           enableDragDrop: enableDragDrop,
           onAssign: onAssign,
           onUnassign: onUnassign,
-        );
-
-        final Widget sidebar = _AssignmentSidebar(
-          key: assignmentSidebarKey,
-          controller: controller,
-          onAssign: onAssign,
-          onSidebarDragStart: onSidebarDragStart,
-          onDragEnd: onDragEnd,
-          onSidebarItemDragEnd: onSidebarItemDragEnd,
-          onUserDropZoneHoverChanged: onUserDropZoneHoverChanged,
-          onDragCursorMove: onDragCursorMove,
-          dragActive: isDragging,
-        );
-
-        if (compact) {
-          return Column(
-            children: [eventsBody, const SizedBox(height: 16), sidebar],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 7,
-              child: _EventsBody(
-                controller: controller,
-                sortMode: sortMode,
-                onSortChanged: onSortChanged,
-                splitAssigned: splitAssigned,
-                previousSplitAssigned: previousSplitAssigned,
-                onSplitChanged: onSplitChanged,
-                sortTick: sortTick,
-                previousAllEventIndexes: previousAllEventIndexes,
-                previousAssignedEventIndexes: previousAssignedEventIndexes,
-                previousUnassignedEventIndexes: previousUnassignedEventIndexes,
-                onGlobalListDragStart: onGlobalListDragStart,
-                onDragEnd: onDragEnd,
-                onDragCursorMove: onDragCursorMove,
-                onEdit: onEdit,
-                onDelete: onDelete,
-                onCreate: onCreate,
-                enableDragDrop: true,
-                onAssign: onAssign,
-                onUnassign: onUnassign,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 3,
-              child: _AssignmentSidebar(
-                key: assignmentSidebarKey,
-                controller: controller,
-                onAssign: onAssign,
-                onSidebarDragStart: onSidebarDragStart,
-                onDragEnd: onDragEnd,
-                onSidebarItemDragEnd: onSidebarItemDragEnd,
-                onUserDropZoneHoverChanged: onUserDropZoneHoverChanged,
-                onDragCursorMove: onDragCursorMove,
-                dragActive: isDragging,
-              ),
-            ),
-          ],
+          onOpenQuickAssign: onOpenQuickAssign,
         );
       },
     );
@@ -532,7 +403,6 @@ class _AssignmentSidebar extends StatefulWidget {
   final bool dragActive;
 
   const _AssignmentSidebar({
-    super.key,
     required this.controller,
     required this.onAssign,
     required this.onSidebarDragStart,
@@ -653,6 +523,7 @@ class _EventDropZone extends StatelessWidget {
   final ValueChanged<bool> onUserDropZoneHoverChanged;
   final ValueChanged<Offset> onDragCursorMove;
   final ValueChanged<Event> onAccept;
+  final ScrollController? scrollController;
 
   const _EventDropZone({
     required this.title,
@@ -664,6 +535,7 @@ class _EventDropZone extends StatelessWidget {
     required this.onUserDropZoneHoverChanged,
     required this.onDragCursorMove,
     required this.onAccept,
+    this.scrollController,
   });
 
   @override
@@ -673,7 +545,31 @@ class _EventDropZone extends StatelessWidget {
         onUserDropZoneHoverChanged(true);
         return true;
       },
-      onMove: (_) => onUserDropZoneHoverChanged(true),
+      onMove: (details) {
+        onUserDropZoneHoverChanged(true);
+        // Auto-scroll quando il drag raggiunge i margini
+        if (scrollController != null) {
+          final box = context.findRenderObject() as RenderBox?;
+          if (box != null) {
+            final local = box.globalToLocal(details.offset);
+            if (local.dy < 60 && scrollController!.offset > 0) {
+              scrollController!.jumpTo(
+                (scrollController!.offset - 20).clamp(
+                  0.0,
+                  scrollController!.position.maxScrollExtent,
+                ),
+              );
+            } else if (local.dy > box.size.height - 60) {
+              scrollController!.jumpTo(
+                (scrollController!.offset + 20).clamp(
+                  0.0,
+                  scrollController!.position.maxScrollExtent,
+                ),
+              );
+            }
+          }
+        }
+      },
       onLeave: (_) => onUserDropZoneHoverChanged(false),
       onAcceptWithDetails: (details) {
         onUserDropZoneHoverChanged(false);
@@ -889,15 +785,13 @@ class _EventsBody extends StatelessWidget {
   final Map<int, int> previousAllEventIndexes;
   final Map<int, int> previousAssignedEventIndexes;
   final Map<int, int> previousUnassignedEventIndexes;
-  final VoidCallback onGlobalListDragStart;
-  final VoidCallback onDragEnd;
-  final ValueChanged<Offset> onDragCursorMove;
   final ValueChanged<Event> onEdit;
   final ValueChanged<Event> onDelete;
   final VoidCallback onCreate;
   final bool enableDragDrop;
   final Future<void> Function(Event event, int? userId) onAssign;
   final Future<void> Function(Event event) onUnassign;
+  final ValueChanged<Event> onOpenQuickAssign;
 
   const _EventsBody({
     required this.controller,
@@ -910,15 +804,13 @@ class _EventsBody extends StatelessWidget {
     required this.previousAllEventIndexes,
     required this.previousAssignedEventIndexes,
     required this.previousUnassignedEventIndexes,
-    required this.onGlobalListDragStart,
-    required this.onDragEnd,
-    required this.onDragCursorMove,
     required this.onEdit,
     required this.onDelete,
     required this.onCreate,
     required this.enableDragDrop,
     required this.onAssign,
     required this.onUnassign,
+    required this.onOpenQuickAssign,
   });
 
   @override
@@ -1175,42 +1067,15 @@ class _EventsBody extends StatelessWidget {
               }
               return Transform.translate(
                 offset: Offset(fromOffsetX * value, fromOffsetY * value),
-                child: child,
-              );
-            },
-            child: Draggable<Event>(
-              data: source[i],
-              onDragStarted: onGlobalListDragStart,
-              onDragUpdate: (details) =>
-                  onDragCursorMove(details.globalPosition),
-              onDragEnd: (_) => onDragEnd(),
-              onDragCompleted: onDragEnd,
-              onDraggableCanceled: (_, _) => onDragEnd(),
-              feedback: Material(
-                color: Colors.transparent,
-                child: SizedBox(
-                  width: 480,
-                  child: EventListTile(
-                    event: source[i],
-                    onEdit: () {},
-                    onDelete: () {},
-                  ),
-                ),
-              ),
-              childWhenDragging: Opacity(
-                opacity: 0.45,
                 child: EventListTile(
                   event: source[i],
                   onEdit: () => onEdit(source[i]),
                   onDelete: () => onDelete(source[i]),
+                  onAssign: () => onOpenQuickAssign(source[i]),
+                  onUnassign: () => onUnassign(source[i]),
                 ),
-              ),
-              child: EventListTile(
-                event: source[i],
-                onEdit: () => onEdit(source[i]),
-                onDelete: () => onDelete(source[i]),
-              ),
-            ),
+              );
+            },
           ),
         ),
     ];
@@ -1244,6 +1109,325 @@ class _SplitSection extends StatelessWidget {
           Text('$count', style: const TextStyle(color: _textMuted)),
         ],
       ),
+    );
+  }
+}
+
+class _QuickAssignBottomSheet extends StatefulWidget {
+  final Event event;
+  final List<dynamic> users;
+  final void Function(int? userId) onAssign;
+
+  const _QuickAssignBottomSheet({
+    required this.event,
+    required this.users,
+    required this.onAssign,
+  });
+
+  @override
+  State<_QuickAssignBottomSheet> createState() =>
+      _QuickAssignBottomSheetState();
+}
+
+class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
+  late TextEditingController _searchController;
+  List<dynamic> _filteredUsers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _filteredUsers = widget.users;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterUsers(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredUsers = widget.users;
+      } else {
+        final lower = query.toLowerCase();
+        _filteredUsers = widget.users.where((user) {
+          final name = '${user.name} ${user.lastName}'.toLowerCase();
+          final email = user.email?.toLowerCase() ?? '';
+          return name.contains(lower) || email.contains(lower);
+        }).toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(28),
+              topRight: Radius.circular(28),
+            ),
+            border: Border(
+              top: BorderSide(color: const Color(0xFFE7EAF0), width: 1),
+              left: BorderSide(color: const Color(0xFFE7EAF0), width: 1),
+              right: BorderSide(color: const Color(0xFFE7EAF0), width: 1),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x15000000),
+                blurRadius: 20,
+                offset: Offset(0, -4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFF3F4F6), width: 1),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Assegna evento',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1F2937),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.event.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: _textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(context),
+                          iconSize: 24,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _filterUsers,
+                  decoration: InputDecoration(
+                    hintText: 'Cerca per nome o email...',
+                    hintStyle: const TextStyle(color: _textMuted, fontSize: 14),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: _textMuted,
+                      size: 20,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _borderColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: _borderColor,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF4F46E5),
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _filteredUsers.isEmpty
+                    ? Center(
+                        child: Text(
+                          _searchController.text.isEmpty
+                              ? 'Nessun utente disponibile'
+                              : 'Nessun utente trovato',
+                          style: const TextStyle(
+                            color: _textMuted,
+                            fontSize: 14,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: _filteredUsers.length,
+                        itemBuilder: (ctx, index) {
+                          final user = _filteredUsers[index];
+                          final isAssigned = widget.event.userId == user.id;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => widget.onAssign(
+                                  isAssigned ? null : user.id,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                highlightColor: const Color(
+                                  0xFF4F46E5,
+                                ).withValues(alpha: 0.08),
+                                splashColor: const Color(
+                                  0xFF4F46E5,
+                                ).withValues(alpha: 0.1),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isAssigned
+                                        ? const Color(
+                                            0xFF4F46E5,
+                                          ).withValues(alpha: 0.08)
+                                        : const Color(0xFFFAFAFA),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: isAssigned
+                                          ? const Color(
+                                              0xFF4F46E5,
+                                            ).withValues(alpha: 0.3)
+                                          : const Color(0xFFE5E7EB),
+                                      width: isAssigned ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: const Color(
+                                            0xFF4F46E5,
+                                          ).withValues(alpha: 0.12),
+                                          border: isAssigned
+                                              ? Border.all(
+                                                  color: const Color(
+                                                    0xFF4F46E5,
+                                                  ),
+                                                  width: 2,
+                                                )
+                                              : null,
+                                        ),
+                                        child: const Icon(
+                                          Icons.person_rounded,
+                                          color: Color(0xFF4F46E5),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${user.name} ${user.lastName}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              user.email ?? '',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: _textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (isAssigned)
+                                        Tooltip(
+                                          message: 'Rimuovi assegnazione',
+                                          child: IconButton(
+                                            icon: const Icon(
+                                              Icons.close_rounded,
+                                              color: Color(0xFFEF4444),
+                                            ),
+                                            onPressed: () =>
+                                                widget.onAssign(null),
+                                            iconSize: 20,
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(
+                                              minWidth: 32,
+                                              minHeight: 32,
+                                            ),
+                                          ),
+                                        )
+                                      else
+                                        const SizedBox(width: 32),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -6,6 +6,8 @@ class EventListTile extends StatelessWidget {
   final Event event;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onAssign;
+  final VoidCallback? onUnassign;
   final Widget? footer;
 
   const EventListTile({
@@ -13,6 +15,8 @@ class EventListTile extends StatelessWidget {
     required this.event,
     required this.onEdit,
     required this.onDelete,
+    this.onAssign,
+    this.onUnassign,
     this.footer,
   });
 
@@ -147,6 +151,60 @@ class EventListTile extends StatelessWidget {
             onDelete: onDelete,
           );
 
+          Widget assignButton = SizedBox.shrink();
+          if (event.userId != null && onUnassign != null) {
+            // Assegnato: mostra icona di rimozione
+            assignButton = SizedBox(
+              height: 40,
+              child: Tooltip(
+                message: 'Rimuovi assegnazione',
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Rimuovere assegnazione?'),
+                        content: const Text(
+                          'L\'evento sarà disassegnato dall\'utente.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: const Text('Annulla'),
+                          ),
+                          FilledButton.tonal(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: const Text('Rimuovi'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      onUnassign!();
+                    }
+                  },
+                  iconSize: 20,
+                  color: const Color(0xFFEF4444),
+                ),
+              ),
+            );
+          } else if (event.userId == null && onAssign != null) {
+            // Non assegnato: mostra icona di aggiunta
+            assignButton = SizedBox(
+              height: 40,
+              child: Tooltip(
+                message: 'Assegna evento',
+                child: IconButton(
+                  icon: const Icon(Icons.person_add_rounded),
+                  onPressed: onAssign,
+                  iconSize: 20,
+                  color: const Color(0xFF4F46E5),
+                ),
+              ),
+            );
+          }
+
           final body = !compact
               ? Row(
                   children: [
@@ -156,6 +214,8 @@ class EventListTile extends StatelessWidget {
                     statusChip,
                     const SizedBox(width: 12),
                     attendeesChip,
+                    const SizedBox(width: 4),
+                    assignButton,
                     const SizedBox(width: 4),
                     menuButton,
                   ],
@@ -169,6 +229,7 @@ class EventListTile extends StatelessWidget {
                         leadingIcon,
                         const SizedBox(width: 12),
                         Expanded(child: details),
+                        assignButton,
                         menuButton,
                       ],
                     ),
