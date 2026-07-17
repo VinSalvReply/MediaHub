@@ -300,8 +300,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 620,
-          maxHeight: isCompact ? MediaQuery.sizeOf(context).height - 24 : 860,
+          maxWidth: 760,
+          maxHeight: isCompact ? MediaQuery.sizeOf(context).height - 60 : 800,
         ),
         child: Padding(
           padding: EdgeInsets.all(isCompact ? 16 : 24),

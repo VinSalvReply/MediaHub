@@ -184,7 +184,7 @@ class _EventFormDialogState extends State<EventFormDialog> {
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 760,
-          maxHeight: isCompact ? MediaQuery.sizeOf(context).height - 24 : 900,
+          maxHeight: isCompact ? MediaQuery.sizeOf(context).height - 60 : 800,
         ),
         child: Padding(
           padding: EdgeInsets.all(isCompact ? 16 : 24),
