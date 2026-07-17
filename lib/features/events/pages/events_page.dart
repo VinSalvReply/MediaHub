@@ -898,51 +898,12 @@ class _EventsBody extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                 ),
               ),
-              SizedBox(
-                width: 210,
-                child: DropdownButtonFormField<EventSortMode>(
-                  initialValue: sortMode,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: EventSortMode.nameAsc,
-                      child: Text('Nome A-Z'),
-                    ),
-                    DropdownMenuItem(
-                      value: EventSortMode.nameDesc,
-                      child: Text('Nome Z-A'),
-                    ),
-                    DropdownMenuItem(
-                      value: EventSortMode.dateAsc,
-                      child: Text('Data crescente'),
-                    ),
-                    DropdownMenuItem(
-                      value: EventSortMode.dateDesc,
-                      child: Text('Data decrescente'),
-                    ),
-                  ],
-                  onChanged: onSortChanged,
-                ),
+              _EventsSettingsMenu(
+                sortMode: sortMode,
+                onSortChanged: onSortChanged,
+                splitAssigned: splitAssigned,
+                onSplitChanged: onSplitChanged,
               ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Dividi vista: assegnati a sinistra, non assegnati a destra',
-                  style: TextStyle(fontSize: 12, color: _textMuted),
-                ),
-              ),
-              Switch.adaptive(value: splitAssigned, onChanged: onSplitChanged),
             ],
           ),
           const SizedBox(height: 6),
@@ -1108,6 +1069,192 @@ class _SplitSection extends StatelessWidget {
           ),
           Text('$count', style: const TextStyle(color: _textMuted)),
         ],
+      ),
+    );
+  }
+}
+
+class _EventsSettingsMenu extends StatelessWidget {
+  final EventSortMode sortMode;
+  final ValueChanged<EventSortMode?> onSortChanged;
+  final bool splitAssigned;
+  final ValueChanged<bool> onSplitChanged;
+
+  const _EventsSettingsMenu({
+    required this.sortMode,
+    required this.onSortChanged,
+    required this.splitAssigned,
+    required this.onSplitChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Impostazioni',
+      icon: const Icon(Icons.tune_rounded),
+      onPressed: () => _showSettingsMenu(context),
+    );
+  }
+
+  void _showSettingsMenu(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _SettingsMenuDialog(
+        sortMode: sortMode,
+        onSortChanged: onSortChanged,
+        splitAssigned: splitAssigned,
+        onSplitChanged: onSplitChanged,
+      ),
+    );
+  }
+}
+
+class _SettingsMenuDialog extends StatefulWidget {
+  final EventSortMode sortMode;
+  final ValueChanged<EventSortMode?> onSortChanged;
+  final bool splitAssigned;
+  final ValueChanged<bool> onSplitChanged;
+
+  const _SettingsMenuDialog({
+    required this.sortMode,
+    required this.onSortChanged,
+    required this.splitAssigned,
+    required this.onSplitChanged,
+  });
+
+  @override
+  State<_SettingsMenuDialog> createState() => _SettingsMenuDialogState();
+}
+
+class _SettingsMenuDialogState extends State<_SettingsMenuDialog> {
+  late EventSortMode _currentSort;
+  late bool _currentSplit;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentSort = widget.sortMode;
+    _currentSplit = widget.splitAssigned;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 340, maxHeight: 320),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Impostazioni',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(context),
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                    iconSize: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Ordinamento',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+              ),
+              const SizedBox(height: 6),
+              DropdownButtonFormField<EventSortMode>(
+                value: _currentSort,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: EventSortMode.nameAsc,
+                    child: Text('Nome A-Z'),
+                  ),
+                  DropdownMenuItem(
+                    value: EventSortMode.nameDesc,
+                    child: Text('Nome Z-A'),
+                  ),
+                  DropdownMenuItem(
+                    value: EventSortMode.dateAsc,
+                    child: Text('Data crescente'),
+                  ),
+                  DropdownMenuItem(
+                    value: EventSortMode.dateDesc,
+                    child: Text('Data decrescente'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _currentSort = value);
+                    widget.onSortChanged(value);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Visualizzazione',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+              ),
+              const SizedBox(height: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE7EAF0)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Text(
+                              'Dividi vista',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Assegnati / Non assegnati',
+                              style: TextStyle(fontSize: 10, color: _textMuted),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch.adaptive(
+                        value: _currentSplit,
+                        onChanged: (value) {
+                          setState(() => _currentSplit = value);
+                          widget.onSplitChanged(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
