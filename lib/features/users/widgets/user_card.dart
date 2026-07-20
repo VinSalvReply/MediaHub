@@ -139,120 +139,147 @@ class _CardContent extends StatelessWidget {
         ? const Color(0xFF22C55E)
         : const Color(0xFFEF4444);
 
-    return Column(
-      children: [
-        Container(
-          height: 110,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.95),
-                color.withValues(alpha: 0.65),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isMobileSize = width < 340;
+
+        // Valori responsivi
+        final headerHeight = isMobileSize ? 95.0 : 110.0;
+        final avatarRadius = isMobileSize ? 38.0 : 43.0;
+        final avatarSize = isMobileSize ? 96.0 : 106.0;
+        final avatarFontSize = isMobileSize ? 24.0 : 28.0;
+        final nameSize = isMobileSize ? 16.0 : 18.0;
+        final horizontalPadding = isMobileSize ? 20.0 : 28.0;
+        final headerTranslate = isMobileSize ? -48.0 : -55.0;
+
+        return Column(
+          children: [
+            Container(
+              height: headerHeight,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    color.withValues(alpha: 0.95),
+                    color.withValues(alpha: 0.65),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(26),
+                ),
+              ),
             ),
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(26),
-            ),
-          ),
-        ),
-        Transform.translate(
-          offset: const Offset(0, -55),
-          child: Column(
-            children: [
-              Stack(
-                alignment: Alignment.bottomRight,
+            Transform.translate(
+              offset: Offset(0, headerTranslate),
+              child: Column(
                 children: [
-                  Container(
-                    width: 106,
-                    height: 106,
-                    decoration: BoxDecoration(shape: BoxShape.circle),
-                    child: CircleAvatar(
-                      radius: 43,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 43,
-                        backgroundColor: color.withValues(alpha: 0.15),
-                        child: Text(
-                          '${user.name[0]}${user.lastName[0]}',
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: avatarSize,
+                        height: avatarSize,
+                        decoration: BoxDecoration(shape: BoxShape.circle),
+                        child: CircleAvatar(
+                          radius: (avatarSize / 2),
+                          backgroundColor: Colors.white,
+                          child: CircleAvatar(
+                            radius: avatarRadius,
+                            backgroundColor: color.withValues(alpha: 0.15),
+                            child: Text(
+                              '${user.name[0]}${user.lastName[0]}',
+                              style: TextStyle(
+                                color: color,
+                                fontSize: avatarFontSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: statusColor,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: user.isActive ? 10 : 4,
+                              color: statusColor.withValues(alpha: 0.30),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      '${user.name} ${user.lastName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: nameSize,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 18,
-                    height: 18,
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: statusColor,
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: user.isActive ? 10 : 4,
-                          color: statusColor.withValues(alpha: 0.30),
+                      color: color.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      user.role,
+                      style: TextStyle(
+                        fontSize: isMobileSize ? 11 : 12,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _InfoRow(
+                          icon: Icons.email_rounded,
+                          text: user.email,
+                          compact: isMobileSize,
+                        ),
+                        const SizedBox(height: 6),
+                        _InfoRow(
+                          icon: Icons.calendar_today_rounded,
+                          text:
+                              'Creato il ${formatDate(user.createdAt, format: "dd-MM-yyyy")}',
+                          compact: isMobileSize,
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                '${user.name} ${user.lastName}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  user.role,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _InfoRow(icon: Icons.email_rounded, text: user.email),
-                    const SizedBox(height: 8),
-                    _InfoRow(
-                      icon: Icons.calendar_today_rounded,
-                      text:
-                          'Creato il ${formatDate(user.createdAt, format: "dd-MM-yyyy")}',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -260,21 +287,26 @@ class _CardContent extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
+  final bool compact;
 
-  const _InfoRow({required this.icon, required this.text});
+  const _InfoRow({
+    required this.icon,
+    required this.text,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.grey),
+        Icon(icon, size: compact ? 13 : 14, color: Colors.grey),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13, color: greyLight),
+            style: TextStyle(fontSize: compact ? 12 : 13, color: greyLight),
           ),
         ),
       ],

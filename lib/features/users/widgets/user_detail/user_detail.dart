@@ -81,39 +81,64 @@ class _UserDetailState extends State<UserDetail>
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
           clipBehavior: Clip.antiAlias,
-          child: SizedBox(
-            width: 1000,
-            height: 720,
-            child: FutureBuilder<UserDetailData>(
-              future: future,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: _UserDetailSkeleton(),
-                  );
-                }
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Calcola dimensioni responsive
+              final screenWidth = MediaQuery.of(context).size.width;
+              final screenHeight = MediaQuery.of(context).size.height;
+              final isMobile = screenWidth < 600;
+              final isTablet = screenWidth < 1200;
 
-                final data = snapshot.data!;
+              late double dialogWidth;
+              late double dialogHeight;
 
-                return Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      _Header(
-                        user: widget.user,
-                        color: widget.color,
-                        onClose: () => Navigator.of(context).maybePop(),
+              if (isMobile) {
+                dialogWidth = screenWidth - 32;
+                dialogHeight = screenHeight - 80;
+              } else if (isTablet) {
+                dialogWidth = screenWidth - 64;
+                dialogHeight = screenHeight - 120;
+              } else {
+                dialogWidth = 1000;
+                dialogHeight = 720;
+              }
+
+              return SizedBox(
+                width: dialogWidth,
+                height: dialogHeight,
+                child: FutureBuilder<UserDetailData>(
+                  future: future,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: _UserDetailSkeleton(),
+                      );
+                    }
+
+                    final data = snapshot.data!;
+                    final padding = isMobile ? 16.0 : 24.0;
+
+                    return Padding(
+                      padding: EdgeInsets.all(padding),
+                      child: Column(
+                        children: [
+                          _Header(
+                            user: widget.user,
+                            color: widget.color,
+                            onClose: () => Navigator.of(context).maybePop(),
+                          ),
+                          SizedBox(height: isMobile ? 12 : 20),
+                          Expanded(
+                            child: _UserTabs(data: data, color: widget.color),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: _UserTabs(data: data, color: widget.color),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ),
       ),
