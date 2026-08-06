@@ -181,8 +181,8 @@ export function buildSeed(): Database {
   }).reverse();
 
   const alerts: Alert[] = [
-    { type: "warning", message: "High inactive users rate" },
-    { type: "info", message: "New event starting soon" },
+    { type: "warning", message: "Elevato tasso di utenti inattivi" },
+    { type: "info", message: "Nuovo evento in arrivo a breve" },
   ];
 
   const topUsers: TopUser[] = Array.from({ length: 5 }, () => ({

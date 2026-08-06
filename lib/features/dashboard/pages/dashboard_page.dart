@@ -1770,7 +1770,7 @@ class _QuickAction {
 }
 
 String _dayLabel(DateTime date) {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   return days[date.weekday - 1];
 }
 
