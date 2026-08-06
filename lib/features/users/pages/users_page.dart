@@ -11,17 +11,31 @@ class UsersPage extends StatefulWidget {
 
 class _UsersPageState extends State<UsersPage> {
   late final UsersController controller;
+  late final ScrollController _scrollController;
+  bool _showScrollToTop = false;
 
   @override
   void initState() {
     super.initState();
     controller = UsersController()..fetchUsers();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_handleScroll);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_handleScroll);
+    _scrollController.dispose();
     controller.dispose();
     super.dispose();
+  }
+
+  void _handleScroll() {
+    final shouldShow = _scrollController.hasClients
+        ? _scrollController.offset > 120
+        : false;
+    if (_showScrollToTop == shouldShow) return;
+    setState(() => _showScrollToTop = shouldShow);
   }
 
   @override
@@ -41,49 +55,93 @@ class _UsersPageState extends State<UsersPage> {
 
         return Container(
           color: const Color(0xFFF5F7FB),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Users',
-                            style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w800,
-                            ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Users',
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'Manage users, roles and activity',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 6),
-                          Text(
-                            'Manage users, roles and activity',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 16),
+                        _TopActionButton(
+                          icon: Icons.search_rounded,
+                          onTap: () {},
+                        ),
+                        const SizedBox(width: 10),
+                        _TopActionButton(
+                          icon: Icons.filter_alt_rounded,
+                          onTap: () {},
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    _TopActionButton(icon: Icons.search_rounded, onTap: () {}),
-                    const SizedBox(width: 10),
-                    _TopActionButton(
-                      icon: Icons.filter_alt_rounded,
-                      onTap: () {},
-                    ),
+                    const SizedBox(height: 24),
+                    _UsersStats(users: users),
+                    const SizedBox(height: 24),
+                    UsersList(users: users),
                   ],
                 ),
-                const SizedBox(height: 24),
-                _UsersStats(users: users),
-                const SizedBox(height: 24),
-                UsersList(users: users),
-              ],
-            ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 12,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: _showScrollToTop ? 1 : 0,
+                  child: IgnorePointer(
+                    ignoring: !_showScrollToTop,
+                    child: Center(
+                      child: SizedBox(
+                        width: 34,
+                        height: 34,
+                        child: FloatingActionButton(
+                          heroTag: null,
+                          mini: true,
+                          onPressed: () {
+                            _scrollController.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 320),
+                              curve: Curves.easeOutCubic,
+                            );
+                          },
+                          backgroundColor: const Color(0xFF4F46E5),
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                          child: const Icon(Icons.keyboard_arrow_up, size: 18),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
