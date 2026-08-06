@@ -12,7 +12,9 @@ class UsersPage extends StatefulWidget {
 class _UsersPageState extends State<UsersPage> {
   late final UsersController controller;
   late final ScrollController _scrollController;
+  late final TextEditingController _searchController;
   bool _showScrollToTop = false;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -20,12 +22,14 @@ class _UsersPageState extends State<UsersPage> {
     controller = UsersController()..fetchUsers();
     _scrollController = ScrollController();
     _scrollController.addListener(_handleScroll);
+    _searchController = TextEditingController();
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_handleScroll);
     _scrollController.dispose();
+    _searchController.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -36,6 +40,16 @@ class _UsersPageState extends State<UsersPage> {
         : false;
     if (_showScrollToTop == shouldShow) return;
     setState(() => _showScrollToTop = shouldShow);
+  }
+
+  List<dynamic> _filterUsers(List<dynamic> users) {
+    if (_searchQuery.trim().isEmpty) return users;
+    final query = _searchQuery.toLowerCase().trim();
+    return users.where((user) {
+      final fullName = '${user.name} ${user.lastName}'.toLowerCase();
+      final email = user.email.toLowerCase();
+      return fullName.contains(query) || email.contains(query);
+    }).toList();
   }
 
   @override
@@ -52,93 +66,110 @@ class _UsersPageState extends State<UsersPage> {
         }
 
         final users = controller.users;
+        final filteredUsers = _filterUsers(users);
+        final hasActiveSearch = _searchQuery.trim().isNotEmpty;
 
         return Container(
           color: const Color(0xFFF5F7FB),
-          child: Stack(
+          child: Column(
             children: [
-              SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(24),
-                child: Column(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Users',
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              SizedBox(height: 6),
-                              Text(
-                                'Manage users, roles and activity',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Users',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        _TopActionButton(
-                          icon: Icons.search_rounded,
-                          onTap: () {},
-                        ),
-                        const SizedBox(width: 10),
-                        _TopActionButton(
-                          icon: Icons.filter_alt_rounded,
-                          onTap: () {},
-                        ),
-                      ],
+                          SizedBox(height: 6),
+                          Text(
+                            'Manage users, roles and activity',
+                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    _UsersStats(users: users),
-                    const SizedBox(height: 24),
-                    UsersList(users: users),
                   ],
                 ),
               ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 12,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 180),
-                  opacity: _showScrollToTop ? 1 : 0,
-                  child: IgnorePointer(
-                    ignoring: !_showScrollToTop,
-                    child: Center(
-                      child: SizedBox(
-                        width: 34,
-                        height: 34,
-                        child: FloatingActionButton(
-                          heroTag: null,
-                          mini: true,
-                          onPressed: () {
-                            _scrollController.animateTo(
-                              0,
-                              duration: const Duration(milliseconds: 320),
-                              curve: Curves.easeOutCubic,
-                            );
-                          },
-                          backgroundColor: const Color(0xFF4F46E5),
-                          foregroundColor: Colors.white,
-                          elevation: 3,
-                          child: const Icon(Icons.keyboard_arrow_up, size: 18),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                child: _UsersSearchBar(
+                  controller: _searchController,
+                  query: _searchQuery,
+                  resultCount: filteredUsers.length,
+                  totalCount: users.length,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  onClear: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _UsersStats(users: users),
+                          const SizedBox(height: 24),
+                          if (filteredUsers.isEmpty && hasActiveSearch)
+                            _UsersSearchEmptyState(query: _searchQuery)
+                          else
+                            UsersList(users: filteredUsers.cast()),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 180),
+                        opacity: _showScrollToTop ? 1 : 0,
+                        child: IgnorePointer(
+                          ignoring: !_showScrollToTop,
+                          child: Center(
+                            child: SizedBox(
+                              width: 34,
+                              height: 34,
+                              child: FloatingActionButton(
+                                heroTag: null,
+                                mini: true,
+                                onPressed: () {
+                                  _scrollController.animateTo(
+                                    0,
+                                    duration: const Duration(milliseconds: 320),
+                                    curve: Curves.easeOutCubic,
+                                  );
+                                },
+                                backgroundColor: const Color(0xFF4F46E5),
+                                foregroundColor: Colors.white,
+                                elevation: 3,
+                                child: const Icon(
+                                  Icons.keyboard_arrow_up,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -157,6 +188,157 @@ class _TopActionButton extends StatefulWidget {
 
   @override
   State<_TopActionButton> createState() => _TopActionButtonState();
+}
+
+class _UsersSearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final String query;
+  final int resultCount;
+  final int totalCount;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _UsersSearchBar({
+    required this.controller,
+    required this.query,
+    required this.resultCount,
+    required this.totalCount,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 700;
+    final hasQuery = query.trim().isNotEmpty;
+
+    return Container(
+      constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 680),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: isMobile ? 10 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 18),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+        boxShadow: const [
+          BoxShadow(
+            blurRadius: 18,
+            offset: Offset(0, 8),
+            color: Color(0x10000000),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: isMobile ? 34 : 38,
+            height: isMobile ? 34 : 38,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.search_rounded,
+              color: Color(0xFF4F46E5),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintText: 'Cerca per nome o email...',
+                hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 8 : 10,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '$resultCount/$totalCount',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF4B5563),
+              ),
+            ),
+          ),
+          if (hasQuery) ...[
+            const SizedBox(width: 6),
+            IconButton(
+              tooltip: 'Pulisci ricerca',
+              onPressed: onClear,
+              icon: const Icon(Icons.close_rounded, size: 20),
+              color: const Color(0xFF6B7280),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              padding: EdgeInsets.zero,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _UsersSearchEmptyState extends StatelessWidget {
+  final String query;
+
+  const _UsersSearchEmptyState({required this.query});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE7EAF0)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.person_search_rounded,
+              color: Color(0xFF4F46E5),
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Nessun utente trovato',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Nessun risultato per "$query"',
+            style: const TextStyle(color: Color(0xFF6B7280)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _TopActionButtonState extends State<_TopActionButton> {
