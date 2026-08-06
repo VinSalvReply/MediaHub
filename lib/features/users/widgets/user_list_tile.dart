@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/widgets/user_detail/user_detail.dart';
 

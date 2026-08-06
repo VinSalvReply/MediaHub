@@ -204,8 +204,6 @@ class _EventsPageState extends State<EventsPage> {
       builder: (context, _) {
         return LayoutBuilder(
           builder: (context, constraints) {
-            final isMobile = constraints.maxWidth < 1120;
-
             return Container(
               color: _bgColor,
               child: Stack(
@@ -499,6 +497,7 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
                               widget.onUserDropZoneHoverChanged,
                           onDragCursorMove: widget.onDragCursorMove,
                           onAccept: (event) => widget.onAssign(event, user.id),
+                          scrollController: _scrollController,
                         ),
                       );
                     }),
@@ -535,7 +534,7 @@ class _EventDropZone extends StatelessWidget {
     required this.onUserDropZoneHoverChanged,
     required this.onDragCursorMove,
     required this.onAccept,
-    this.scrollController,
+    required this.scrollController,
   });
 
   @override
@@ -648,94 +647,6 @@ class _EventDropZone extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _GlobalAssignOverlay extends StatelessWidget {
-  const _GlobalAssignOverlay();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-            border: Border.all(color: const Color(0xFF4F46E5), width: 2.5),
-          ),
-          child: Center(
-            child: Container(
-              margin: const EdgeInsets.all(20),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3730A3).withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: const Text(
-                'Rilascia su un utente per assegnare l\'evento',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlobalUnassignOverlay extends StatelessWidget {
-  const _GlobalUnassignOverlay();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.16),
-            border: Border.all(color: const Color(0xFFEF4444), width: 2.5),
-          ),
-          child: Center(
-            child: Container(
-              margin: const EdgeInsets.all(20),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF7F1D1D).withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFEF4444).withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: const Text(
-                'Rilascia fuori dagli utenti per disassegnare l\'evento',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1171,7 +1082,7 @@ class _SettingsMenuDialogState extends State<_SettingsMenuDialog> {
               ),
               const SizedBox(height: 6),
               DropdownButtonFormField<EventSortMode>(
-                value: _currentSort,
+                initialValue: _currentSort,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   isDense: true,
