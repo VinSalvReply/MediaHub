@@ -194,7 +194,7 @@ class EventListTile extends StatelessWidget {
             assignButton = SizedBox(
               height: 40,
               child: Tooltip(
-                message: 'Assegna evento',
+                message: 'Assegna utente',
                 child: IconButton(
                   icon: const Icon(Icons.person_add_rounded),
                   onPressed: onAssign,

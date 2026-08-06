@@ -1190,6 +1190,7 @@ class _QuickAssignBottomSheet extends StatefulWidget {
 class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
   late TextEditingController _searchController;
   List<dynamic> _filteredUsers = [];
+  bool _showScrollToTop = false;
 
   @override
   void initState() {
@@ -1217,6 +1218,12 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
         }).toList();
       }
     });
+  }
+
+  void _updateScrollToTopVisibility(ScrollMetrics metrics) {
+    final shouldShow = metrics.pixels > 120;
+    if (_showScrollToTop == shouldShow) return;
+    setState(() => _showScrollToTop = shouldShow);
   }
 
   @override
@@ -1270,7 +1277,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Assegna evento',
+                                'Assegna utente',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -1357,129 +1364,190 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                           ),
                         ),
                       )
-                    : ListView.builder(
-                        controller: scrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: _filteredUsers.length,
-                        itemBuilder: (ctx, index) {
-                          final user = _filteredUsers[index];
-                          final isAssigned = widget.event.userId == user.id;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => widget.onAssign(
-                                  isAssigned ? null : user.id,
-                                ),
-                                borderRadius: BorderRadius.circular(14),
-                                highlightColor: const Color(
-                                  0xFF4F46E5,
-                                ).withValues(alpha: 0.08),
-                                splashColor: const Color(
-                                  0xFF4F46E5,
-                                ).withValues(alpha: 0.1),
-                                child: Container(
+                    : Stack(
+                        children: [
+                          NotificationListener<ScrollNotification>(
+                            onNotification: (notification) {
+                              if (notification.metrics.axis != Axis.vertical) {
+                                return false;
+                              }
+                              _updateScrollToTopVisibility(
+                                notification.metrics,
+                              );
+                              return false;
+                            },
+                            child: ListView.builder(
+                              controller: scrollController,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              itemCount: _filteredUsers.length,
+                              itemBuilder: (ctx, index) {
+                                final user = _filteredUsers[index];
+                                final isAssigned =
+                                    widget.event.userId == user.id;
+                                return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 14,
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: isAssigned
-                                        ? const Color(
-                                            0xFF4F46E5,
-                                          ).withValues(alpha: 0.08)
-                                        : const Color(0xFFFAFAFA),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: isAssigned
-                                          ? const Color(
-                                              0xFF4F46E5,
-                                            ).withValues(alpha: 0.3)
-                                          : const Color(0xFFE5E7EB),
-                                      width: isAssigned ? 1.5 : 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 44,
-                                        height: 44,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: const Color(
-                                            0xFF4F46E5,
-                                          ).withValues(alpha: 0.12),
-                                          border: isAssigned
-                                              ? Border.all(
-                                                  color: const Color(
-                                                    0xFF4F46E5,
-                                                  ),
-                                                  width: 2,
-                                                )
-                                              : null,
-                                        ),
-                                        child: const Icon(
-                                          Icons.person_rounded,
-                                          color: Color(0xFF4F46E5),
-                                          size: 20,
-                                        ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => widget.onAssign(
+                                        isAssigned ? null : user.id,
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                      borderRadius: BorderRadius.circular(14),
+                                      highlightColor: const Color(
+                                        0xFF4F46E5,
+                                      ).withValues(alpha: 0.08),
+                                      splashColor: const Color(
+                                        0xFF4F46E5,
+                                      ).withValues(alpha: 0.1),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 14,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isAssigned
+                                              ? const Color(
+                                                  0xFF4F46E5,
+                                                ).withValues(alpha: 0.08)
+                                              : const Color(0xFFFAFAFA),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          border: Border.all(
+                                            color: isAssigned
+                                                ? const Color(
+                                                    0xFF4F46E5,
+                                                  ).withValues(alpha: 0.3)
+                                                : const Color(0xFFE5E7EB),
+                                            width: isAssigned ? 1.5 : 1,
+                                          ),
+                                        ),
+                                        child: Row(
                                           children: [
-                                            Text(
-                                              '${user.name} ${user.lastName}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
+                                            Container(
+                                              width: 44,
+                                              height: 44,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: const Color(
+                                                  0xFF4F46E5,
+                                                ).withValues(alpha: 0.12),
+                                                border: isAssigned
+                                                    ? Border.all(
+                                                        color: const Color(
+                                                          0xFF4F46E5,
+                                                        ),
+                                                        width: 2,
+                                                      )
+                                                    : null,
+                                              ),
+                                              child: const Icon(
+                                                Icons.person_rounded,
+                                                color: Color(0xFF4F46E5),
+                                                size: 20,
                                               ),
                                             ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              user.email ?? '',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: _textMuted,
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    '${user.name} ${user.lastName}',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    user.email ?? '',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: _textMuted,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
+                                            if (isAssigned)
+                                              Tooltip(
+                                                message: 'Rimuovi assegnazione',
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                    Icons.close_rounded,
+                                                    color: Color(0xFFEF4444),
+                                                  ),
+                                                  onPressed: () =>
+                                                      widget.onAssign(null),
+                                                  iconSize: 20,
+                                                  padding: EdgeInsets.zero,
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                        minWidth: 32,
+                                                        minHeight: 32,
+                                                      ),
+                                                ),
+                                              )
+                                            else
+                                              const SizedBox(width: 32),
                                           ],
                                         ),
                                       ),
-                                      if (isAssigned)
-                                        Tooltip(
-                                          message: 'Rimuovi assegnazione',
-                                          child: IconButton(
-                                            icon: const Icon(
-                                              Icons.close_rounded,
-                                              color: Color(0xFFEF4444),
-                                            ),
-                                            onPressed: () =>
-                                                widget.onAssign(null),
-                                            iconSize: 20,
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(
-                                              minWidth: 32,
-                                              minHeight: 32,
-                                            ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 12,
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 180),
+                              opacity: _showScrollToTop ? 1 : 0,
+                              child: IgnorePointer(
+                                ignoring: !_showScrollToTop,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 34,
+                                    height: 34,
+                                    child: FloatingActionButton(
+                                      heroTag: null,
+                                      mini: true,
+                                      onPressed: () {
+                                        scrollController.animateTo(
+                                          0,
+                                          duration: const Duration(
+                                            milliseconds: 320,
                                           ),
-                                        )
-                                      else
-                                        const SizedBox(width: 32),
-                                    ],
+                                          curve: Curves.easeOutCubic,
+                                        );
+                                      },
+                                      backgroundColor: const Color(0xFF4F46E5),
+                                      foregroundColor: Colors.white,
+                                      elevation: 3,
+                                      child: const Icon(
+                                        Icons.keyboard_arrow_up,
+                                        size: 18,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
               ),
             ],
