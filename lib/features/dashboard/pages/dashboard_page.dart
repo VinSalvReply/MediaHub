@@ -1721,7 +1721,7 @@ class _DashboardError extends StatelessWidget {
             const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
             const SizedBox(height: 12),
             const Text(
-              'Failed to load dashboard',
+              'Impossibile caricare la dashboard',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
@@ -1731,7 +1731,7 @@ class _DashboardError extends StatelessWidget {
               style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
           ],
         ),
       ),

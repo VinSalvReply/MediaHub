@@ -83,7 +83,7 @@ class _UsersPageState extends State<UsersPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Users',
+                            'Utenti',
                             style: TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.w800,
@@ -91,7 +91,7 @@ class _UsersPageState extends State<UsersPage> {
                           ),
                           SizedBox(height: 6),
                           Text(
-                            'Manage users, roles and activity',
+                            'Gestisci utenti, ruoli e attivita',
                             style: TextStyle(color: Colors.grey, fontSize: 14),
                           ),
                         ],
@@ -404,19 +404,19 @@ class _UsersStats extends StatelessWidget {
           ),
           children: [
             _StatCard(
-              title: 'Total users',
+              title: 'Utenti totali',
               value: '$total',
               accent: const Color(0xFF4F46E5),
               icon: Icons.people_alt_rounded,
             ),
             _StatCard(
-              title: 'Active',
+              title: 'Attivi',
               value: '$active',
               accent: const Color(0xFF14B8A6),
               icon: Icons.bolt_rounded,
             ),
             _StatCard(
-              title: 'Inactive',
+              title: 'Inattivi',
               value: '$inactive',
               accent: const Color(0xFFEF4444),
               icon: Icons.pause_circle_rounded,

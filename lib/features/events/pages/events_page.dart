@@ -268,7 +268,7 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Events',
+                'Eventi',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 6),
@@ -726,7 +726,11 @@ class _EventsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (controller.isLoadingEvents) {
+    final isInitialLoading =
+        (controller.isLoadingUsers || controller.isLoadingEvents) &&
+        controller.events.isEmpty;
+
+    if (isInitialLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 48),
         child: Center(child: CircularProgressIndicator()),

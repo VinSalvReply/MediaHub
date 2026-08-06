@@ -29,7 +29,7 @@ class OverviewTab extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _InfoCard(
-                  title: "Role",
+                  title: "Ruolo",
                   value: user.role,
                   icon: Icons.badge_rounded,
                 ),
@@ -41,7 +41,7 @@ class OverviewTab extends StatelessWidget {
             children: [
               Expanded(
                 child: _InfoCard(
-                  title: "Created",
+                  title: "Creato il",
                   value: formatDate(user.createdAt),
                   icon: Icons.calendar_today_rounded,
                 ),
@@ -49,10 +49,10 @@ class OverviewTab extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _InfoCard(
-                  title: "Status",
+                  title: "Stato",
                   value: user.isActive
-                      ? 'Active'
-                      : 'Inactive${user.lastLogin != null ? ' - Last login: ${formatDate(user.lastLogin)}' : ''}',
+                      ? 'Attivo'
+                      : 'Inattivo${user.lastLogin != null ? ' - Ultimo accesso: ${formatDate(user.lastLogin)}' : ''}',
                   icon: Icons.verified_user_rounded,
                 ),
               ),

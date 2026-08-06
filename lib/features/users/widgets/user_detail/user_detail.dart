@@ -347,7 +347,7 @@ class _Header extends StatelessWidget {
                   children: [
                     _Badge(label: user.role, color: color),
                     _Badge(
-                      label: user.isActive ? 'Active' : 'Inactive',
+                      label: user.isActive ? 'Attivo' : 'Inattivo',
                       color: statusColor,
                     ),
                   ],
@@ -435,9 +435,9 @@ class _UserTabs extends StatelessWidget {
                     labelColor: color,
                     unselectedLabelColor: Colors.grey,
                     tabs: const [
-                      Tab(text: "Overview"),
-                      Tab(text: "Activity"),
-                      Tab(text: "Events"),
+                      Tab(text: "Panoramica"),
+                      Tab(text: "Attivita"),
+                      Tab(text: "Eventi"),
                     ],
                   ),
                 ),

@@ -46,13 +46,13 @@ class Sidebar extends StatelessWidget {
             ),
             _SidebarTile(
               icon: Icons.people_alt_rounded,
-              label: 'Users',
+              label: 'Utenti',
               selected: location == AppRoutes.users,
               onTap: () => context.go(AppRoutes.users),
             ),
             _SidebarTile(
               icon: Icons.event_rounded,
-              label: 'Events',
+              label: 'Eventi',
               selected: location == AppRoutes.events,
               onTap: () => context.go(AppRoutes.events),
             ),
@@ -250,7 +250,7 @@ class _SidebarFooterState extends State<_SidebarFooter> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Admin user',
+                          'Utente Admin',
                           style: TextStyle(fontWeight: FontWeight.w700),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -439,7 +439,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Admin user',
+                          'Utente Admin',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,

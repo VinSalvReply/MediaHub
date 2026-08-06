@@ -28,7 +28,7 @@ class MainLayout extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.people_alt_rounded),
-              title: const Text('Users'),
+              title: const Text('Utenti'),
               onTap: () {
                 Navigator.pop(context);
                 context.go(AppRoutes.users);
@@ -36,7 +36,7 @@ class MainLayout extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.event_rounded),
-              title: const Text('Events'),
+              title: const Text('Eventi'),
               onTap: () {
                 Navigator.pop(context);
                 context.go(AppRoutes.events);
