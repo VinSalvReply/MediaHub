@@ -5,6 +5,7 @@ import 'package:mediahub/features/users/models/content_item.dart';
 
 const _contentTypes = ['post', 'image', 'video'];
 const _contentStatuses = ['draft', 'published', 'archived'];
+const _mediaPreviewCardWidth = 160.0;
 
 String _contentTypeLabel(String type) {
   switch (type) {
@@ -669,14 +670,13 @@ class _MediaSection extends StatelessWidget {
           else
             LayoutBuilder(
               builder: (context, constraints) {
-                final cardWidth = constraints.maxWidth < 520 ? 140.0 : 160.0;
                 return Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
                     for (var i = 0; i < selectedMedia.length; i++)
                       _MediaPreviewCard(
-                        width: cardWidth,
+                        width: _mediaPreviewCardWidth,
                         media: selectedMedia[i],
                         onRemove: () => onRemoveMedia(i),
                         looksLikeImage: looksLikeImage,
@@ -746,7 +746,8 @@ class _MediaPreviewCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             media.label,
-            maxLines: 2,
+            maxLines: 1,
+            softWrap: false,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
           ),
