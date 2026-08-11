@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mediahub/data/services/api_client.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const _contentTypes = ['post', 'image', 'video'];
 const _contentStatuses = ['draft', 'published', 'archived'];
@@ -61,11 +62,13 @@ class ContentFormResult {
 class _SelectedMedia {
   final String reference;
   final String label;
+  final String? thumbnailReference;
   final Uint8List? bytes;
 
   const _SelectedMedia({
     required this.reference,
     required this.label,
+    this.thumbnailReference,
     this.bytes,
   });
 }
@@ -110,6 +113,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         _SelectedMedia(
           reference: mediaUrl,
           label: _labelFromReference(mediaUrl),
+          thumbnailReference: _thumbnailReferenceFromMedia(mediaUrl),
         ),
     ];
   }
@@ -148,6 +152,26 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         lower.endsWith('.mov') ||
         lower.endsWith('.webm') ||
         lower.endsWith('.m4v');
+  }
+
+  String? _thumbnailReferenceFromMedia(String reference) {
+    if (!_looksLikeVideo(reference)) return null;
+    final uri = Uri.tryParse(reference);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return null;
+    }
+
+    final segments = uri.pathSegments;
+    if (segments.isEmpty) return null;
+
+    final fileName = segments.last;
+    final dotIndex = fileName.lastIndexOf('.');
+    if (dotIndex <= 0) return null;
+
+    final thumbnailName = '${fileName.substring(0, dotIndex)}.poster.jpg';
+    final updatedSegments = [...segments]
+      ..[segments.length - 1] = thumbnailName;
+    return uri.replace(pathSegments: updatedSegments).toString();
   }
 
   String? _optionalUrlValidator(String? value) {
@@ -196,10 +220,11 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
       final mediaToAdd = await Future.wait(
         validFiles.map((file) async {
-          final persistedUrl = await _uploadLocalMedia(file);
+          final persistedMedia = await _uploadLocalMedia(file);
           return _SelectedMedia(
-            reference: persistedUrl,
+            reference: persistedMedia.reference,
             label: file.name,
+            thumbnailReference: persistedMedia.thumbnailReference,
             bytes: file.bytes,
           );
         }),
@@ -220,6 +245,15 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   }
 
   Future<void> _addMediaUrl() async {
+    if (_type == 'video') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Per i video e disponibile solo il caricamento da PC.'),
+        ),
+      );
+      return;
+    }
+
     final value = _mediaUrlCtrl.text.trim();
     final error = _optionalUrlValidator(value);
     if (error != null) {
@@ -232,15 +266,16 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
     try {
       setState(() => _isSyncingMedia = true);
-      final persistedUrl = await _importRemoteMedia(value);
+      final persistedMedia = await _importRemoteMedia(value);
       if (!mounted) return;
 
       setState(() {
         _selectedMedia = [
           ..._selectedMedia,
           _SelectedMedia(
-            reference: persistedUrl,
+            reference: persistedMedia.reference,
             label: _labelFromReference(value),
+            thumbnailReference: persistedMedia.thumbnailReference,
           ),
         ];
         _mediaUrlCtrl.clear();
@@ -319,7 +354,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
     );
   }
 
-  Future<String> _uploadLocalMedia(PlatformFile file) async {
+  Future<_PersistedMedia> _uploadLocalMedia(PlatformFile file) async {
     final response = Map<String, dynamic>.from(
       await _apiClient.multipartPost(
             '/media/upload',
@@ -329,19 +364,20 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
           )
           as Map,
     );
-    return response['url'] as String;
+    return _PersistedMedia.fromJson(response);
   }
 
-  Future<String> _importRemoteMedia(String sourceUrl) async {
+  Future<_PersistedMedia> _importRemoteMedia(String sourceUrl) async {
     final response = Map<String, dynamic>.from(
       await _apiClient.post('/media/import', {'url': sourceUrl}) as Map,
     );
-    return response['url'] as String;
+    return _PersistedMedia.fromJson(response);
   }
 
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initial != null;
+    final canChangeType = !isEdit;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isCompact = screenWidth < 640;
     return Dialog(
@@ -406,9 +442,11 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                                 ),
                               )
                               .toList(),
-                          onChanged: (value) {
-                            if (value != null) _onTypeChanged(value);
-                          },
+                          onChanged: canChangeType
+                              ? (value) {
+                                  if (value != null) _onTypeChanged(value);
+                                }
+                              : null,
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
@@ -448,9 +486,11 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                                   ),
                                 )
                                 .toList(),
-                            onChanged: (value) {
-                              if (value != null) _onTypeChanged(value);
-                            },
+                            onChanged: canChangeType
+                                ? (value) {
+                                    if (value != null) _onTypeChanged(value);
+                                  }
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -640,6 +680,7 @@ class _MediaSection extends StatelessWidget {
     };
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -652,27 +693,51 @@ class _MediaSection extends StatelessWidget {
           Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
           const Text(
-            'Carica piu file dal PC oppure aggiungi URL esterni. La preview mostra cosa verra associato al contenuto.',
+            'Carica dei file multimediali associati all\'evento.',
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
           const SizedBox(height: 12),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 520;
-              if (compact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          if (type != 'video') ...[
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 520;
+                if (compact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: mediaUrlController,
+                        enabled: !isSyncingMedia,
+                        decoration: const InputDecoration(
+                          labelText: 'Aggiungi URL immagine',
+                          hintText: 'https://cdn.esempio.it/file.jpg',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      FilledButton.tonalIcon(
+                        onPressed: isSyncingMedia ? null : onAddMediaUrl,
+                        icon: const Icon(Icons.link_rounded),
+                        label: const Text('Aggiungi'),
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
                   children: [
-                    TextFormField(
-                      controller: mediaUrlController,
-                      enabled: !isSyncingMedia,
-                      decoration: const InputDecoration(
-                        labelText: 'Aggiungi URL media',
-                        hintText: 'https://cdn.esempio.it/file.jpg',
-                        border: OutlineInputBorder(),
+                    Expanded(
+                      child: TextFormField(
+                        controller: mediaUrlController,
+                        enabled: !isSyncingMedia,
+                        decoration: const InputDecoration(
+                          labelText: 'Aggiungi URL immagine',
+                          hintText: 'https://cdn.esempio.it/file.jpg',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(width: 8),
                     FilledButton.tonalIcon(
                       onPressed: isSyncingMedia ? null : onAddMediaUrl,
                       icon: const Icon(Icons.link_rounded),
@@ -680,32 +745,10 @@ class _MediaSection extends StatelessWidget {
                     ),
                   ],
                 );
-              }
-
-              return Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: mediaUrlController,
-                      enabled: !isSyncingMedia,
-                      decoration: const InputDecoration(
-                        labelText: 'Aggiungi URL media',
-                        hintText: 'https://cdn.esempio.it/file.jpg',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.tonalIcon(
-                    onPressed: isSyncingMedia ? null : onAddMediaUrl,
-                    icon: const Icon(Icons.link_rounded),
-                    label: const Text('Aggiungi'),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 10),
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
           OutlinedButton.icon(
             onPressed: isSyncingMedia ? null : onPickLocalMedia,
             icon: const Icon(Icons.upload_file_rounded),
@@ -784,6 +827,7 @@ class _MediaPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isImage = looksLikeImage(media.reference);
     final isVideo = looksLikeVideo(media.reference);
+    final canOpenReference = _isHttpUrl(media.reference);
 
     return Container(
       width: width,
@@ -798,12 +842,40 @@ class _MediaPreviewCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Container(
-              height: 82,
-              width: double.infinity,
-              color: const Color(0xFFF3F4F6),
-              alignment: Alignment.center,
-              child: _buildPreview(isImage, isVideo),
+            child: GestureDetector(
+              onTap: canOpenReference
+                  ? () => _openMediaReference(context)
+                  : null,
+              child: Stack(
+                children: [
+                  Container(
+                    height: 82,
+                    width: double.infinity,
+                    color: const Color(0xFFF3F4F6),
+                    alignment: Alignment.center,
+                    child: _buildPreview(isImage, isVideo),
+                  ),
+                  if (canOpenReference)
+                    const Positioned(
+                      top: 6,
+                      right: 6,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color(0xAA111827),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.open_in_new_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -847,6 +919,30 @@ class _MediaPreviewCard extends StatelessWidget {
       );
     }
 
+    if (isVideo && _isHttpUrl(media.thumbnailReference)) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(
+            media.thumbnailReference!,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            errorBuilder: (context, error, stackTrace) =>
+                _buildFallbackIcon(isImage, isVideo),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(color: Color(0x33000000)),
+          ),
+          const Center(
+            child: Icon(
+              Icons.play_circle_fill_rounded,
+              size: 30,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      );
+    }
     return _buildFallbackIcon(isImage, isVideo);
   }
 
@@ -862,8 +958,35 @@ class _MediaPreviewCard extends StatelessWidget {
     );
   }
 
-  bool _isHttpUrl(String reference) {
+  bool _isHttpUrl(String? reference) {
+    if (reference == null) return false;
     final uri = Uri.tryParse(reference);
     return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+  }
+
+  Future<void> _openMediaReference(BuildContext context) async {
+    final uri = Uri.tryParse(media.reference);
+    if (uri == null) return;
+
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossibile aprire il media.')),
+      );
+    }
+  }
+}
+
+class _PersistedMedia {
+  final String reference;
+  final String? thumbnailReference;
+
+  const _PersistedMedia({required this.reference, this.thumbnailReference});
+
+  factory _PersistedMedia.fromJson(Map<String, dynamic> json) {
+    return _PersistedMedia(
+      reference: json['url'] as String,
+      thumbnailReference: json['thumbnailUrl'] as String?,
+    );
   }
 }

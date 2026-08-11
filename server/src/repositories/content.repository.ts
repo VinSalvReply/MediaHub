@@ -1,3 +1,4 @@
+import { cleanupUnreferencedManagedMedia } from "../media-storage.js";
 import { nextId } from "../db.js";
 import { store } from "../store.js";
 import { getString } from "../strings.js";
@@ -44,6 +45,7 @@ export const contentRepository = {
     const existing = list[idx]!;
     const updated: ContentItem = { ...existing, ...patch, id: itemId };
     list[idx] = updated;
+    cleanupRemovedMedia(existing.media_urls, updated.media_urls);
     store.persist();
     return updated;
   },
@@ -51,9 +53,12 @@ export const contentRepository = {
   remove(userId: number, itemId: number): boolean {
     const list = store.data.contents[userId];
     if (!list) return false;
+    const existing = list.find((c) => c.id === itemId);
+    if (!existing) return false;
     const before = list.length;
     store.data.contents[userId] = list.filter((c) => c.id !== itemId);
     if (store.data.contents[userId]!.length === before) return false;
+    cleanupRemovedMedia(existing.media_urls, []);
     store.persist();
     return true;
   },
@@ -100,17 +105,43 @@ export const contentRepository = {
     const existing = store.data.global_contents[idx]!;
     const updated: GlobalContentItem = { ...existing, ...patch, id: itemId };
     store.data.global_contents[idx] = updated;
+    cleanupRemovedMedia(existing.media_urls, updated.media_urls);
     store.persist();
     return updated;
   },
 
   removeGlobal(itemId: number): boolean {
+    const existing = store.data.global_contents.find((c) => c.id === itemId);
+    if (!existing) return false;
     const before = store.data.global_contents.length;
     store.data.global_contents = store.data.global_contents.filter(
       (c) => c.id !== itemId,
     );
     if (store.data.global_contents.length === before) return false;
+    cleanupRemovedMedia(existing.media_urls, []);
     store.persist();
     return true;
   },
 };
+
+function cleanupRemovedMedia(
+  previousUrls: readonly string[] | undefined,
+  nextUrls: readonly string[] | undefined,
+): void {
+  const removedUrls = (previousUrls ?? []).filter(
+    (mediaUrl) => !(nextUrls ?? []).includes(mediaUrl),
+  );
+  if (removedUrls.length === 0) return;
+
+  cleanupUnreferencedManagedMedia(removedUrls, listAllReferencedMediaUrls());
+}
+
+function listAllReferencedMediaUrls(): string[] {
+  const userScoped = Object.values(store.data.contents).flatMap((contents) =>
+    contents.flatMap((content) => content.media_urls ?? []),
+  );
+  const globalScoped = store.data.global_contents.flatMap(
+    (content) => content.media_urls ?? [],
+  );
+  return [...userScoped, ...globalScoped];
+}

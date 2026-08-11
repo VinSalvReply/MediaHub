@@ -1,15 +1,22 @@
+import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { Router, type Request } from "express";
+import ffmpegPath from "ffmpeg-static";
 import multer from "multer";
 import { HttpError, asyncHandler } from "../http.js";
+import {
+  buildThumbnailFilename,
+  ensureMediaDirectory,
+  mediaDirectory,
+} from "../media-storage.js";
 import { getString } from "../strings.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const mediaDirectory = path.resolve(__dirname, "../../media");
 const upload = multer({ storage: multer.memoryStorage() });
+const execFileAsync = promisify(execFile);
+const videoExtensions = new Set([".mp4", ".mov", ".webm", ".m4v"]);
 
 export const mediaRouter: Router = Router();
 
@@ -24,8 +31,13 @@ mediaRouter.post(
 
     const storedName = buildStoredFilename(file.originalname);
     await persistMedia(file.buffer, storedName);
+    const thumbnailName = await createThumbnailIfNeeded(storedName);
 
-    res.status(201).json({ url: buildMediaUrl(req, storedName) });
+    res.status(201).json({
+      url: buildMediaUrl(req, storedName),
+      thumbnailUrl:
+        thumbnailName == null ? null : buildMediaUrl(req, thumbnailName),
+    });
   }),
 );
 
@@ -60,8 +72,13 @@ mediaRouter.post(
       extractFilename(remoteUrl, response.headers.get("content-type")),
     );
     await persistMedia(bytes, storedName);
+    const thumbnailName = await createThumbnailIfNeeded(storedName);
 
-    res.status(201).json({ url: buildMediaUrl(req, storedName) });
+    res.status(201).json({
+      url: buildMediaUrl(req, storedName),
+      thumbnailUrl:
+        thumbnailName == null ? null : buildMediaUrl(req, thumbnailName),
+    });
   }),
 );
 
@@ -70,8 +87,40 @@ function buildMediaUrl(req: Request, filename: string): string {
 }
 
 async function persistMedia(bytes: Buffer, filename: string): Promise<void> {
-  await mkdir(mediaDirectory, { recursive: true });
+  ensureMediaDirectory();
   await writeFile(path.join(mediaDirectory, filename), bytes);
+}
+
+async function createThumbnailIfNeeded(
+  mediaFilename: string,
+): Promise<string | null> {
+  if (!ffmpegPath || !isVideoFilename(mediaFilename)) {
+    return null;
+  }
+
+  const inputPath = path.join(mediaDirectory, mediaFilename);
+  const thumbnailFilename = buildThumbnailFilename(mediaFilename);
+  const outputPath = path.join(mediaDirectory, thumbnailFilename);
+
+  try {
+    await execFileAsync(ffmpegPath, [
+      "-y",
+      "-ss",
+      "00:00:00.200",
+      "-i",
+      inputPath,
+      "-frames:v",
+      "1",
+      "-vf",
+      "scale=320:-1",
+      outputPath,
+    ]);
+    return thumbnailFilename;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to generate video thumbnail", error);
+    return null;
+  }
 }
 
 function buildStoredFilename(originalName: string): string {
@@ -115,4 +164,8 @@ function extensionFromContentType(contentType: string | null): string {
 
 function normalizeExtension(extension: string): string {
   return extension ? extension.toLowerCase() : "";
+}
+
+function isVideoFilename(filename: string): boolean {
+  return videoExtensions.has(path.extname(filename).toLowerCase());
 }
