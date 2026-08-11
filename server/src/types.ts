@@ -84,6 +84,9 @@ export interface StringCatalog {
     eventNotFound: string;
     contentNotFound: string;
     queryParamMustBeNumber: string;
+    mediaUrlRequired: string;
+    mediaUploadMissingFile: string;
+    mediaImportFailed: string;
   };
   defaults: {
     untitled: string;

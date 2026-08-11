@@ -27,6 +27,9 @@ function emptyDb(): Database {
         eventNotFound: "",
         contentNotFound: "",
         queryParamMustBeNumber: "",
+        mediaUrlRequired: "",
+        mediaUploadMissingFile: "",
+        mediaImportFailed: "",
       },
       defaults: {
         untitled: "",
