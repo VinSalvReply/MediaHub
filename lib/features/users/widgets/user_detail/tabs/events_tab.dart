@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/utils/date.dart';
+import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/routes/app_router.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
@@ -66,9 +68,10 @@ class EventsTab extends StatelessWidget {
         final e = data.events[i];
         final linked = e.contents;
 
-        return TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 220 + i * 50),
-          tween: Tween(begin: 0, end: 1),
+        return PreservedTweenAnimationBuilder(
+          duration: AnimationConfig.detailEventsEntryDuration(i),
+          begin: 0,
+          end: 1,
           curve: Curves.easeOutCubic,
           builder: (context, v, child) {
             return Opacity(
@@ -108,7 +111,7 @@ class _EventCardState extends State<_EventCard> {
       onEnter: (_) => setState(() => hover = true),
       onExit: (_) => setState(() => hover = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: AnimationConfig.hoverSmooth,
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

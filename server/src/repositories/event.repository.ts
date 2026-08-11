@@ -1,5 +1,6 @@
 import { nextId } from "../db.js";
 import { store } from "../store.js";
+import { getString } from "../strings.js";
 import type { ContentItem, GlobalEvent, UserEvent } from "../types.js";
 
 export type EventCreateInput = Partial<Omit<UserEvent, "id">>;
@@ -11,9 +12,9 @@ export const eventRepository = {
   normalizeContents(inputContents: ContentItem[] | undefined): ContentItem[] {
     return (inputContents ?? []).map((content, index) => ({
       id: content.id ?? index + 1,
-      title: content.title ?? "Contenuto senza titolo",
-      type: content.type ?? "post",
-      status: content.status ?? "draft",
+      title: content.title ?? getString("defaults.untitledContent"),
+      type: content.type ?? store.data.strings.defaults.contentType,
+      status: content.status ?? store.data.strings.defaults.contentStatus,
       created_at: content.created_at ?? new Date().toISOString(),
       media_urls: content.media_urls ?? [],
       post_body: content.post_body ?? null,
@@ -31,10 +32,10 @@ export const eventRepository = {
     const list = (store.data.events[userId] ??= []);
     const event: UserEvent = {
       id: nextId(list),
-      title: input.title ?? "Untitled",
+      title: input.title ?? getString("defaults.untitled"),
       date: input.date ?? new Date().toISOString(),
       attendees: input.attendees ?? 0,
-      status: input.status ?? "upcoming",
+      status: input.status ?? store.data.strings.defaults.eventStatus,
       contents: eventRepository.normalizeContents(input.contents),
     };
     list.push(event);
@@ -76,10 +77,10 @@ export const eventRepository = {
   createGlobal(input: GlobalEventCreateInput): GlobalEvent {
     const event: GlobalEvent = {
       id: nextId(store.data.global_events),
-      title: input.title ?? "Untitled",
+      title: input.title ?? getString("defaults.untitled"),
       date: input.date ?? new Date().toISOString(),
       attendees: input.attendees ?? 0,
-      status: input.status ?? "upcoming",
+      status: input.status ?? store.data.strings.defaults.eventStatus,
       user_id: input.user_id ?? null,
       contents: eventRepository.normalizeContents(input.contents),
     };

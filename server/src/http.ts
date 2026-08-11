@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { formatString, getString } from "./strings.js";
 
 export class HttpError extends Error {
   constructor(
@@ -9,7 +10,9 @@ export class HttpError extends Error {
   }
 }
 
-export function notFound(message = "Resource not found"): never {
+export function notFound(
+  message = getString("errors.resourceNotFound"),
+): never {
   throw new HttpError(404, message);
 }
 
@@ -34,13 +37,16 @@ export function errorHandler(
   }
   // eslint-disable-next-line no-console
   console.error(err);
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({ error: getString("errors.internalServerError") });
 }
 
-export function parseId(value: string, label = "id"): number {
+export function parseId(
+  value: string,
+  label = getString("errors.idLabel"),
+): number {
   const id = Number(value);
   if (!Number.isInteger(id) || id <= 0) {
-    throw new HttpError(400, `Invalid ${label}`);
+    throw new HttpError(400, formatString("errors.invalidField", { label }));
   }
   return id;
 }

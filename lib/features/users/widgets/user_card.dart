@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/core/utils/date.dart';
+import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/widgets/user_detail/user_detail.dart';
 
@@ -39,8 +41,8 @@ class _UserCardState extends State<UserCard> {
 
           await Navigator.of(context).push(
             PageRouteBuilder(
-              transitionDuration: const Duration(milliseconds: 500),
-              reverseTransitionDuration: const Duration(milliseconds: 400),
+              transitionDuration: AnimationConfig.heroForwardDuration,
+              reverseTransitionDuration: AnimationConfig.heroReverseDuration,
               opaque: false,
               pageBuilder: (_, _, _) {
                 return Scaffold(
@@ -59,21 +61,17 @@ class _UserCardState extends State<UserCard> {
                 );
               },
               transitionsBuilder: (_, animation, _, child) {
-                final curved = CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOutCubic,
-                );
-
-                return FadeTransition(opacity: curved, child: child);
+                return child;
               },
             ),
           );
 
           setState(() => isTransitioning = false);
         },
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: Duration(milliseconds: 400 + (widget.index * 60)),
+        child: PreservedTweenAnimationBuilder(
+          begin: 0,
+          end: 1,
+          duration: AnimationConfig.gridEntryDuration(widget.index),
           curve: Curves.easeOutCubic,
           builder: (context, value, child) {
             final slide = (1 - value);
@@ -89,11 +87,11 @@ class _UserCardState extends State<UserCard> {
             );
           },
           child: AnimatedScale(
-            duration: const Duration(milliseconds: 180),
+            duration: AnimationConfig.hoverSmooth,
             scale: hovered && !isTransitioning ? 1.02 : 1.0,
             curve: Curves.easeOut,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
+              duration: AnimationConfig.hoverPanel,
               curve: Curves.easeOutCubic,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
@@ -201,7 +199,7 @@ class _CardContent extends StatelessWidget {
                         ),
                       ),
                       AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
+                        duration: AnimationConfig.statusPulse,
                         width: 18,
                         height: 18,
                         decoration: BoxDecoration(

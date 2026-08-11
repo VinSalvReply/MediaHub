@@ -1,3 +1,143 @@
+class DashboardDataDto {
+  final DashboardMetricsDto metrics;
+  final List<DashboardActivityDto> activities;
+  final List<DashboardInsightDto> insights;
+  final List<DashboardTrendDto> trend;
+  final List<DashboardAlertDto> alerts;
+  final List<DashboardFocusEventDto> focusEvents;
+
+  DashboardDataDto({
+    required this.metrics,
+    required this.activities,
+    required this.insights,
+    required this.trend,
+    required this.alerts,
+    required this.focusEvents,
+  });
+
+  factory DashboardDataDto.fromJson(Map<String, dynamic> json) {
+    return DashboardDataDto(
+      metrics: DashboardMetricsDto.fromJson(json['metrics']),
+      activities: (json['activities'] as List)
+          .map((j) => DashboardActivityDto.fromJson(j))
+          .toList(),
+      insights: (json['insights'] as List)
+          .map((j) => DashboardInsightDto.fromJson(j))
+          .toList(),
+      trend: (json['trend'] as List)
+          .map((j) => DashboardTrendDto.fromJson(j))
+          .toList(),
+      alerts: (json['alerts'] as List)
+          .map((j) => DashboardAlertDto.fromJson(j))
+          .toList(),
+      focusEvents: (json['focusEvents'] as List)
+          .map((j) => DashboardFocusEventDto.fromJson(j))
+          .toList(),
+    );
+  }
+}
+
+class DashboardMetricsDto {
+  final int totalEvents;
+  final int liveEvents;
+  final int upcomingThisWeek;
+  final int totalContents;
+  final int publishedContents;
+  final int totalMediaAssets;
+  final int eventsWithoutContents;
+
+  DashboardMetricsDto({
+    required this.totalEvents,
+    required this.liveEvents,
+    required this.upcomingThisWeek,
+    required this.totalContents,
+    required this.publishedContents,
+    required this.totalMediaAssets,
+    required this.eventsWithoutContents,
+  });
+
+  factory DashboardMetricsDto.fromJson(Map<String, dynamic> json) {
+    return DashboardMetricsDto(
+      totalEvents: json['totalEvents'],
+      liveEvents: json['liveEvents'],
+      upcomingThisWeek: json['upcomingThisWeek'],
+      totalContents: json['totalContents'],
+      publishedContents: json['publishedContents'],
+      totalMediaAssets: json['totalMediaAssets'],
+      eventsWithoutContents: json['eventsWithoutContents'],
+    );
+  }
+}
+
+class DashboardActivityDto {
+  final String title;
+  final String subtitle;
+  final String type;
+  final DateTime date;
+
+  DashboardActivityDto({
+    required this.title,
+    required this.subtitle,
+    required this.type,
+    required this.date,
+  });
+
+  factory DashboardActivityDto.fromJson(Map<String, dynamic> json) {
+    return DashboardActivityDto(
+      title: json['title'],
+      subtitle: json['subtitle'],
+      type: json['type'],
+      date: DateTime.parse(json['date']),
+    );
+  }
+}
+
+class DashboardInsightDto {
+  final String label;
+  final double value;
+
+  DashboardInsightDto({required this.label, required this.value});
+
+  factory DashboardInsightDto.fromJson(Map<String, dynamic> json) {
+    return DashboardInsightDto(
+      label: json['label'],
+      value: (json['value'] as num).toDouble(),
+    );
+  }
+}
+
+class DashboardFocusEventDto {
+  final String title;
+  final DateTime date;
+  final String status;
+  final int contentCount;
+  final int publishedCount;
+  final int mediaCount;
+  final bool needsAttention;
+
+  DashboardFocusEventDto({
+    required this.title,
+    required this.date,
+    required this.status,
+    required this.contentCount,
+    required this.publishedCount,
+    required this.mediaCount,
+    required this.needsAttention,
+  });
+
+  factory DashboardFocusEventDto.fromJson(Map<String, dynamic> json) {
+    return DashboardFocusEventDto(
+      title: json['title'],
+      date: DateTime.parse(json['date']),
+      status: json['status'],
+      contentCount: json['contentCount'],
+      publishedCount: json['publishedCount'],
+      mediaCount: json['mediaCount'],
+      needsAttention: json['needsAttention'],
+    );
+  }
+}
+
 class DashboardTrendDto {
   final DateTime date;
   final int activeUsers;
@@ -26,16 +166,5 @@ class DashboardAlertDto {
 
   factory DashboardAlertDto.fromJson(Map<String, dynamic> json) {
     return DashboardAlertDto(type: json["type"], message: json["message"]);
-  }
-}
-
-class TopUserDto {
-  final String name;
-  final int score;
-
-  TopUserDto({required this.name, required this.score});
-
-  factory TopUserDto.fromJson(Map<String, dynamic> json) {
-    return TopUserDto(name: json["name"], score: json["score"]);
   }
 }

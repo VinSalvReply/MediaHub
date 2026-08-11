@@ -1,5 +1,6 @@
 import { nextId } from "../db.js";
 import { store } from "../store.js";
+import { formatString } from "../strings.js";
 import type { User } from "../types.js";
 
 export type UserCreateInput = Partial<Omit<User, "id" | "created_at">>;
@@ -20,9 +21,13 @@ export const userRepository = {
       id,
       name: input.name ?? "",
       last_name: input.last_name ?? "",
-      email: input.email ?? `user${id}@mediahub.dev`,
-      role: input.role ?? "User",
-      segment: input.segment ?? "Casual",
+      email:
+        input.email ??
+        formatString("defaults.emailTemplate", {
+          id,
+        }),
+      role: input.role ?? store.data.strings.defaults.userRole,
+      segment: input.segment ?? store.data.strings.defaults.userSegment,
       is_active: input.is_active ?? true,
       created_at: new Date().toISOString(),
       last_login: input.last_login ?? null,

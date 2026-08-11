@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
 
@@ -22,9 +24,10 @@ class ContentTab extends StatelessWidget {
       itemBuilder: (context, i) {
         final c = data.contents[i];
 
-        return TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 220 + i * 40),
-          tween: Tween(begin: 0, end: 1),
+        return PreservedTweenAnimationBuilder(
+          duration: AnimationConfig.detailListEntryDuration(i),
+          begin: 0,
+          end: 1,
           curve: Curves.easeOutCubic,
           builder: (context, v, child) {
             return Opacity(
@@ -60,7 +63,7 @@ class _ContentTileState extends State<_ContentTile> {
       onEnter: (_) => setState(() => hover = true),
       onExit: (_) => setState(() => hover = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: AnimationConfig.hoverSmooth,
         curve: Curves.easeOut,
         transform: Matrix4.identity()
           ..translateByDouble(0.0, hover ? -3.0 : 0.0, 0.0, 1.0)

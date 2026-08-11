@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/contents/controllers/contents_controller.dart';
 import 'package:mediahub/features/contents/widgets/content_form_dialog.dart';
 import 'package:mediahub/features/contents/widgets/content_list_tile.dart';
@@ -620,7 +622,7 @@ class _ContentDropZone extends StatelessWidget {
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: AnimationConfig.hoverSmooth,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFFFFF7ED) : const Color(0xFFF8FAFC),
@@ -713,7 +715,7 @@ class _ScopedContentUnassignZone extends StatelessWidget {
       builder: (context, candidateData, _) {
         final active = enabled && candidateData.isNotEmpty;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
+          duration: AnimationConfig.hoverFast,
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
@@ -1052,9 +1054,10 @@ class _ContentsBody extends StatelessWidget {
         Padding(
           key: ValueKey('content-${source[i].id}-$sortTick'),
           padding: const EdgeInsets.only(bottom: 12),
-          child: TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 700 + (i * 35).clamp(0, 260)),
-            tween: Tween(begin: 1, end: 0),
+          child: PreservedTweenAnimationBuilder(
+            duration: AnimationConfig.reorderDuration(i),
+            begin: 1,
+            end: 0,
             curve: Curves.easeInOutCubicEmphasized,
             builder: (context, value, child) {
               final previousIndex = previousIndexes[source[i].id];

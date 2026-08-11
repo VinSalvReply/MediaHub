@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/utils/date.dart';
+import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/users/models/user_activity.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
 
@@ -18,9 +20,10 @@ class ActivityTab extends StatelessWidget {
       itemBuilder: (context, i) {
         final a = data.activities[i];
 
-        return TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 220 + i * 40),
-          tween: Tween(begin: 0, end: 1),
+        return PreservedTweenAnimationBuilder(
+          duration: AnimationConfig.detailListEntryDuration(i),
+          begin: 0,
+          end: 1,
           curve: Curves.easeOutCubic,
           builder: (context, v, child) {
             return Opacity(
@@ -58,7 +61,7 @@ class _ActivityTileState extends State<_ActivityTile> {
       onEnter: (_) => setState(() => hover = true),
       onExit: (_) => setState(() => hover = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: AnimationConfig.hoverSmooth,
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(

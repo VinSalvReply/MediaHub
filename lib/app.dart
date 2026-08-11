@@ -10,6 +10,19 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'MediaHub',
       routerConfig: router,
+      builder: (context, child) {
+        if (child == null) {
+          return const SizedBox.shrink();
+        }
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            disableAnimations: false,
+            accessibleNavigation: false,
+          ),
+          child: child,
+        );
+      },
     );
   }
 }

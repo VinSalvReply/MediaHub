@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/animation.dart';
 
 class Shimmer extends StatefulWidget {
   final Widget child;
@@ -18,7 +19,8 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
 
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: AnimationConfig.shimmerCycle,
+      animationBehavior: AnimationBehavior.preserve,
     )..repeat();
   }
 

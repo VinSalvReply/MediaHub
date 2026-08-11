@@ -74,6 +74,62 @@ export interface TopUser {
   score: number;
 }
 
+export interface StringCatalog {
+  errors: {
+    resourceNotFound: string;
+    internalServerError: string;
+    invalidField: string;
+    idLabel: string;
+    userNotFound: string;
+    eventNotFound: string;
+    contentNotFound: string;
+    queryParamMustBeNumber: string;
+  };
+  defaults: {
+    untitled: string;
+    untitledContent: string;
+    userRole: Role;
+    userSegment: Segment;
+    activityType: ActivityType;
+    activityDescription: string;
+    device: Device;
+    eventStatus: EventStatus;
+    contentType: ContentType;
+    contentStatus: ContentStatus;
+    alertType: AlertType;
+    emailTemplate: string;
+  };
+  dashboard: {
+    contentTypeImage: string;
+    contentTypeVideo: string;
+    contentTypePost: string;
+    contentSubtitleTemplate: string;
+    eventLiveSubtitle: string;
+    eventPlannedSubtitle: string;
+    insightEventsWithContents: string;
+    insightPublishedContents: string;
+    insightLiveCoverage: string;
+    insightContentsWithMedia: string;
+  };
+  logs: {
+    serverListening: string;
+    seededUsers: string;
+  };
+  seed: {
+    names: string[];
+    lastNames: string[];
+    eventTitles: string[];
+    contentTitles: string[];
+    globalEventTitles: string[];
+    globalContentTitles: string[];
+    entityPostTemplate: string;
+    entityEventTemplate: string;
+    entities: string[];
+    activityDescriptions: Record<ActivityType, string>;
+    emailTemplate: string;
+  };
+}
+
 export interface Database {
   users: User[];
   activities: Record<number, Activity[]>;
@@ -84,4 +140,5 @@ export interface Database {
   trend: TrendPoint[];
   alerts: Alert[];
   topUsers: TopUser[];
+  strings: StringCatalog;
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/widgets/user_detail/user_detail.dart';
 
@@ -28,8 +29,9 @@ class _UserListTileState extends State<UserListTile>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: Duration(milliseconds: 300 + (widget.index * 50)),
+      duration: AnimationConfig.listFadeDuration(widget.index),
       vsync: this,
+      animationBehavior: AnimationBehavior.preserve,
     );
     _fadeAnimation = Tween<double>(
       begin: 0,
@@ -62,8 +64,8 @@ class _UserListTileState extends State<UserListTile>
           onTap: () async {
             await Navigator.of(context).push(
               PageRouteBuilder(
-                transitionDuration: const Duration(milliseconds: 500),
-                reverseTransitionDuration: const Duration(milliseconds: 400),
+                transitionDuration: AnimationConfig.heroForwardDuration,
+                reverseTransitionDuration: AnimationConfig.heroReverseDuration,
                 opaque: false,
                 pageBuilder: (_, _, _) {
                   return Scaffold(
@@ -82,17 +84,13 @@ class _UserListTileState extends State<UserListTile>
                   );
                 },
                 transitionsBuilder: (_, animation, _, child) {
-                  final curved = CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeInOutCubic,
-                  );
-                  return FadeTransition(opacity: curved, child: child);
+                  return child;
                 },
               ),
             );
           },
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: AnimationConfig.hoverCard,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -143,7 +141,7 @@ class _UserListTileState extends State<UserListTile>
                     ),
                     // Status indicator
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
+                      duration: AnimationConfig.statusPulse,
                       width: 14,
                       height: 14,
                       decoration: BoxDecoration(
@@ -217,7 +215,7 @@ class _UserListTileState extends State<UserListTile>
                 // Arrow icon
                 AnimatedRotation(
                   turns: hovered ? 0.1 : 0,
-                  duration: const Duration(milliseconds: 200),
+                  duration: AnimationConfig.hoverCard,
                   child: Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,

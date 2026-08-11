@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/events/controllers/events_controller.dart';
 import 'package:mediahub/features/events/widgets/event_form_dialog.dart';
 import 'package:mediahub/features/events/widgets/event_list_tile.dart';
@@ -577,7 +579,7 @@ class _EventDropZone extends StatelessWidget {
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: AnimationConfig.hoverSmooth,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF8FAFC),
@@ -921,9 +923,10 @@ class _EventsBody extends StatelessWidget {
         Padding(
           key: ValueKey('event-${source[i].id}-$sortTick'),
           padding: const EdgeInsets.only(bottom: 12),
-          child: TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 700 + (i * 35).clamp(0, 260)),
-            tween: Tween(begin: 1, end: 0),
+          child: PreservedTweenAnimationBuilder(
+            duration: AnimationConfig.reorderDuration(i),
+            begin: 1,
+            end: 0,
             curve: Curves.easeInOutCubicEmphasized,
             builder: (context, value, child) {
               final previousIndex = previousIndexes[source[i].id];
@@ -1518,7 +1521,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                             right: 0,
                             bottom: 12,
                             child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 180),
+                              duration: AnimationConfig.hoverSmooth,
                               opacity: _showScrollToTop ? 1 : 0,
                               child: IgnorePointer(
                                 ignoring: !_showScrollToTop,
@@ -1532,9 +1535,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                                       onPressed: () {
                                         scrollController.animateTo(
                                           0,
-                                          duration: const Duration(
-                                            milliseconds: 320,
-                                          ),
+                                          duration: AnimationConfig.scrollToTop,
                                           curve: Curves.easeOutCubic,
                                         );
                                       },

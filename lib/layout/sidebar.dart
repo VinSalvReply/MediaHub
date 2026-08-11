@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/routes/app_router.dart';
 
@@ -140,7 +141,7 @@ class _SidebarTileState extends State<_SidebarTile> {
       cursor: SystemMouseCursors.click,
       child: RepaintBoundary(
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: AnimationConfig.hoverPanel,
           curve: Curves.easeOutCubic,
           margin: const EdgeInsets.only(bottom: 10),
           decoration: BoxDecoration(
@@ -178,19 +179,13 @@ class _SidebarFooterState extends State<_SidebarFooter> {
   Future<void> _openProfilePopup() async {
     await Navigator.of(context).push(
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 500),
-        reverseTransitionDuration: const Duration(milliseconds: 380),
+        transitionDuration: AnimationConfig.heroForwardDuration,
+        reverseTransitionDuration: AnimationConfig.heroReverseDuration,
         opaque: false,
         pageBuilder: (context, animation, secondaryAnimation) =>
             const _ProfilePopupRoute(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOutCubic,
-            reverseCurve: Curves.easeInCubic,
-          );
-
-          return FadeTransition(opacity: curved, child: child);
+          return child;
         },
       ),
     );
@@ -202,7 +197,7 @@ class _SidebarFooterState extends State<_SidebarFooter> {
 
     return RepaintBoundary(
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
+        duration: AnimationConfig.hoverPanel,
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -265,7 +260,7 @@ class _SidebarFooterState extends State<_SidebarFooter> {
                     ),
                   ),
                   AnimatedSlide(
-                    duration: const Duration(milliseconds: 220),
+                    duration: AnimationConfig.hoverPanel,
                     curve: Curves.easeOutCubic,
                     offset: hovered ? const Offset(0.08, 0) : Offset.zero,
                     child: Icon(
@@ -336,7 +331,8 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
     super.initState();
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 550),
+      duration: AnimationConfig.dialogScale,
+      animationBehavior: AnimationBehavior.preserve,
     );
     scaleAnim = TweenSequence<double>([
       TweenSequenceItem(
@@ -363,7 +359,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
     ]).animate(controller);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 120));
+      await Future.delayed(AnimationConfig.dialogStartShortDelay);
       if (mounted) controller.forward();
     });
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
@@ -32,7 +33,8 @@ class _UserDetailState extends State<UserDetail>
 
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 550),
+      duration: AnimationConfig.dialogScale,
+      animationBehavior: AnimationBehavior.preserve,
     );
 
     scaleAnim = TweenSequence<double>([
@@ -60,7 +62,7 @@ class _UserDetailState extends State<UserDetail>
     ]).animate(controller);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 220));
+      await Future.delayed(AnimationConfig.dialogStartDelay);
       if (mounted) controller.forward();
     });
   }
@@ -309,7 +311,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
+                duration: AnimationConfig.statusPulse,
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(

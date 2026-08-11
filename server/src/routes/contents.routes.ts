@@ -2,6 +2,7 @@ import { Router } from "express";
 import { HttpError, notFound, parseId } from "../http.js";
 import { contentRepository } from "../repositories/content.repository.js";
 import { eventRepository } from "../repositories/event.repository.js";
+import { formatString, getString } from "../strings.js";
 import { userRepository } from "../repositories/user.repository.js";
 
 export const contentsRouter: Router = Router();
@@ -9,20 +10,23 @@ export const contentsRouter: Router = Router();
 function parseOptionalId(value: unknown, name: string): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
   if (Array.isArray(value)) {
-    throw new HttpError(400, `${name} query param must be a number`);
+    throw new HttpError(
+      400,
+      formatString("errors.queryParamMustBeNumber", { name }),
+    );
   }
   return parseId(String(value), name);
 }
 
 function validateLinks(userId?: number, eventId?: number): void {
   if (typeof userId === "number" && !userRepository.find(userId)) {
-    notFound("User not found");
+    notFound(getString("errors.userNotFound"));
   }
   if (typeof eventId === "number") {
     const eventExists = eventRepository
       .listGlobal()
       .some((event) => event.id === eventId);
-    if (!eventExists) notFound("Event not found");
+    if (!eventExists) notFound(getString("errors.eventNotFound"));
   }
 }
 
@@ -50,12 +54,14 @@ contentsRouter.put("/:contentId", (req, res) => {
     typeof req.body?.event_id === "number" ? req.body.event_id : undefined;
   validateLinks(userId, eventId);
   const updated = contentRepository.updateGlobal(contentId, req.body);
-  if (!updated) notFound("Content not found");
+  if (!updated) notFound(getString("errors.contentNotFound"));
   res.json(updated);
 });
 
 contentsRouter.delete("/:contentId", (req, res) => {
   const contentId = parseId(req.params.contentId, "contentId");
-  if (!contentRepository.removeGlobal(contentId)) notFound("Content not found");
+  if (!contentRepository.removeGlobal(contentId)) {
+    notFound(getString("errors.contentNotFound"));
+  }
   res.status(204).end();
 });

@@ -1,5 +1,6 @@
 import { nextId } from "../db.js";
 import { store } from "../store.js";
+import { getString } from "../strings.js";
 import type { ContentItem, GlobalContentItem } from "../types.js";
 
 export type ContentCreateInput = Partial<Omit<ContentItem, "id">>;
@@ -16,9 +17,9 @@ export const contentRepository = {
     const list = (store.data.contents[userId] ??= []);
     const item: ContentItem = {
       id: nextId(list),
-      title: input.title ?? "Untitled",
-      type: input.type ?? "post",
-      status: input.status ?? "draft",
+      title: input.title ?? getString("defaults.untitled"),
+      type: input.type ?? store.data.strings.defaults.contentType,
+      status: input.status ?? store.data.strings.defaults.contentStatus,
       created_at: input.created_at ?? new Date().toISOString(),
       media_urls: input.media_urls ?? [],
       post_body: input.post_body ?? null,
@@ -73,9 +74,9 @@ export const contentRepository = {
   createGlobal(input: GlobalContentCreateInput): GlobalContentItem {
     const item: GlobalContentItem = {
       id: nextId(store.data.global_contents),
-      title: input.title ?? "Untitled",
-      type: input.type ?? "post",
-      status: input.status ?? "draft",
+      title: input.title ?? getString("defaults.untitled"),
+      type: input.type ?? store.data.strings.defaults.contentType,
+      status: input.status ?? store.data.strings.defaults.contentStatus,
       created_at: input.created_at ?? new Date().toISOString(),
       user_id: input.user_id ?? null,
       event_id: input.event_id ?? null,

@@ -17,39 +17,19 @@ import type {
   UserEvent,
   GlobalEvent,
 } from "./types.js";
+import { loadDb } from "./db.js";
 
-const NAMES = [
-  "Luca",
-  "Marco",
-  "Giulia",
-  "Francesca",
-  "Alessandro",
-  "Chiara",
-  "Davide",
-  "Elena",
-];
-const LAST_NAMES = ["Rossi", "Bianchi", "Ferrari", "Romano", "Gallo", "Conti"];
 const ROLES: Role[] = ["Admin", "Editor", "User"];
 const SEGMENTS: Segment[] = ["Power user", "Casual", "Inactive"];
 const ACTIVITY_TYPES: ActivityType[] = ["login", "edit", "upload", "delete"];
 const DEVICES: Device[] = ["web", "mobile", "desktop"];
-const EVENT_TITLES = [
-  "Flutter Meetup",
-  "Tech Conference",
-  "Design Sprint",
-  "Hackathon",
-  "Workshop UX",
-];
 const EVENT_STATUS: EventStatus[] = ["upcoming", "live", "ended"];
 const CONTENT_TYPES: ContentType[] = ["image", "video", "post"];
 const CONTENT_STATUS: ContentStatus[] = ["draft", "published", "archived"];
-const CONTENT_TITLES = [
-  "Landing Page Design",
-  "Promo Video",
-  "User Interview",
-  "Marketing Campaign",
-  "Dashboard UI",
-];
+
+function loadSeedCatalog() {
+  return loadDb().strings.seed;
+}
 
 function pick<T>(list: readonly T[]): T {
   return list[Math.floor(Math.random() * list.length)]!;
@@ -68,37 +48,65 @@ function futureDate(): string {
   d.setDate(d.getDate() + rand(60));
   return d.toISOString();
 }
-function activityDescription(type: ActivityType): string {
-  switch (type) {
-    case "login":
-      return "Accesso effettuato";
-    case "edit":
-      return "Modifica contenuto";
-    case "upload":
-      return "Caricamento asset";
-    case "delete":
-      return "Eliminazione elemento";
-  }
+
+function applyTemplate(
+  template: string,
+  values: Record<string, number>,
+): string {
+  return Object.entries(values).reduce((text, [key, value]) => {
+    return text.split(`{${key}}`).join(String(value));
+  }, template);
 }
-function randomEntity(): string {
-  return pick([
-    `Post #${rand(100)}`,
-    `Event #${rand(50)}`,
-    "Profile update",
-    "Media asset",
-  ]);
+
+function rolePool(dbUsers: User[]): Role[] {
+  const pool = Array.from(new Set(dbUsers.map((user) => user.role)));
+  return pool.length > 0 ? pool : ROLES;
+}
+
+function segmentPool(dbUsers: User[]): Segment[] {
+  const pool = Array.from(new Set(dbUsers.map((user) => user.segment)));
+  return pool.length > 0 ? pool : SEGMENTS;
 }
 
 export function buildSeed(): Database {
+  const catalog = loadSeedCatalog();
+  const currentDb = loadDb();
+  const seedNames = catalog.names.length
+    ? catalog.names
+    : currentDb.users.map((user) => user.name);
+  const seedLastNames = catalog.lastNames.length
+    ? catalog.lastNames
+    : currentDb.users.map((user) => user.last_name);
+  const seedEventTitles = catalog.eventTitles.length
+    ? catalog.eventTitles
+    : currentDb.global_events.map((event) => event.title);
+  const seedContentTitles = catalog.contentTitles.length
+    ? catalog.contentTitles
+    : currentDb.global_contents.map((content) => content.title);
+  const seedGlobalEventTitles =
+    catalog.globalEventTitles.length > 1
+      ? catalog.globalEventTitles
+      : seedEventTitles;
+  const seedGlobalContentTitles =
+    catalog.globalContentTitles.length > 1
+      ? catalog.globalContentTitles
+      : seedContentTitles;
+  const seedEntities = catalog.entities.length
+    ? catalog.entities
+    : currentDb.users.map((user) => user.email);
+  const activityDescriptions = catalog.activityDescriptions;
+  const roleValues = rolePool(currentDb.users);
+  const segmentValues = segmentPool(currentDb.users);
+
   const users: User[] = Array.from({ length: 20 }, (_, i) => {
     const isActive = Math.random() < 0.5;
     return {
       id: i + 1,
-      name: NAMES[i % NAMES.length]!,
-      last_name: LAST_NAMES[i % LAST_NAMES.length]!,
-      email: `user${i + 1}@mediahub.dev`,
-      role: ROLES[i % ROLES.length]!,
-      segment: pick(SEGMENTS),
+      name: seedNames[i % seedNames.length] ?? "",
+      last_name: seedLastNames[i % seedLastNames.length] ?? "",
+      email: applyTemplate(catalog.emailTemplate, { id: i + 1 }),
+      role: roleValues[i % roleValues.length]!,
+      segment: pick(segmentValues),
       is_active: isActive,
       created_at: pastDate(),
       last_login: isActive || Math.random() < 0.5 ? pastDate() : null,
@@ -116,8 +124,12 @@ export function buildSeed(): Database {
       const type = pick(ACTIVITY_TYPES);
       return {
         type,
-        description: activityDescription(type),
-        entity: randomEntity(),
+        description: activityDescriptions[type] ?? "",
+        entity: pick([
+          applyTemplate(catalog.entityPostTemplate, { id: rand(100) }),
+          applyTemplate(catalog.entityEventTemplate, { id: rand(50) }),
+          pick(seedEntities),
+        ]),
         device: pick(DEVICES),
         date: pastDate(),
       };
@@ -125,7 +137,7 @@ export function buildSeed(): Database {
 
     events[u.id] = Array.from({ length: 4 + rand(6) }, (_, i) => ({
       id: i + 1,
-      title: pick(EVENT_TITLES),
+      title: pick(seedEventTitles),
       date: futureDate(),
       attendees: 20 + rand(200),
       status: pick(EVENT_STATUS),
@@ -146,7 +158,7 @@ export function buildSeed(): Database {
 
     contents[u.id] = Array.from({ length: 10 + rand(12) }, (_, i) => ({
       id: i + 1,
-      title: pick(CONTENT_TITLES),
+      title: pick(seedContentTitles),
       type: pick(CONTENT_TYPES),
       status: pick(CONTENT_STATUS),
       created_at: pastDate(),
@@ -180,20 +192,17 @@ export function buildSeed(): Database {
     };
   }).reverse();
 
-  const alerts: Alert[] = [
-    { type: "warning", message: "Elevato tasso di utenti inattivi" },
-    { type: "info", message: "Nuovo evento in arrivo a breve" },
-  ];
+  const alerts: Alert[] = [];
 
   const topUsers: TopUser[] = Array.from({ length: 5 }, () => ({
-    name: pick(NAMES),
+    name: pick(seedNames),
     score: 200 + rand(800),
   }));
 
   global_events.push(
     {
       id: global_events.length + 1,
-      title: "MediaHub Product Launch",
+      title: seedGlobalEventTitles[0] ?? "",
       date: futureDate(),
       attendees: 350,
       status: "upcoming",
@@ -201,7 +210,7 @@ export function buildSeed(): Database {
     },
     {
       id: global_events.length + 2,
-      title: "Community Live Q&A",
+      title: seedGlobalEventTitles[1] ?? "",
       date: futureDate(),
       attendees: 120,
       status: "live",
@@ -212,7 +221,7 @@ export function buildSeed(): Database {
   global_contents.push(
     {
       id: global_contents.length + 1,
-      title: "Summer Campaign Hero Video",
+      title: seedGlobalContentTitles[0] ?? "",
       type: "video",
       status: "draft",
       created_at: pastDate(),
@@ -221,7 +230,7 @@ export function buildSeed(): Database {
     },
     {
       id: global_contents.length + 2,
-      title: "Product Launch Social Carousel",
+      title: seedGlobalContentTitles[1] ?? "",
       type: "image",
       status: "published",
       created_at: pastDate(),
@@ -240,5 +249,6 @@ export function buildSeed(): Database {
     trend,
     alerts,
     topUsers,
+    strings: currentDb.strings,
   };
 }

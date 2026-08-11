@@ -164,7 +164,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         _ => FileType.media,
       };
 
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: pickerType,
         allowMultiple: true,
         withData: kIsWeb,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/features/users/controllers/users_controller.dart';
 import 'package:mediahub/features/users/widgets/users_list.dart';
 
@@ -138,7 +139,7 @@ class _UsersPageState extends State<UsersPage> {
                       right: 0,
                       bottom: 12,
                       child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 180),
+                        duration: AnimationConfig.hoverSmooth,
                         opacity: _showScrollToTop ? 1 : 0,
                         child: IgnorePointer(
                           ignoring: !_showScrollToTop,
@@ -152,7 +153,7 @@ class _UsersPageState extends State<UsersPage> {
                                 onPressed: () {
                                   _scrollController.animateTo(
                                     0,
-                                    duration: const Duration(milliseconds: 320),
+                                    duration: AnimationConfig.scrollToTop,
                                     curve: Curves.easeOutCubic,
                                   );
                                 },
@@ -351,7 +352,7 @@ class _TopActionButtonState extends State<_TopActionButton> {
         onEnter: (_) => setState(() => hovered = true),
         onExit: (_) => setState(() => hovered = false),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: AnimationConfig.hoverStandard,
           width: 44,
           height: 44,
           decoration: BoxDecoration(

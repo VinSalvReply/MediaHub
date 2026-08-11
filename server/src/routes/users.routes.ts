@@ -4,12 +4,13 @@ import { contentRepository } from "../repositories/content.repository.js";
 import { eventRepository } from "../repositories/event.repository.js";
 import { userRepository } from "../repositories/user.repository.js";
 import { HttpError, notFound, parseId } from "../http.js";
+import { getString } from "../strings.js";
 
 export const usersRouter: Router = Router();
 
 function requireUser(id: number) {
   const user = userRepository.find(id);
-  if (!user) throw new HttpError(404, "User not found");
+  if (!user) throw new HttpError(404, getString("errors.userNotFound"));
   return user;
 }
 
@@ -22,7 +23,7 @@ usersRouter.get("/", (_req, res) => {
 usersRouter.get("/:id", (req, res) => {
   const id = parseId(req.params.id);
   const user = userRepository.find(id);
-  if (!user) notFound("User not found");
+  if (!user) notFound(getString("errors.userNotFound"));
   res.json(user);
 });
 
@@ -34,13 +35,13 @@ usersRouter.post("/", (req, res) => {
 usersRouter.put("/:id", (req, res) => {
   const id = parseId(req.params.id);
   const user = userRepository.update(id, req.body);
-  if (!user) notFound("User not found");
+  if (!user) notFound(getString("errors.userNotFound"));
   res.json(user);
 });
 
 usersRouter.delete("/:id", (req, res) => {
   const id = parseId(req.params.id);
-  if (!userRepository.remove(id)) notFound("User not found");
+  if (!userRepository.remove(id)) notFound(getString("errors.userNotFound"));
   res.status(204).end();
 });
 
@@ -81,12 +82,12 @@ usersRouter.put("/:userId/events/:eventId", (req, res) => {
   const existing = eventRepository
     .listGlobal(userId)
     .find((event) => event.id === eventId);
-  if (!existing) notFound("Event not found");
+  if (!existing) notFound(getString("errors.eventNotFound"));
   const updated = eventRepository.updateGlobal(eventId, {
     ...req.body,
     user_id: userId,
   });
-  if (!updated) notFound("Event not found");
+  if (!updated) notFound(getString("errors.eventNotFound"));
   res.json(updated);
 });
 
@@ -97,8 +98,10 @@ usersRouter.delete("/:userId/events/:eventId", (req, res) => {
   const existing = eventRepository
     .listGlobal(userId)
     .find((event) => event.id === eventId);
-  if (!existing) notFound("Event not found");
-  if (!eventRepository.removeGlobal(eventId)) notFound("Event not found");
+  if (!existing) notFound(getString("errors.eventNotFound"));
+  if (!eventRepository.removeGlobal(eventId)) {
+    notFound(getString("errors.eventNotFound"));
+  }
   res.status(204).end();
 });
 
@@ -125,12 +128,12 @@ usersRouter.put("/:userId/content/:itemId", (req, res) => {
   const existing = contentRepository
     .listGlobal({ userId })
     .find((item) => item.id === itemId);
-  if (!existing) notFound("Content not found");
+  if (!existing) notFound(getString("errors.contentNotFound"));
   const updated = contentRepository.updateGlobal(itemId, {
     ...req.body,
     user_id: userId,
   });
-  if (!updated) notFound("Content not found");
+  if (!updated) notFound(getString("errors.contentNotFound"));
   res.json(updated);
 });
 
@@ -141,7 +144,9 @@ usersRouter.delete("/:userId/content/:itemId", (req, res) => {
   const existing = contentRepository
     .listGlobal({ userId })
     .find((item) => item.id === itemId);
-  if (!existing) notFound("Content not found");
-  if (!contentRepository.removeGlobal(itemId)) notFound("Content not found");
+  if (!existing) notFound(getString("errors.contentNotFound"));
+  if (!contentRepository.removeGlobal(itemId)) {
+    notFound(getString("errors.contentNotFound"));
+  }
   res.status(204).end();
 });
