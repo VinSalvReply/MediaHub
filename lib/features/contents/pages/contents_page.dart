@@ -140,7 +140,9 @@ class _ContentsPageState extends State<ContentsPage> {
       callToActionUrl: result.callToActionUrl,
       tags: result.tags,
     );
-    _toast(ok ? 'Contenuto creato' : (controller.error ?? 'Operazione fallita'));
+    _toast(
+      ok ? 'Contenuto creato' : (controller.error ?? 'Operazione fallita'),
+    );
   }
 
   Future<void> _openEditDialog(ContentItem item) async {
@@ -160,7 +162,9 @@ class _ContentsPageState extends State<ContentsPage> {
       callToActionUrl: result.callToActionUrl,
       tags: result.tags,
     );
-    _toast(ok ? 'Contenuto aggiornato' : (controller.error ?? 'Operazione fallita'));
+    _toast(
+      ok ? 'Contenuto aggiornato' : (controller.error ?? 'Operazione fallita'),
+    );
   }
 
   Future<void> _assignContent(ContentItem item, int? eventId) async {
@@ -177,7 +181,11 @@ class _ContentsPageState extends State<ContentsPage> {
   Future<void> _unassignContent(ContentItem item) async {
     final bool ok = await controller.assignContentToEvent(item, null);
     if (!mounted) return;
-    _toast(ok ? 'Contenuto disassegnato' : (controller.error ?? 'Operazione fallita'));
+    _toast(
+      ok
+          ? 'Contenuto disassegnato'
+          : (controller.error ?? 'Operazione fallita'),
+    );
   }
 
   Future<void> _confirmDelete(ContentItem item) async {
@@ -200,7 +208,9 @@ class _ContentsPageState extends State<ContentsPage> {
     );
     if (confirm != true) return;
     final bool ok = await controller.removeContent(item);
-    _toast(ok ? 'Contenuto eliminato' : (controller.error ?? 'Operazione fallita'));
+    _toast(
+      ok ? 'Contenuto eliminato' : (controller.error ?? 'Operazione fallita'),
+    );
   }
 
   void _toast(String message) {
