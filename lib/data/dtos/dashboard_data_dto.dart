@@ -6,7 +6,7 @@ class DashboardDataDto {
   final List<DashboardAlertDto> alerts;
   final List<DashboardFocusEventDto> focusEvents;
 
-  DashboardDataDto({
+  const DashboardDataDto({
     required this.metrics,
     required this.activities,
     required this.insights,
@@ -17,7 +17,9 @@ class DashboardDataDto {
 
   factory DashboardDataDto.fromJson(Map<String, dynamic> json) {
     return DashboardDataDto(
-      metrics: DashboardMetricsDto.fromJson(json['metrics']),
+      metrics: DashboardMetricsDto.fromJson(
+        json['metrics'] as Map<String, dynamic>,
+      ),
       activities: (json['activities'] as List<dynamic>)
           .map(
             (dynamic j) =>
@@ -61,7 +63,7 @@ class DashboardMetricsDto {
   final int totalMediaAssets;
   final int eventsWithoutContents;
 
-  DashboardMetricsDto({
+  const DashboardMetricsDto({
     required this.totalEvents,
     required this.liveEvents,
     required this.upcomingThisWeek,
@@ -73,13 +75,13 @@ class DashboardMetricsDto {
 
   factory DashboardMetricsDto.fromJson(Map<String, dynamic> json) {
     return DashboardMetricsDto(
-      totalEvents: json['totalEvents'],
-      liveEvents: json['liveEvents'],
-      upcomingThisWeek: json['upcomingThisWeek'],
-      totalContents: json['totalContents'],
-      publishedContents: json['publishedContents'],
-      totalMediaAssets: json['totalMediaAssets'],
-      eventsWithoutContents: json['eventsWithoutContents'],
+      totalEvents: (json['totalEvents'] as num).toInt(),
+      liveEvents: (json['liveEvents'] as num).toInt(),
+      upcomingThisWeek: (json['upcomingThisWeek'] as num).toInt(),
+      totalContents: (json['totalContents'] as num).toInt(),
+      publishedContents: (json['publishedContents'] as num).toInt(),
+      totalMediaAssets: (json['totalMediaAssets'] as num).toInt(),
+      eventsWithoutContents: (json['eventsWithoutContents'] as num).toInt(),
     );
   }
 }
@@ -90,7 +92,7 @@ class DashboardActivityDto {
   final String type;
   final DateTime date;
 
-  DashboardActivityDto({
+  const DashboardActivityDto({
     required this.title,
     required this.subtitle,
     required this.type,
@@ -99,10 +101,10 @@ class DashboardActivityDto {
 
   factory DashboardActivityDto.fromJson(Map<String, dynamic> json) {
     return DashboardActivityDto(
-      title: json['title'],
-      subtitle: json['subtitle'],
-      type: json['type'],
-      date: DateTime.parse(json['date']),
+      title: json['title'] as String,
+      subtitle: json['subtitle'] as String,
+      type: json['type'] as String,
+      date: DateTime.parse(json['date'] as String),
     );
   }
 }
@@ -111,11 +113,11 @@ class DashboardInsightDto {
   final String label;
   final double value;
 
-  DashboardInsightDto({required this.label, required this.value});
+  const DashboardInsightDto({required this.label, required this.value});
 
   factory DashboardInsightDto.fromJson(Map<String, dynamic> json) {
     return DashboardInsightDto(
-      label: json['label'],
+      label: json['label'] as String,
       value: (json['value'] as num).toDouble(),
     );
   }
@@ -130,7 +132,7 @@ class DashboardFocusEventDto {
   final int mediaCount;
   final bool needsAttention;
 
-  DashboardFocusEventDto({
+  const DashboardFocusEventDto({
     required this.title,
     required this.date,
     required this.status,
@@ -142,13 +144,13 @@ class DashboardFocusEventDto {
 
   factory DashboardFocusEventDto.fromJson(Map<String, dynamic> json) {
     return DashboardFocusEventDto(
-      title: json['title'],
-      date: DateTime.parse(json['date']),
-      status: json['status'],
-      contentCount: json['contentCount'],
-      publishedCount: json['publishedCount'],
-      mediaCount: json['mediaCount'],
-      needsAttention: json['needsAttention'],
+      title: json['title'] as String,
+      date: DateTime.parse(json['date'] as String),
+      status: json['status'] as String,
+      contentCount: (json['contentCount'] as num).toInt(),
+      publishedCount: (json['publishedCount'] as num).toInt(),
+      mediaCount: (json['mediaCount'] as num).toInt(),
+      needsAttention: json['needsAttention'] as bool,
     );
   }
 }
@@ -158,7 +160,7 @@ class DashboardTrendDto {
   final int activeUsers;
   final int contentCreated;
 
-  DashboardTrendDto({
+  const DashboardTrendDto({
     required this.date,
     required this.activeUsers,
     required this.contentCreated,
@@ -166,9 +168,9 @@ class DashboardTrendDto {
 
   factory DashboardTrendDto.fromJson(Map<String, dynamic> json) {
     return DashboardTrendDto(
-      date: DateTime.parse(json["date"]),
-      activeUsers: json["active_users"],
-      contentCreated: json["content_created"],
+      date: DateTime.parse(json['date'] as String),
+      activeUsers: (json['active_users'] as num).toInt(),
+      contentCreated: (json['content_created'] as num).toInt(),
     );
   }
 }
@@ -177,9 +179,12 @@ class DashboardAlertDto {
   final String type;
   final String message;
 
-  DashboardAlertDto({required this.type, required this.message});
+  const DashboardAlertDto({required this.type, required this.message});
 
   factory DashboardAlertDto.fromJson(Map<String, dynamic> json) {
-    return DashboardAlertDto(type: json["type"], message: json["message"]);
+    return DashboardAlertDto(
+      type: json['type'] as String,
+      message: json['message'] as String,
+    );
   }
 }

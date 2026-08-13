@@ -3,7 +3,7 @@ class UserActivityDto {
   final String description;
   final String date;
 
-  UserActivityDto({
+  const UserActivityDto({
     required this.type,
     required this.description,
     required this.date,
@@ -11,9 +11,9 @@ class UserActivityDto {
 
   factory UserActivityDto.fromJson(Map<String, dynamic> json) {
     return UserActivityDto(
-      type: json['type'],
-      description: json['description'],
-      date: json['date'],
+      type: json['type'] as String,
+      description: json['description'] as String,
+      date: json['date'] as String,
     );
   }
 }

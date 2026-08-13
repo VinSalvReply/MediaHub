@@ -9,7 +9,7 @@ class EventDto {
   final int? userId;
   final List<ContentItemDto> contents;
 
-  EventDto({
+  const EventDto({
     required this.id,
     required this.title,
     required this.date,

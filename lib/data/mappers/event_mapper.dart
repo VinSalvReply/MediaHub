@@ -1,6 +1,7 @@
 import 'package:mediahub/data/dtos/content_item_dto.dart';
 import 'package:mediahub/data/dtos/event_dto.dart';
 import 'package:mediahub/data/mappers/content_item_mapper.dart';
+import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
 
 extension EventMapper on EventDto {
@@ -24,6 +25,8 @@ extension EventRequestMapper on Event {
     'attendees': attendees,
     'status': status.name,
     'user_id': userId,
-    'contents': contents.map((content) => content.toJson()).toList(),
+    'contents': contents
+        .map((ContentItem content) => content.toJson())
+        .toList(),
   };
 }

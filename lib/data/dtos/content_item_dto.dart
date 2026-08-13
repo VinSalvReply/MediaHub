@@ -12,7 +12,7 @@ class ContentItemDto {
   final String? callToActionUrl;
   final List<String> tags;
 
-  ContentItemDto({
+  const ContentItemDto({
     required this.id,
     required this.title,
     required this.type,

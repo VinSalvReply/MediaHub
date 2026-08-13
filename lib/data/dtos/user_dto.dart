@@ -8,7 +8,7 @@ class UserDto {
   final String createdAt;
   final String? lastLogin;
 
-  UserDto({
+  const UserDto({
     required this.id,
     required this.name,
     required this.lastName,
@@ -21,14 +21,14 @@ class UserDto {
 
   factory UserDto.fromJson(Map<String, dynamic> json) {
     return UserDto(
-      id: json['id'],
-      name: json['name'],
-      lastName: json['last_name'],
-      email: json['email'],
-      role: json['role'],
-      isActive: json['is_active'],
-      createdAt: json['created_at'],
-      lastLogin: json['last_login'],
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      lastName: json['last_name'] as String,
+      email: json['email'] as String,
+      role: json['role'] as String,
+      isActive: json['is_active'] as bool,
+      createdAt: json['created_at'] as String,
+      lastLogin: json['last_login'] as String?,
     );
   }
 }
