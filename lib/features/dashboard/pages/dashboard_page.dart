@@ -62,9 +62,7 @@ class _DashboardPageState extends State<DashboardPage>
             builder:
                 (BuildContext context, AsyncSnapshot<DashboardData> snapshot) {
                   if (snapshot.hasError) {
-                    return _DashboardError(
-                      onRetry: _reload,
-                    );
+                    return _DashboardError(onRetry: _reload);
                   }
 
                   if (!snapshot.hasData) {

@@ -41,7 +41,9 @@ class ContentsController extends ChangeNotifier {
       error = null;
       notifyListeners();
       contents = await _repository.getGlobalContents();
-      contents.sort((ContentItem a, ContentItem b) => b.createdAt.compareTo(a.createdAt));
+      contents.sort(
+        (ContentItem a, ContentItem b) => b.createdAt.compareTo(a.createdAt),
+      );
     } catch (e, st) {
       debugPrint('ContentsController.loadContents error: $e\n$st');
       error = 'Impossibile caricare i contenuti';
