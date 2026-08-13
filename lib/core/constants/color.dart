@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-final defaultColor = Colors.blueGrey[900];
-final defaultColorLight = Colors.blueGrey[700];
+final Color? defaultColor = Colors.blueGrey[900];
+final Color? defaultColorLight = Colors.blueGrey[700];
 
-final greyLight = Colors.grey[700];
+final Color? greyLight = Colors.grey[700];
 
-final cardColors = [
+final List<Color> cardColors = <Color>[
   Colors.green[900]!,
   Colors.deepPurple[900]!,
   Colors.deepOrange[900]!,

@@ -6,27 +6,27 @@ import 'package:mediahub/data/services/api_client.dart';
 /// e i mapper esistenti continuano a funzionare senza modifiche.
 class UserService {
   final ApiClient _api;
-  final Map<String, _CacheEntry> _cache = {};
+  final Map<String, _CacheEntry> _cache = <String, _CacheEntry>{};
   static const Duration _cacheDuration = Duration(minutes: 5);
 
   UserService({ApiClient? api}) : _api = api ?? ApiClient();
 
-  void _cacheResult(String key, dynamic value) {
+  void _cacheResult<T>(String key, T value) {
     _cache[key] = _CacheEntry(value, DateTime.now());
   }
 
-  dynamic _getCached(String key) {
-    final entry = _cache[key];
+  T? _getCached<T>(String key) {
+    final _CacheEntry? entry = _cache[key];
     if (entry == null) return null;
     if (DateTime.now().difference(entry.timestamp) > _cacheDuration) {
       _cache.remove(key);
       return null;
     }
-    return entry.value;
+    return entry.value as T;
   }
 
   void _invalidateCache(Iterable<String> keys) {
-    for (final key in keys) {
+    for (final String key in keys) {
       _cache.remove(key);
     }
   }
@@ -36,9 +36,9 @@ class UserService {
   // ================= USERS =================
 
   Future<List<Map<String, dynamic>>> getUsers() async {
-    final cached = _getCached('users');
+    final List<Map<String, dynamic>>? cached = _getCached<List<Map<String, dynamic>>>('users');
     if (cached != null) return cached;
-    final result = _listJson(await _api.get('/users'));
+    final List<Map<String, dynamic>> result = _listJson(await _api.get('/users'));
     _cacheResult('users', result);
     return result;
   }
@@ -83,8 +83,8 @@ class UserService {
     int userId,
     Map<String, dynamic> body,
   ) async {
-    final result = _mapJson(await _api.post('/users/$userId/events', body));
-    _invalidateCache(['events', 'dashboard']);
+    final Map<String, dynamic> result = _mapJson(await _api.post('/users/$userId/events', body));
+    _invalidateCache(<String>['events', 'dashboard']);
     return result;
   }
 
@@ -93,33 +93,33 @@ class UserService {
     int eventId,
     Map<String, dynamic> body,
   ) async {
-    final result = _mapJson(
+    final Map<String, dynamic> result = _mapJson(
       await _api.put('/users/$userId/events/$eventId', body),
     );
-    _invalidateCache(['events', 'dashboard']);
+    _invalidateCache(<String>['events', 'dashboard']);
     return result;
   }
 
   Future<void> deleteUserEvent(int userId, int eventId) async {
     await _api.delete('/users/$userId/events/$eventId');
-    _invalidateCache(['events', 'dashboard']);
+    _invalidateCache(<String>['events', 'dashboard']);
   }
 
   Future<List<Map<String, dynamic>>> getEvents({int? userId}) async {
     if (userId == null) {
-      final cached = _getCached('events');
+      final List<Map<String, dynamic>>? cached = _getCached<List<Map<String, dynamic>>>('events');
       if (cached != null) return cached;
-      final result = _listJson(await _api.get('/events'));
+      final List<Map<String, dynamic>> result = _listJson(await _api.get('/events'));
       _cacheResult('events', result);
       return result;
     }
-    final query = '?userId=$userId';
+    final String query = '?userId=$userId';
     return _listJson(await _api.get('/events$query'));
   }
 
   Future<Map<String, dynamic>> addEvent(Map<String, dynamic> body) async {
-    final result = _mapJson(await _api.post('/events', body));
-    _invalidateCache(['events', 'dashboard']);
+    final Map<String, dynamic> result = _mapJson(await _api.post('/events', body));
+    _invalidateCache(<String>['events', 'dashboard']);
     return result;
   }
 
@@ -127,14 +127,14 @@ class UserService {
     int eventId,
     Map<String, dynamic> body,
   ) async {
-    final result = _mapJson(await _api.put('/events/$eventId', body));
-    _invalidateCache(['events', 'dashboard']);
+    final Map<String, dynamic> result = _mapJson(await _api.put('/events/$eventId', body));
+    _invalidateCache(<String>['events', 'dashboard']);
     return result;
   }
 
   Future<void> deleteEvent(int eventId) async {
     await _api.delete('/events/$eventId');
-    _invalidateCache(['events', 'dashboard']);
+    _invalidateCache(<String>['events', 'dashboard']);
   }
 
   // ================= CONTENT =================
@@ -166,16 +166,16 @@ class UserService {
     int? eventId,
   }) async {
     if (userId == null && eventId == null) {
-      final cached = _getCached('contents');
+      final List<Map<String, dynamic>>? cached = _getCached<List<Map<String, dynamic>>>('contents');
       if (cached != null) return cached;
-      final result = _listJson(await _api.get('/contents'));
+      final List<Map<String, dynamic>> result = _listJson(await _api.get('/contents'));
       _cacheResult('contents', result);
       return result;
     }
-    final params = <String>[];
+    final List<String> params = <String>[];
     if (userId != null) params.add('userId=$userId');
     if (eventId != null) params.add('eventId=$eventId');
-    final query = params.isEmpty ? '' : '?${params.join('&')}';
+    final String query = params.isEmpty ? '' : '?${params.join('&')}';
     return _listJson(await _api.get('/contents$query'));
   }
 
@@ -196,9 +196,9 @@ class UserService {
   // ================= DASHBOARD =================
 
   Future<Map<String, dynamic>> getDashboard() async {
-    final cached = _getCached('dashboard');
+    final Map<String, dynamic>? cached = _getCached<Map<String, dynamic>>('dashboard');
     if (cached != null) return cached;
-    final result = _mapJson(await _api.get('/dashboard'));
+    final Map<String, dynamic> result = _mapJson(await _api.get('/dashboard'));
     _cacheResult('dashboard', result);
     return result;
   }
@@ -206,11 +206,11 @@ class UserService {
   // ================= HELPERS =================
 
   List<Map<String, dynamic>> _listJson(dynamic raw) {
-    return (raw as List).cast<Map<String, dynamic>>();
+    return (raw as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
   Map<String, dynamic> _mapJson(dynamic raw) {
-    return Map<String, dynamic>.from(raw as Map);
+    return Map<String, dynamic>.from(raw as Map<String, dynamic>);
   }
 }
 

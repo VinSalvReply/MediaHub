@@ -30,7 +30,7 @@ class UserDetail extends StatefulWidget {
 class _UserDetailState extends State<UserDetail>
     with SingleTickerProviderStateMixin {
   late Future<UserDetailData> future;
-  final repo = UserRepository();
+  final UserRepository repo = UserRepository();
 
   late final AnimationController controller;
   late final Animation<double> scaleAnim;
@@ -46,23 +46,23 @@ class _UserDetailState extends State<UserDetail>
       animationBehavior: AnimationBehavior.preserve,
     );
 
-    scaleAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(
+    scaleAnim = TweenSequence<double>(<TweenSequenceItem<double>>[
+      TweenSequenceItem<double>(
+        tween: Tween<double>(
           begin: 0.92,
           end: 1.08,
         ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 60,
       ),
-      TweenSequenceItem(
-        tween: Tween(
+      TweenSequenceItem<double>(
+        tween: Tween<double>(
           begin: 1.08,
           end: 0.98,
         ).chain(CurveTween(curve: Curves.easeInOut)),
         weight: 25,
       ),
-      TweenSequenceItem(
-        tween: Tween(
+      TweenSequenceItem<double>(
+        tween: Tween<double>(
           begin: 0.98,
           end: 1.0,
         ).chain(CurveTween(curve: Curves.easeOut)),
@@ -70,9 +70,9 @@ class _UserDetailState extends State<UserDetail>
       ),
     ]).animate(controller);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) async {
       if (!widget.startPulseImmediately) {
-        await Future.delayed(AnimationConfig.dialogStartDelayDuration);
+        await Future<void>.delayed(AnimationConfig.dialogStartDelayDuration);
       }
       if (mounted) controller.forward();
     });
@@ -86,19 +86,19 @@ class _UserDetailState extends State<UserDetail>
 
   @override
   Widget build(BuildContext context) {
-    final child = ScaleTransition(
+    final ScaleTransition child = ScaleTransition(
       scale: scaleAnim,
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         child: LayoutBuilder(
-          builder: (context, constraints) {
+          builder: (BuildContext context, BoxConstraints constraints) {
             // Calcola dimensioni responsive
-            final screenWidth = MediaQuery.of(context).size.width;
-            final screenHeight = MediaQuery.of(context).size.height;
-            final isMobile = screenWidth < ResponsiveBreakpoints.mobile;
-            final isTablet = screenWidth < ResponsiveBreakpoints.tablet;
+            final double screenWidth = MediaQuery.of(context).size.width;
+            final double screenHeight = MediaQuery.of(context).size.height;
+            final bool isMobile = screenWidth < ResponsiveBreakpoints.mobile;
+            final bool isTablet = screenWidth < ResponsiveBreakpoints.tablet;
 
             late double dialogWidth;
             late double dialogHeight;
@@ -119,7 +119,7 @@ class _UserDetailState extends State<UserDetail>
               height: dialogHeight,
               child: FutureBuilder<UserDetailData>(
                 future: future,
-                builder: (context, snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<UserDetailData> snapshot) {
                   if (!snapshot.hasData) {
                     return const Padding(
                       padding: EdgeInsets.all(24),
@@ -127,13 +127,13 @@ class _UserDetailState extends State<UserDetail>
                     );
                   }
 
-                  final data = snapshot.data!;
-                  final padding = isMobile ? 16.0 : 24.0;
+                  final UserDetailData data = snapshot.data!;
+                  final double padding = isMobile ? 16.0 : 24.0;
 
                   return Padding(
                     padding: EdgeInsets.all(padding),
                     child: Column(
-                      children: [
+                      children: <Widget>[
                         _Header(
                           user: widget.user,
                           color: widget.color,
@@ -168,7 +168,7 @@ class _UserDetailSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
+      children: <Widget>[
         // Header skeleton
         Container(
           padding: const EdgeInsets.all(18),
@@ -178,13 +178,13 @@ class _UserDetailSkeleton extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE7EAF0)),
           ),
           child: Row(
-            children: [
+            children: <Widget>[
               const ShimmerCircle(),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: const <Widget>[
                     ShimmerBar(width: 180),
                     SizedBox(height: 10),
                     ShimmerBar(width: 220),
@@ -192,7 +192,7 @@ class _UserDetailSkeleton extends StatelessWidget {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: [
+                      children: <Widget>[
                         ShimmerBar(width: 84),
                         ShimmerBar(width: 70),
                         ShimmerBar(width: 120),
@@ -217,7 +217,7 @@ class _UserDetailSkeleton extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE7EAF0)),
             ),
             child: Column(
-              children: [
+              children: <Widget>[
                 // Tab bar skeleton
                 Container(
                   padding: const EdgeInsets.all(6),
@@ -227,7 +227,7 @@ class _UserDetailSkeleton extends StatelessWidget {
                     border: Border.all(color: const Color(0xFFE7EAF0)),
                   ),
                   child: Row(
-                    children: const [
+                    children: const <Widget>[
                       Expanded(child: ShimmerBar(width: double.infinity)),
                       SizedBox(width: 8),
                       Expanded(child: ShimmerBar(width: double.infinity)),
@@ -245,10 +245,10 @@ class _UserDetailSkeleton extends StatelessWidget {
                     physics: const BouncingScrollPhysics(),
                     itemCount: 6,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (_, index) {
+                    itemBuilder: (_, int index) {
                       if (index % 3 == 0) {
                         return Row(
-                          children: const [
+                          children: const <Widget>[
                             Expanded(
                               child: ShimmerBox(
                                 width: double.infinity,
@@ -295,7 +295,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = user.isActive
+    final Color statusColor = user.isActive
         ? const Color(0xFF22C55E)
         : const Color(0xFFEF4444);
 
@@ -308,10 +308,10 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Stack(
             alignment: Alignment.bottomRight,
-            children: [
+            children: <Widget>[
               CircleAvatar(
                 radius: 42,
                 backgroundColor: color.withValues(alpha: 0.14),
@@ -332,7 +332,7 @@ class _Header extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: statusColor,
                   border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
+                  boxShadow: <BoxShadow>[
                     BoxShadow(
                       blurRadius: user.isActive ? 10 : 4,
                       color: statusColor.withValues(alpha: 0.28),
@@ -346,7 +346,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 Text(
                   '${user.name} ${user.lastName}',
                   style: const TextStyle(
@@ -360,7 +360,7 @@ class _Header extends StatelessWidget {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [
+                  children: <Widget>[
                     _Badge(label: user.role, color: color),
                     _Badge(
                       label: user.isActive ? 'Attivo' : 'Inattivo',
@@ -428,7 +428,7 @@ class _UserTabs extends StatelessWidget {
         child: DefaultTabController(
           length: 3,
           child: Column(
-            children: [
+            children: <Widget>[
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -450,7 +450,7 @@ class _UserTabs extends StatelessWidget {
                     indicatorSize: TabBarIndicatorSize.tab,
                     labelColor: color,
                     unselectedLabelColor: Colors.grey,
-                    tabs: const [
+                    tabs: const <Widget>[
                       Tab(text: "Panoramica"),
                       Tab(text: "Attivita"),
                       Tab(text: "Eventi"),
@@ -461,7 +461,7 @@ class _UserTabs extends StatelessWidget {
               const SizedBox(height: 14),
               Expanded(
                 child: TabBarView(
-                  children: [
+                  children: <Widget>[
                     OverviewTab(data: data),
                     ActivityTab(data: data),
                     EventsTab(data: data),

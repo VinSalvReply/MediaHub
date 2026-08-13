@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
 
-/// Transparent full-screen overlay that hosts the profile card.
-class ProfilePopupRoute extends StatelessWidget {
-  const ProfilePopupRoute({super.key});
+/// Transparent full-screen overlay that hosts the profile card
+class ProfileCardRoute extends StatelessWidget {
+  const ProfileCardRoute({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
-        children: [
+        children: <Widget>[
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => Navigator.of(context).pop(),
-              child: Container(color: Colors.black.withValues(alpha: 0.46)),
+              child: ColoredBox(color: Colors.black.withValues(alpha: 0.46)),
             ),
           ),
           Center(
@@ -23,9 +23,7 @@ class ProfilePopupRoute extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Material(
                 color: Colors.transparent,
-                child: _ProfilePopupCard(
-                  onClose: () => Navigator.of(context).pop(),
-                ),
+                child: const _ProfilePopupCard(),
               ),
             ),
           ),
@@ -36,9 +34,7 @@ class ProfilePopupRoute extends StatelessWidget {
 }
 
 class _ProfilePopupCard extends StatefulWidget {
-  final VoidCallback onClose;
-
-  const _ProfilePopupCard({required this.onClose});
+  const _ProfilePopupCard();
 
   @override
   State<_ProfilePopupCard> createState() => _ProfilePopupCardState();
@@ -55,27 +51,27 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
     controller = AnimationController(
       vsync: this,
       duration: AnimationConfig.dialogScaleDuration,
-      // preserve: ignores system reduce-motion so the bounce always runs.
+      // preserve: ignores system reduce-motion so the bounce always runs
       animationBehavior: AnimationBehavior.preserve,
     );
     // 3-phase spring bounce: ease-in → overshoot → settle at 1.0.
-    scaleAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(
+    scaleAnim = TweenSequence<double>(<TweenSequenceItem<double>>[
+      TweenSequenceItem<double>(
+        tween: Tween<double>(
           begin: 0.92,
           end: 1.08,
         ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 60,
       ),
-      TweenSequenceItem(
-        tween: Tween(
+      TweenSequenceItem<double>(
+        tween: Tween<double>(
           begin: 1.08,
           end: 0.98,
         ).chain(CurveTween(curve: Curves.easeInOut)),
         weight: 25,
       ),
-      TweenSequenceItem(
-        tween: Tween(
+      TweenSequenceItem<double>(
+        tween: Tween<double>(
           begin: 0.98,
           end: 1.0,
         ).chain(CurveTween(curve: Curves.easeOut)),
@@ -83,22 +79,16 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
       ),
     ]).animate(controller);
 
-    // Wait one frame + a short delay so the overlay is visible before the scale starts.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(AnimationConfig.dialogStartShortDelayDuration);
+    // Wait one frame + a short delay so the overlay is visible before the scale starts
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) async {
+      await Future<void>.delayed(AnimationConfig.dialogStartShortDelayDuration);
       if (mounted) controller.forward();
     });
   }
 
   @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF4F46E5);
+    const Color accent = Color(0xFF4F46E5);
 
     return ScaleTransition(
       scale: scaleAnim,
@@ -109,7 +99,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(color: const Color(0xFFE7EAF0)),
-          boxShadow: const [
+          boxShadow: const <BoxShadow>[
             BoxShadow(
               blurRadius: 36,
               offset: Offset(0, 18),
@@ -119,12 +109,12 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             Container(
               padding: const EdgeInsets.fromLTRB(24, 22, 18, 22),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFFEC4899)],
+                  colors: <Color>[Color(0xFF4F46E5), Color(0xFFEC4899)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -132,7 +122,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Container(
                     width: 68,
                     height: 68,
@@ -159,7 +149,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
                   const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         Text(
                           'Utente Admin',
                           style: TextStyle(
@@ -186,7 +176,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -195,7 +185,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
                       border: Border.all(color: const Color(0xFFE7EAF0)),
                     ),
                     child: const Column(
-                      children: [
+                      children: <Widget>[
                         _ProfileMetaRow(
                           icon: Icons.workspace_premium_rounded,
                           label: 'Ruolo',
@@ -223,7 +213,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
                   ),
                   const SizedBox(height: 12),
                   const Row(
-                    children: [
+                    children: <Widget>[
                       Expanded(
                         child: _ProfileActionChip(
                           icon: Icons.settings_outlined,
@@ -249,7 +239,7 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Row(
-                      children: [
+                      children: <Widget>[
                         Icon(
                           Icons.info_outline_rounded,
                           color: accent,
@@ -277,6 +267,12 @@ class _ProfilePopupCardState extends State<_ProfilePopupCard>
       ),
     );
   }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 }
 
 class _ProfileMetaRow extends StatelessWidget {
@@ -293,7 +289,7 @@ class _ProfileMetaRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
+      children: <Widget>[
         Icon(icon, size: 16, color: const Color(0xFF6B7280)),
         const SizedBox(width: 8),
         Text(
@@ -343,7 +339,7 @@ class _ProfileActionChip extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+        children: <Widget>[
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 8),
           Flexible(

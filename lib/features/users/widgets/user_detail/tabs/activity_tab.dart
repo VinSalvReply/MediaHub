@@ -17,15 +17,15 @@ class ActivityTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: data.activities.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, i) {
-        final a = data.activities[i];
+      itemBuilder: (BuildContext context, int i) {
+        final UserActivity a = data.activities[i];
 
         return PreservedTweenAnimationBuilder(
           duration: AnimationConfig.detailListEntryDuration(i),
           begin: 0,
           end: 1,
           curve: Curves.easeOutCubic,
-          builder: (context, v, child) {
+          builder: (BuildContext context, double v, Widget? child) {
             return Opacity(
               opacity: v,
               child: Transform.translate(
@@ -55,7 +55,7 @@ class _ActivityTileState extends State<_ActivityTile> {
 
   @override
   Widget build(BuildContext context) {
-    final a = widget.activity;
+    final UserActivity a = widget.activity;
 
     return MouseRegion(
       onEnter: (_) => setState(() => hover = true),
@@ -69,17 +69,17 @@ class _ActivityTileState extends State<_ActivityTile> {
           color: hover ? const Color(0xFFF8FAFC) : const Color(0xFFFDFDFE),
           border: Border.all(color: const Color(0xFFE7EAF0)),
           boxShadow: hover
-              ? const [
+              ? const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 18,
                     offset: Offset(0, 8),
                     color: Color(0x10000000),
                   ),
                 ]
-              : const [],
+              : const <BoxShadow>[],
         ),
         child: Row(
-          children: [
+          children: <Widget>[
             Container(
               width: 42,
               height: 42,

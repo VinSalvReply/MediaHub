@@ -12,12 +12,12 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < ResponsiveBreakpoints.mobile;
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool isMobile = constraints.maxWidth < ResponsiveBreakpoints.mobile;
 
         return Scaffold(
           body: Row(
-            children: [
+            children: <Widget>[
               if (!isMobile) const Sidebar(),
               Expanded(child: child),
             ],
@@ -36,13 +36,13 @@ class MainLayout extends StatelessWidget {
   void _showMobileMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
+      builder: (BuildContext context) => Container(
         color: Colors.white,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: navEntries
               .map(
-                (entry) => ListTile(
+                (NavEntry entry) => ListTile(
                   leading: Icon(entry.icon),
                   title: Text(entry.label),
                   onTap: () {

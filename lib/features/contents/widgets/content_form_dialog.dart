@@ -5,9 +5,9 @@ import 'package:mediahub/data/services/api_client.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const _contentTypes = ['post', 'image', 'video'];
-const _contentStatuses = ['draft', 'published', 'archived'];
-const _mediaPreviewCardWidth = 160.0;
+const List<String> _contentTypes = <String>['post', 'image', 'video'];
+const List<String> _contentStatuses = <String>['draft', 'published', 'archived'];
+const double _mediaPreviewCardWidth = 160.0;
 
 String _contentTypeLabel(String type) {
   switch (type) {
@@ -83,7 +83,7 @@ class ContentFormDialog extends StatefulWidget {
 }
 
 class _ContentFormDialogState extends State<ContentFormDialog> {
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final ApiClient _apiClient = ApiClient();
   late final TextEditingController _titleCtrl;
   late final TextEditingController _mediaUrlCtrl;
@@ -94,12 +94,12 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   late String _type;
   late String _status;
   bool _isSyncingMedia = false;
-  List<_SelectedMedia> _selectedMedia = const [];
+  List<_SelectedMedia> _selectedMedia = const <_SelectedMedia>[];
 
   @override
   void initState() {
     super.initState();
-    final c = widget.initial;
+    final ContentItem? c = widget.initial;
     _titleCtrl = TextEditingController(text: c?.title ?? '');
     _mediaUrlCtrl = TextEditingController();
     _postBodyCtrl = TextEditingController(text: c?.postBody ?? '');
@@ -108,8 +108,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
     _tagsCtrl = TextEditingController(text: c?.tags.join(', ') ?? '');
     _type = c?.type ?? _contentTypes.first;
     _status = c?.status ?? _contentStatuses.first;
-    _selectedMedia = [
-      for (final mediaUrl in c?.mediaUrls ?? const <String>[])
+    _selectedMedia = <_SelectedMedia>[
+      for (final String mediaUrl in c?.mediaUrls ?? const <String>[])
         _SelectedMedia(
           reference: mediaUrl,
           label: _labelFromReference(mediaUrl),
@@ -131,14 +131,14 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   }
 
   String _labelFromReference(String reference) {
-    final uri = Uri.tryParse(reference);
-    final path = uri?.path ?? reference;
-    final segments = path.split('/').where((part) => part.isNotEmpty).toList();
+    final Uri? uri = Uri.tryParse(reference);
+    final String path = uri?.path ?? reference;
+    final List<String> segments = path.split('/').where((String part) => part.isNotEmpty).toList();
     return segments.isEmpty ? reference : segments.last;
   }
 
   bool _looksLikeImage(String reference) {
-    final lower = reference.toLowerCase();
+    final String lower = reference.toLowerCase();
     return lower.endsWith('.png') ||
         lower.endsWith('.jpg') ||
         lower.endsWith('.jpeg') ||
@@ -147,7 +147,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   }
 
   bool _looksLikeVideo(String reference) {
-    final lower = reference.toLowerCase();
+    final String lower = reference.toLowerCase();
     return lower.endsWith('.mp4') ||
         lower.endsWith('.mov') ||
         lower.endsWith('.webm') ||
@@ -156,28 +156,28 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
   String? _thumbnailReferenceFromMedia(String reference) {
     if (!_looksLikeVideo(reference)) return null;
-    final uri = Uri.tryParse(reference);
+    final Uri? uri = Uri.tryParse(reference);
     if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
       return null;
     }
 
-    final segments = uri.pathSegments;
+    final List<String> segments = uri.pathSegments;
     if (segments.isEmpty) return null;
 
-    final fileName = segments.last;
-    final dotIndex = fileName.lastIndexOf('.');
+    final String fileName = segments.last;
+    final int dotIndex = fileName.lastIndexOf('.');
     if (dotIndex <= 0) return null;
 
-    final thumbnailName = '${fileName.substring(0, dotIndex)}.poster.jpg';
-    final updatedSegments = [...segments]
+    final String thumbnailName = '${fileName.substring(0, dotIndex)}.poster.jpg';
+    final List<String> updatedSegments = <String>[...segments]
       ..[segments.length - 1] = thumbnailName;
     return uri.replace(pathSegments: updatedSegments).toString();
   }
 
   String? _optionalUrlValidator(String? value) {
-    final text = value?.trim() ?? '';
+    final String text = value?.trim() ?? '';
     if (text.isEmpty) return null;
-    final uri = Uri.tryParse(text);
+    final Uri? uri = Uri.tryParse(text);
     if (uri == null ||
         (uri.scheme != 'http' && uri.scheme != 'https') ||
         uri.host.isEmpty) {
@@ -188,22 +188,22 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
   Future<void> _pickLocalMedia() async {
     try {
-      final pickerType = switch (_type) {
+      final FileType pickerType = switch (_type) {
         'image' => FileType.image,
         'video' => FileType.video,
         _ => FileType.media,
       };
 
-      final result = await FilePicker.pickFiles(
+      final FilePickerResult? result = await FilePicker.pickFiles(
         type: pickerType,
         allowMultiple: true,
         withData: kIsWeb,
       );
       if (!mounted || result == null || result.files.isEmpty) return;
 
-      final validFiles = result.files
+      final List<PlatformFile> validFiles = result.files
           .where(
-            (file) => (file.path?.isNotEmpty ?? false) || file.bytes != null,
+            (PlatformFile file) => (file.path?.isNotEmpty ?? false) || file.bytes != null,
           )
           .toList();
 
@@ -218,9 +218,9 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
       setState(() => _isSyncingMedia = true);
 
-      final mediaToAdd = await Future.wait(
-        validFiles.map((file) async {
-          final persistedMedia = await _uploadLocalMedia(file);
+      final List<_SelectedMedia> mediaToAdd = await Future.wait(
+        validFiles.map((PlatformFile file) async {
+          final _PersistedMedia persistedMedia = await _uploadLocalMedia(file);
           return _SelectedMedia(
             reference: persistedMedia.reference,
             label: file.name,
@@ -232,7 +232,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
       if (!mounted) return;
       setState(() {
-        _selectedMedia = [..._selectedMedia, ...mediaToAdd];
+        _selectedMedia = <_SelectedMedia>[..._selectedMedia, ...mediaToAdd];
         _isSyncingMedia = false;
       });
     } catch (e) {
@@ -254,8 +254,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
       return;
     }
 
-    final value = _mediaUrlCtrl.text.trim();
-    final error = _optionalUrlValidator(value);
+    final String value = _mediaUrlCtrl.text.trim();
+    final String? error = _optionalUrlValidator(value);
     if (error != null) {
       ScaffoldMessenger.of(
         context,
@@ -266,11 +266,11 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
     try {
       setState(() => _isSyncingMedia = true);
-      final persistedMedia = await _importRemoteMedia(value);
+      final _PersistedMedia persistedMedia = await _importRemoteMedia(value);
       if (!mounted) return;
 
       setState(() {
-        _selectedMedia = [
+        _selectedMedia = <_SelectedMedia>[
           ..._selectedMedia,
           _SelectedMedia(
             reference: persistedMedia.reference,
@@ -292,15 +292,15 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
   void _removeMediaAt(int index) {
     setState(() {
-      _selectedMedia = [..._selectedMedia]..removeAt(index);
+      _selectedMedia = <_SelectedMedia>[..._selectedMedia]..removeAt(index);
     });
   }
 
   List<String> _parseTags() {
     return _tagsCtrl.text
         .split(',')
-        .map((tag) => tag.trim())
-        .where((tag) => tag.isNotEmpty)
+        .map((String tag) => tag.trim())
+        .where((String tag) => tag.isNotEmpty)
         .toSet()
         .toList();
   }
@@ -334,9 +334,9 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
       return;
     }
 
-    final postBody = _postBodyCtrl.text.trim();
-    final ctaLabel = _ctaLabelCtrl.text.trim();
-    final ctaUrl = _ctaUrlCtrl.text.trim();
+    final String postBody = _postBodyCtrl.text.trim();
+    final String ctaLabel = _ctaLabelCtrl.text.trim();
+    final String ctaUrl = _ctaUrlCtrl.text.trim();
 
     Navigator.of(context).pop(
       ContentFormResult(
@@ -345,7 +345,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         status: _status,
         userId: null,
         eventId: null,
-        mediaUrls: _selectedMedia.map((media) => media.reference).toList(),
+        mediaUrls: _selectedMedia.map((_SelectedMedia media) => media.reference).toList(),
         postBody: postBody.isEmpty ? null : postBody,
         callToActionLabel: ctaLabel.isEmpty ? null : ctaLabel,
         callToActionUrl: ctaUrl.isEmpty ? null : ctaUrl,
@@ -355,31 +355,31 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   }
 
   Future<_PersistedMedia> _uploadLocalMedia(PlatformFile file) async {
-    final response = Map<String, dynamic>.from(
+    final Map<String, dynamic> response = Map<String, dynamic>.from(
       await _apiClient.multipartPost(
             '/media/upload',
             bytes: file.bytes,
             fileName: file.name,
             filePath: file.path,
           )
-          as Map,
+          as Map<String, dynamic>,
     );
     return _PersistedMedia.fromJson(response);
   }
 
   Future<_PersistedMedia> _importRemoteMedia(String sourceUrl) async {
-    final response = Map<String, dynamic>.from(
-      await _apiClient.post('/media/import', {'url': sourceUrl}) as Map,
+    final Map<String, dynamic> response = Map<String, dynamic>.from(
+      await _apiClient.post('/media/import', <String, String>{'url': sourceUrl}) as Map<String, dynamic>,
     );
     return _PersistedMedia.fromJson(response);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.initial != null;
-    final canChangeType = !isEdit;
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final isCompact = screenWidth < 640;
+    final bool isEdit = widget.initial != null;
+    final bool canChangeType = !isEdit;
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final bool isCompact = screenWidth < 640;
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
         horizontal: isCompact ? 12 : 24,
@@ -399,7 +399,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Text(
                     isEdit ? 'Modifica contenuto' : 'Nuovo contenuto',
                     style: TextStyle(
@@ -419,7 +419,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                       labelText: 'Titolo',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) =>
+                    validator: (String? value) =>
                         (value == null || value.trim().isEmpty)
                         ? 'Obbligatorio'
                         : null,
@@ -427,7 +427,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                   const SizedBox(height: 14),
                   if (isCompact)
                     Column(
-                      children: [
+                      children: <Widget>[
                         DropdownButtonFormField<String>(
                           initialValue: _type,
                           decoration: const InputDecoration(
@@ -436,14 +436,14 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                           ),
                           items: _contentTypes
                               .map(
-                                (type) => DropdownMenuItem(
+                                (String type) => DropdownMenuItem<String>(
                                   value: type,
                                   child: Text(_contentTypeLabel(type)),
                                 ),
                               )
                               .toList(),
                           onChanged: canChangeType
-                              ? (value) {
+                              ? (String? value) {
                                   if (value != null) _onTypeChanged(value);
                                 }
                               : null,
@@ -457,20 +457,20 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                           ),
                           items: _contentStatuses
                               .map(
-                                (status) => DropdownMenuItem(
+                                (String status) => DropdownMenuItem<String>(
                                   value: status,
                                   child: Text(_contentStatusLabel(status)),
                                 ),
                               )
                               .toList(),
-                          onChanged: (value) =>
+                          onChanged: (String? value) =>
                               setState(() => _status = value ?? _status),
                         ),
                       ],
                     )
                   else
                     Row(
-                      children: [
+                      children: <Widget>[
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             initialValue: _type,
@@ -480,14 +480,14 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                             ),
                             items: _contentTypes
                                 .map(
-                                  (type) => DropdownMenuItem(
+                                  (String type) => DropdownMenuItem<String>(
                                     value: type,
                                     child: Text(_contentTypeLabel(type)),
                                   ),
                                 )
                                 .toList(),
                             onChanged: canChangeType
-                                ? (value) {
+                                ? (String? value) {
                                     if (value != null) _onTypeChanged(value);
                                   }
                                 : null,
@@ -503,13 +503,13 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                             ),
                             items: _contentStatuses
                                 .map(
-                                  (status) => DropdownMenuItem(
+                                  (String status) => DropdownMenuItem<String>(
                                     value: status,
                                     child: Text(_contentStatusLabel(status)),
                                   ),
                                 )
                                 .toList(),
-                            onChanged: (value) =>
+                            onChanged: (String? value) =>
                                 setState(() => _status = value ?? _status),
                           ),
                         ),
@@ -527,7 +527,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                     looksLikeImage: _looksLikeImage,
                     looksLikeVideo: _looksLikeVideo,
                   ),
-                  if (_type == 'post') ...[
+                  if (_type == 'post') ...<Widget>[
                     const SizedBox(height: 18),
                     TextFormField(
                       controller: _postBodyCtrl,
@@ -538,8 +538,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                         hintText: 'Scrivi il copy del contenuto.',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) {
-                        final text = value?.trim() ?? '';
+                      validator: (String? value) {
+                        final String text = value?.trim() ?? '';
                         if (text.isEmpty) return 'Inserisci il testo del post';
                         if (text.length < 30) {
                           return 'Aggiungi almeno 30 caratteri';
@@ -559,7 +559,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                     const SizedBox(height: 14),
                     if (isCompact)
                       Column(
-                        children: [
+                        children: <Widget>[
                           TextFormField(
                             controller: _ctaLabelCtrl,
                             decoration: const InputDecoration(
@@ -582,7 +582,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                       )
                     else
                       Row(
-                        children: [
+                        children: <Widget>[
                           Expanded(
                             child: TextFormField(
                               controller: _ctaLabelCtrl,
@@ -612,7 +612,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                   isCompact
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
+                          children: <Widget>[
                             FilledButton(
                               onPressed: _submit,
                               child: Text(isEdit ? 'Salva' : 'Aggiungi'),
@@ -626,7 +626,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
+                          children: <Widget>[
                             TextButton(
                               onPressed: () => Navigator.of(context).pop(),
                               child: const Text('Annulla'),
@@ -673,7 +673,7 @@ class _MediaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = switch (type) {
+    final String label = switch (type) {
       'image' => 'Media immagine',
       'video' => 'Media video',
       _ => 'Media allegati',
@@ -689,7 +689,7 @@ class _MediaSection extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
           const Text(
@@ -697,14 +697,14 @@ class _MediaSection extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
           const SizedBox(height: 12),
-          if (type != 'video') ...[
+          if (type != 'video') ...<Widget>[
             LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 520;
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final bool compact = constraints.maxWidth < 520;
                 if (compact) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+                    children: <Widget>[
                       TextFormField(
                         controller: mediaUrlController,
                         enabled: !isSyncingMedia,
@@ -725,7 +725,7 @@ class _MediaSection extends StatelessWidget {
                 }
 
                 return Row(
-                  children: [
+                  children: <Widget>[
                     Expanded(
                       child: TextFormField(
                         controller: mediaUrlController,
@@ -760,10 +760,10 @@ class _MediaSection extends StatelessWidget {
                   : 'Carica media dal PC',
             ),
           ),
-          if (isSyncingMedia) ...[
+          if (isSyncingMedia) ...<Widget>[
             const SizedBox(height: 10),
             const Row(
-              children: [
+              children: <Widget>[
                 SizedBox(
                   width: 16,
                   height: 16,
@@ -785,12 +785,12 @@ class _MediaSection extends StatelessWidget {
             )
           else
             LayoutBuilder(
-              builder: (context, constraints) {
+              builder: (BuildContext context, BoxConstraints constraints) {
                 return Wrap(
                   spacing: 10,
                   runSpacing: 10,
-                  children: [
-                    for (var i = 0; i < selectedMedia.length; i++)
+                  children: <Widget>[
+                    for (int i = 0; i < selectedMedia.length; i++)
                       _MediaPreviewCard(
                         width: _mediaPreviewCardWidth,
                         media: selectedMedia[i],
@@ -825,9 +825,9 @@ class _MediaPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isImage = looksLikeImage(media.reference);
-    final isVideo = looksLikeVideo(media.reference);
-    final canOpenReference = _isHttpUrl(media.reference);
+    final bool isImage = looksLikeImage(media.reference);
+    final bool isVideo = looksLikeVideo(media.reference);
+    final bool canOpenReference = _isHttpUrl(media.reference);
 
     return Container(
       width: width,
@@ -839,7 +839,7 @@ class _MediaPreviewCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: GestureDetector(
@@ -847,7 +847,7 @@ class _MediaPreviewCard extends StatelessWidget {
                   ? () => _openMediaReference(context)
                   : null,
               child: Stack(
-                children: [
+                children: <Widget>[
                   Container(
                     height: 82,
                     width: double.infinity,
@@ -914,7 +914,7 @@ class _MediaPreviewCard extends StatelessWidget {
         media.reference,
         fit: BoxFit.cover,
         width: double.infinity,
-        errorBuilder: (context, error, stackTrace) =>
+        errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) =>
             _buildFallbackIcon(isImage, isVideo),
       );
     }
@@ -922,12 +922,12 @@ class _MediaPreviewCard extends StatelessWidget {
     if (isVideo && _isHttpUrl(media.thumbnailReference)) {
       return Stack(
         fit: StackFit.expand,
-        children: [
+        children: <Widget>[
           Image.network(
             media.thumbnailReference!,
             fit: BoxFit.cover,
             width: double.infinity,
-            errorBuilder: (context, error, stackTrace) =>
+            errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) =>
                 _buildFallbackIcon(isImage, isVideo),
           ),
           const DecoratedBox(
@@ -960,15 +960,15 @@ class _MediaPreviewCard extends StatelessWidget {
 
   bool _isHttpUrl(String? reference) {
     if (reference == null) return false;
-    final uri = Uri.tryParse(reference);
+    final Uri? uri = Uri.tryParse(reference);
     return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
   }
 
   Future<void> _openMediaReference(BuildContext context) async {
-    final uri = Uri.tryParse(media.reference);
+    final Uri? uri = Uri.tryParse(media.reference);
     if (uri == null) return;
 
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final bool opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Impossibile aprire il media.')),

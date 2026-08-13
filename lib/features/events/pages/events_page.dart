@@ -7,10 +7,11 @@ import 'package:mediahub/features/events/controllers/events_controller.dart';
 import 'package:mediahub/features/events/widgets/event_form_dialog.dart';
 import 'package:mediahub/features/events/widgets/event_list_tile.dart';
 import 'package:mediahub/features/users/models/event.dart';
+import 'package:mediahub/features/users/models/user.dart';
 
-const _bgColor = Color(0xFFF5F7FB);
-const _borderColor = Color(0xFFE7EAF0);
-const _textMuted = Color(0xFF6B7280);
+const Color _bgColor = Color(0xFFF5F7FB);
+const Color _borderColor = Color(0xFFE7EAF0);
+const Color _textMuted = Color(0xFF6B7280);
 
 enum EventSortMode { nameAsc, nameDesc, dateAsc, dateDesc }
 
@@ -29,18 +30,18 @@ class _EventsPageState extends State<EventsPage> {
   bool _splitAssigned = false;
   bool _previousSplitAssigned = false;
   int _sortTick = 0;
-  Map<int, int> _previousAllEventIndexes = const {};
-  Map<int, int> _previousAssignedEventIndexes = const {};
-  Map<int, int> _previousUnassignedEventIndexes = const {};
+  Map<int, int> _previousAllEventIndexes = const <int, int>{};
+  Map<int, int> _previousAssignedEventIndexes = const <int, int>{};
+  Map<int, int> _previousUnassignedEventIndexes = const <int, int>{};
 
   void _setSortMode(EventSortMode? mode) {
     if (mode == null || mode == _sortMode) return;
-    final before = _sortedEventsFor(_sortMode);
-    final beforeAssigned = before
-        .where((event) => event.userId != null)
+    final List<Event> before = _sortedEventsFor(_sortMode);
+    final List<Event> beforeAssigned = before
+        .where((Event event) => event.userId != null)
         .toList();
-    final beforeUnassigned = before
-        .where((event) => event.userId == null)
+    final List<Event> beforeUnassigned = before
+        .where((Event event) => event.userId == null)
         .toList();
     setState(() {
       // A pure sort change should not trigger split lane transition animation.
@@ -54,7 +55,7 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   List<Event> _sortedEventsFor(EventSortMode mode) {
-    return [...controller.events]..sort((a, b) {
+    return <Event>[...controller.events]..sort((Event a, Event b) {
       switch (mode) {
         case EventSortMode.nameAsc:
           return a.title.toLowerCase().compareTo(b.title.toLowerCase());
@@ -69,7 +70,7 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Map<int, int> _indexByEventId(List<Event> events) {
-    return {for (var i = 0; i < events.length; i++) events[i].id: i};
+    return <int, int>{for (int i = 0; i < events.length; i++) events[i].id: i};
   }
 
   void _setSplitAssigned(bool value) {
@@ -94,12 +95,12 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> _openCreateDialog() async {
-    final result = await showDialog<EventFormResult>(
+    final EventFormResult? result = await showDialog<EventFormResult>(
       context: context,
       builder: (_) => const EventFormDialog(),
     );
     if (result == null) return;
-    final ok = await controller.addEvent(
+    final bool ok = await controller.addEvent(
       title: result.title,
       date: result.date,
       attendees: result.attendees,
@@ -110,12 +111,12 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> _openEditDialog(Event event) async {
-    final result = await showDialog<EventFormResult>(
+    final EventFormResult? result = await showDialog<EventFormResult>(
       context: context,
       builder: (_) => EventFormDialog(initial: event),
     );
     if (result == null) return;
-    final ok = await controller.editEvent(
+    final bool ok = await controller.editEvent(
       original: event,
       title: result.title,
       date: result.date,
@@ -130,7 +131,7 @@ class _EventsPageState extends State<EventsPage> {
 
   Future<void> _assign(Event event, int? userId) async {
     if (userId == null) return;
-    final ok = await controller.assignEventToUser(event, userId);
+    final bool ok = await controller.assignEventToUser(event, userId);
     if (!mounted) return;
     _toast(
       ok
@@ -140,7 +141,7 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> _unassign(Event event) async {
-    final ok = await controller.assignEventToUser(event, null);
+    final bool ok = await controller.assignEventToUser(event, null);
     if (!mounted) return;
     _toast(
       ok ? 'Evento disassegnato' : (controller.error ?? 'Operazione fallita'),
@@ -152,10 +153,10 @@ class _EventsPageState extends State<EventsPage> {
       context: context,
       isScrollControlled: true,
       barrierColor: Colors.transparent,
-      builder: (ctx) => _QuickAssignBottomSheet(
+      builder: (BuildContext ctx) => _QuickAssignBottomSheet(
         event: event,
         users: controller.users,
-        onAssign: (userId) {
+        onAssign: (int? userId) {
           if (userId == null) {
             _unassign(event);
           } else {
@@ -168,12 +169,12 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> _confirmDelete(Event event) async {
-    final confirm = await showDialog<bool>(
+    final bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (BuildContext ctx) => AlertDialog(
         title: const Text('Eliminare evento?'),
         content: Text('"${event.title}" verrà rimosso definitivamente.'),
-        actions: [
+        actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Annulla'),
@@ -186,7 +187,7 @@ class _EventsPageState extends State<EventsPage> {
       ),
     );
     if (confirm != true) return;
-    final ok = await controller.removeEvent(event);
+    final bool ok = await controller.removeEvent(event);
     _toast(
       ok ? 'Evento eliminato' : (controller.error ?? 'Eliminazione fallita'),
     );
@@ -203,19 +204,19 @@ class _EventsPageState extends State<EventsPage> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (context, _) {
+      builder: (BuildContext context, _) {
         return LayoutBuilder(
-          builder: (context, constraints) {
+          builder: (BuildContext context, BoxConstraints constraints) {
             return Container(
               color: _bgColor,
               child: Stack(
-                children: [
+                children: <Widget>[
                   SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         _Header(
                           onCreate: _openCreateDialog,
                           onRefresh: controller.loadEvents,
@@ -264,11 +265,11 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               const Text(
                 'Eventi',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
@@ -311,7 +312,7 @@ class _Card extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _borderColor),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 20,
             offset: Offset(0, 8),
@@ -364,8 +365,8 @@ class _EventsWorkspace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final enableDragDrop = constraints.maxWidth >= 700;
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool enableDragDrop = constraints.maxWidth >= 700;
 
         return _EventsBody(
           controller: controller,
@@ -433,24 +434,24 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
   void autoScrollAt(Offset globalPosition) {
     if (!widget.dragActive) return;
     if (!_scrollController.hasClients) return;
-    final box = context.findRenderObject();
+    final RenderObject? box = context.findRenderObject();
     if (box is! RenderBox) return;
-    final local = box.globalToLocal(globalPosition);
+    final Offset local = box.globalToLocal(globalPosition);
     if (local.dx < 0 || local.dx > box.size.width) return;
-    final h = box.size.height;
-    const edge = 56.0;
+    final double h = box.size.height;
+    const double edge = 56.0;
     double delta = 0;
     if (local.dy < edge) delta = -16;
     if (local.dy > h - edge) delta = 16;
     if (delta == 0) return;
-    final max = _scrollController.position.maxScrollExtent;
-    final next = (_scrollController.offset + delta).clamp(0.0, max);
+    final double max = _scrollController.position.maxScrollExtent;
+    final double next = (_scrollController.offset + delta).clamp(0.0, max);
     _scrollController.jumpTo(next);
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
+    final EventsController controller = widget.controller;
     if (controller.isLoadingUsers) {
       return const _Card(
         padding: EdgeInsets.all(20),
@@ -466,7 +467,7 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
           constraints: const BoxConstraints(minHeight: 420, maxHeight: 680),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               const Text(
                 'Utenti',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
@@ -481,10 +482,10 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
                 child: ListView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
-                  children: [
-                    ...controller.users.map((user) {
-                      final userEvents = controller.events
-                          .where((event) => event.userId == user.id)
+                  children: <Widget>[
+                    ...controller.users.map((User user) {
+                      final List<Event> userEvents = controller.events
+                          .where((Event event) => event.userId == user.id)
                           .toList();
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
@@ -498,7 +499,7 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
                           onUserDropZoneHoverChanged:
                               widget.onUserDropZoneHoverChanged,
                           onDragCursorMove: widget.onDragCursorMove,
-                          onAccept: (event) => widget.onAssign(event, user.id),
+                          onAccept: (Event event) => widget.onAssign(event, user.id),
                           scrollController: _scrollController,
                         ),
                       );
@@ -546,13 +547,13 @@ class _EventDropZone extends StatelessWidget {
         onUserDropZoneHoverChanged(true);
         return true;
       },
-      onMove: (details) {
+      onMove: (DragTargetDetails<Event> details) {
         onUserDropZoneHoverChanged(true);
         // Auto-scroll quando il drag raggiunge i margini
         if (scrollController != null) {
-          final box = context.findRenderObject() as RenderBox?;
+          final RenderBox? box = context.findRenderObject() as RenderBox?;
           if (box != null) {
-            final local = box.globalToLocal(details.offset);
+            final Offset local = box.globalToLocal(details.offset);
             if (local.dy < 60 && scrollController!.offset > 0) {
               scrollController!.jumpTo(
                 (scrollController!.offset - 20).clamp(
@@ -572,12 +573,12 @@ class _EventDropZone extends StatelessWidget {
         }
       },
       onLeave: (_) => onUserDropZoneHoverChanged(false),
-      onAcceptWithDetails: (details) {
+      onAcceptWithDetails: (DragTargetDetails<Event> details) {
         onUserDropZoneHoverChanged(false);
         onAccept(details.data);
       },
-      builder: (context, candidateData, rejectedData) {
-        final isActive = candidateData.isNotEmpty;
+      builder: (BuildContext context, List<Event?> candidateData, List<dynamic> rejectedData) {
+        final bool isActive = candidateData.isNotEmpty;
         return AnimatedContainer(
           duration: AnimationConfig.hoverDuration,
           padding: const EdgeInsets.all(12),
@@ -592,16 +593,16 @@ class _EventDropZone extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Row(
-                children: [
+                children: <Widget>[
                   Icon(icon, size: 18, color: const Color(0xFF4F46E5)),
                   const SizedBox(width: 8),
                   Text(
                     title,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  if (subtitle != null) ...[
+                  if (subtitle != null) ...<Widget>[
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -626,12 +627,12 @@ class _EventDropZone extends StatelessWidget {
                   runSpacing: 8,
                   children: events
                       .map(
-                        (event) => Draggable<Event>(
+                        (Event event) => Draggable<Event>(
                           data: event,
                           onDragStarted: onDragStart,
-                          onDragUpdate: (details) =>
+                          onDragUpdate: (DragUpdateDetails details) =>
                               onDragCursorMove(details.globalPosition),
-                          onDragEnd: (details) => onDragEnd(event, details),
+                          onDragEnd: (DraggableDetails details) => onDragEnd(event, details),
                           feedback: Material(
                             color: Colors.transparent,
                             child: _EventChip(event: event, dragging: true),
@@ -667,7 +668,7 @@ class _EventChip extends StatelessWidget {
         color: dragging ? const Color(0xFF4F46E5) : Colors.white,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 10,
             offset: Offset(0, 4),
@@ -728,7 +729,7 @@ class _EventsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isInitialLoading =
+    final bool isInitialLoading =
         (controller.isLoadingUsers || controller.isLoadingEvents) &&
         controller.events.isEmpty;
 
@@ -742,7 +743,7 @@ class _EventsBody extends StatelessWidget {
       return _Card(
         padding: const EdgeInsets.all(24),
         child: Column(
-          children: [
+          children: <Widget>[
             const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 32),
             const SizedBox(height: 12),
             Text(controller.error!),
@@ -759,7 +760,7 @@ class _EventsBody extends StatelessWidget {
       return _Card(
         padding: const EdgeInsets.all(32),
         child: Column(
-          children: [
+          children: <Widget>[
             const Icon(
               Icons.event_busy_rounded,
               size: 48,
@@ -786,8 +787,8 @@ class _EventsBody extends StatelessWidget {
       );
     }
 
-    final sorted = [...controller.events]
-      ..sort((a, b) {
+    final List<Event> sorted = <Event>[...controller.events]
+      ..sort((Event a, Event b) {
         switch (sortMode) {
           case EventSortMode.nameAsc:
             return a.title.toLowerCase().compareTo(b.title.toLowerCase());
@@ -800,15 +801,15 @@ class _EventsBody extends StatelessWidget {
         }
       });
 
-    final assigned = sorted.where((e) => e.userId != null).toList();
-    final unassigned = sorted.where((e) => e.userId == null).toList();
+    final List<Event> assigned = sorted.where((Event e) => e.userId != null).toList();
+    final List<Event> unassigned = sorted.where((Event e) => e.userId == null).toList();
 
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               const Expanded(
                 child: Text(
                   'Eventi',
@@ -835,11 +836,11 @@ class _EventsBody extends StatelessWidget {
             )
           else
             LayoutBuilder(
-              builder: (context, constraints) {
-                final compactSplit = constraints.maxWidth < 900;
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final bool compactSplit = constraints.maxWidth < 900;
                 if (compactSplit) {
                   return Column(
-                    children: [
+                    children: <Widget>[
                       _SplitSection(title: 'Assegnati', count: assigned.length),
                       ..._buildEventCards(
                         assigned,
@@ -863,10 +864,10 @@ class _EventsBody extends StatelessWidget {
                 }
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Expanded(
                       child: Column(
-                        children: [
+                        children: <Widget>[
                           _SplitSection(
                             title: 'Assegnati',
                             count: assigned.length,
@@ -883,7 +884,7 @@ class _EventsBody extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
-                        children: [
+                        children: <Widget>[
                           _SplitSection(
                             title: 'Non assegnati',
                             count: unassigned.length,
@@ -917,26 +918,26 @@ class _EventsBody extends StatelessWidget {
     required _SplitLane lane,
     required BuildContext context,
   }) {
-    const itemStep = 122.0;
-    return [
-      for (var i = 0; i < source.length; i++)
+    const double itemStep = 122.0;
+    return <Widget>[
+      for (int i = 0; i < source.length; i++)
         Padding(
-          key: ValueKey('event-${source[i].id}-$sortTick'),
+          key: ValueKey<String>('event-${source[i].id}-$sortTick'),
           padding: const EdgeInsets.only(bottom: 12),
           child: PreservedTweenAnimationBuilder(
             duration: AnimationConfig.reorderDuration(i),
             begin: 1,
             end: 0,
             curve: Curves.easeInOutCubicEmphasized,
-            builder: (context, value, child) {
-              final previousIndex = previousIndexes[source[i].id];
-              final fromOffsetY = previousIndex == null
+            builder: (BuildContext context, double value, Widget? child) {
+              final int? previousIndex = previousIndexes[source[i].id];
+              final double fromOffsetY = previousIndex == null
                   ? 0.0
                   : (previousIndex - i) * itemStep;
-              final toggledSplit = splitAssigned != previousSplitAssigned;
-              var fromOffsetX = 0.0;
+              final bool toggledSplit = splitAssigned != previousSplitAssigned;
+              double fromOffsetX = 0.0;
               if (toggledSplit) {
-                final isAssigned = source[i].userId != null;
+                final bool isAssigned = source[i].userId != null;
                 if (splitAssigned && lane == _SplitLane.unassigned) {
                   fromOffsetX = -220;
                 }
@@ -978,7 +979,7 @@ class _SplitSection extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7EAF0)),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           Expanded(
             child: Text(
               title,
@@ -1017,7 +1018,7 @@ class _EventsSettingsMenu extends StatelessWidget {
   void _showSettingsMenu(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => _SettingsMenuDialog(
+      builder: (BuildContext ctx) => _SettingsMenuDialog(
         sortMode: sortMode,
         onSortChanged: onSortChanged,
         splitAssigned: splitAssigned,
@@ -1065,10 +1066,10 @@ class _SettingsMenuDialogState extends State<_SettingsMenuDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                children: <Widget>[
                   const Text(
                     'Impostazioni',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
@@ -1098,25 +1099,25 @@ class _SettingsMenuDialogState extends State<_SettingsMenuDialog> {
                     vertical: 8,
                   ),
                 ),
-                items: const [
-                  DropdownMenuItem(
+                items: const <DropdownMenuItem<EventSortMode>>[
+                  DropdownMenuItem<EventSortMode>(
                     value: EventSortMode.nameAsc,
                     child: Text('Nome A-Z'),
                   ),
-                  DropdownMenuItem(
+                  DropdownMenuItem<EventSortMode>(
                     value: EventSortMode.nameDesc,
                     child: Text('Nome Z-A'),
                   ),
-                  DropdownMenuItem(
+                  DropdownMenuItem<EventSortMode>(
                     value: EventSortMode.dateAsc,
                     child: Text('Data crescente'),
                   ),
-                  DropdownMenuItem(
+                  DropdownMenuItem<EventSortMode>(
                     value: EventSortMode.dateDesc,
                     child: Text('Data decrescente'),
                   ),
                 ],
-                onChanged: (value) {
+                onChanged: (EventSortMode? value) {
                   if (value != null) {
                     setState(() => _currentSort = value);
                     widget.onSortChanged(value);
@@ -1138,12 +1139,12 @@ class _SettingsMenuDialogState extends State<_SettingsMenuDialog> {
                     border: Border.all(color: const Color(0xFFE7EAF0)),
                   ),
                   child: Row(
-                    children: [
+                    children: <Widget>[
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: const <Widget>[
                             Text(
                               'Dividi vista',
                               style: TextStyle(
@@ -1161,7 +1162,7 @@ class _SettingsMenuDialogState extends State<_SettingsMenuDialog> {
                       ),
                       Switch.adaptive(
                         value: _currentSplit,
-                        onChanged: (value) {
+                        onChanged: (bool value) {
                           setState(() => _currentSplit = value);
                           widget.onSplitChanged(value);
                         },
@@ -1180,7 +1181,7 @@ class _SettingsMenuDialogState extends State<_SettingsMenuDialog> {
 
 class _QuickAssignBottomSheet extends StatefulWidget {
   final Event event;
-  final List<dynamic> users;
+  final List<User> users;
   final void Function(int? userId) onAssign;
 
   const _QuickAssignBottomSheet({
@@ -1196,7 +1197,7 @@ class _QuickAssignBottomSheet extends StatefulWidget {
 
 class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
   late TextEditingController _searchController;
-  List<dynamic> _filteredUsers = [];
+  List<User> _filteredUsers = <User>[];
   bool _showScrollToTop = false;
 
   @override
@@ -1217,10 +1218,10 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
       if (query.isEmpty) {
         _filteredUsers = widget.users;
       } else {
-        final lower = query.toLowerCase();
-        _filteredUsers = widget.users.where((user) {
-          final name = '${user.name} ${user.lastName}'.toLowerCase();
-          final email = user.email?.toLowerCase() ?? '';
+        final String lower = query.toLowerCase();
+        _filteredUsers = widget.users.where((User user) {
+          final String name = '${user.name} ${user.lastName}'.toLowerCase();
+          final String email = user.email.toLowerCase();
           return name.contains(lower) || email.contains(lower);
         }).toList();
       }
@@ -1228,7 +1229,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
   }
 
   void _updateScrollToTopVisibility(ScrollMetrics metrics) {
-    final shouldShow = metrics.pixels > 120;
+    final bool shouldShow = metrics.pixels > 120;
     if (_showScrollToTop == shouldShow) return;
     setState(() => _showScrollToTop = shouldShow);
   }
@@ -1240,7 +1241,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
       minChildSize: 0.4,
       maxChildSize: 0.9,
       expand: false,
-      builder: (_, scrollController) {
+      builder: (_, ScrollController scrollController) {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -1253,7 +1254,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
               left: BorderSide(color: const Color(0xFFE7EAF0), width: 1),
               right: BorderSide(color: const Color(0xFFE7EAF0), width: 1),
             ),
-            boxShadow: const [
+            boxShadow: const <BoxShadow>[
               BoxShadow(
                 color: Color(0x15000000),
                 blurRadius: 20,
@@ -1262,7 +1263,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
             ],
           ),
           child: Column(
-            children: [
+            children: <Widget>[
               Container(
                 decoration: const BoxDecoration(
                   border: Border(
@@ -1275,14 +1276,14 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+                      children: <Widget>[
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                            children: <Widget>[
                               const Text(
                                 'Assegna utente',
                                 style: TextStyle(
@@ -1372,9 +1373,9 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                         ),
                       )
                     : Stack(
-                        children: [
+                        children: <Widget>[
                           NotificationListener<ScrollNotification>(
-                            onNotification: (notification) {
+                            onNotification: (ScrollNotification notification) {
                               if (notification.metrics.axis != Axis.vertical) {
                                 return false;
                               }
@@ -1389,9 +1390,9 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                                 horizontal: 12,
                               ),
                               itemCount: _filteredUsers.length,
-                              itemBuilder: (ctx, index) {
-                                final user = _filteredUsers[index];
-                                final isAssigned =
+                              itemBuilder: (BuildContext ctx, int index) {
+                                final User user = _filteredUsers[index];
+                                final bool isAssigned =
                                     widget.event.userId == user.id;
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -1435,7 +1436,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                                           ),
                                         ),
                                         child: Row(
-                                          children: [
+                                          children: <Widget>[
                                             Container(
                                               width: 44,
                                               height: 44,
@@ -1464,7 +1465,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                                               child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
-                                                children: [
+                                                children: <Widget>[
                                                   Text(
                                                     '${user.name} ${user.lastName}',
                                                     style: const TextStyle(
@@ -1474,7 +1475,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
-                                                    user.email ?? '',
+                                                    user.email,
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,

@@ -28,7 +28,7 @@ class ContentListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFmt = DateFormat('dd MMM yyyy');
+    final DateFormat dateFmt = DateFormat('dd MMM yyyy');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -36,7 +36,7 @@ class ContentListTile extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 18,
             offset: Offset(0, 8),
@@ -45,13 +45,13 @@ class ContentListTile extends StatelessWidget {
         ],
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           _TypeIcon(type: content.type),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 Text(
                   content.title,
                   style: const TextStyle(
@@ -68,7 +68,7 @@ class ContentListTile extends StatelessWidget {
                   ),
                 ),
                 if (content.type == 'post' &&
-                    (content.postBody?.trim().isNotEmpty ?? false)) ...[
+                    (content.postBody?.trim().isNotEmpty ?? false)) ...<Widget>[
                   const SizedBox(height: 8),
                   Text(
                     content.postBody!.trim(),
@@ -81,7 +81,7 @@ class ContentListTile extends StatelessWidget {
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
-                  children: [
+                  children: <Widget>[
                     _Badge(
                       label: _contentStatusLabel(content.status),
                       background: const Color(
@@ -152,7 +152,7 @@ class _TypeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = switch (type) {
+    final (IconData icon, Color color) = switch (type) {
       'video' => (Icons.smart_display_rounded, const Color(0xFFEF4444)),
       'image' => (Icons.image_rounded, const Color(0xFF22C55E)),
       _ => (Icons.article_rounded, const Color(0xFF4F46E5)),

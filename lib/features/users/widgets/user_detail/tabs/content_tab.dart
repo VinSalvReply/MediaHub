@@ -21,15 +21,15 @@ class ContentTab extends StatelessWidget {
         childAspectRatio: 5 / 2,
       ),
       itemCount: data.contents.length,
-      itemBuilder: (context, i) {
-        final c = data.contents[i];
+      itemBuilder: (BuildContext context, int i) {
+        final ContentItem c = data.contents[i];
 
         return PreservedTweenAnimationBuilder(
           duration: AnimationConfig.detailListEntryDuration(i),
           begin: 0,
           end: 1,
           curve: Curves.easeOutCubic,
-          builder: (context, v, child) {
+          builder: (BuildContext context, double v, Widget? child) {
             return Opacity(
               opacity: v,
               child: Transform.translate(
@@ -73,14 +73,14 @@ class _ContentTileState extends State<_ContentTile> {
           color: Colors.white,
           border: Border.all(color: const Color(0xFFE7EAF0)),
           boxShadow: hover
-              ? const [
+              ? const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 22,
                     offset: Offset(0, 10),
                     color: Color(0x14000000),
                   ),
                 ]
-              : const [
+              : const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 10,
                     offset: Offset(0, 6),
@@ -91,7 +91,7 @@ class _ContentTileState extends State<_ContentTile> {
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
-            children: [
+            children: <Widget>[
               Container(
                 width: 42,
                 height: 42,

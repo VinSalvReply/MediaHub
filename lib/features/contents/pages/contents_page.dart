@@ -6,10 +6,11 @@ import 'package:mediahub/features/contents/controllers/contents_controller.dart'
 import 'package:mediahub/features/contents/widgets/content_form_dialog.dart';
 import 'package:mediahub/features/contents/widgets/content_list_tile.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
+import 'package:mediahub/features/users/models/event.dart';
 
-const _bgColor = Color(0xFFF5F7FB);
-const _borderColor = Color(0xFFE7EAF0);
-const _textMuted = Color(0xFF6B7280);
+const Color _bgColor = Color(0xFFF5F7FB);
+const Color _borderColor = Color(0xFFE7EAF0);
+const Color _textMuted = Color(0xFF6B7280);
 
 enum ContentSortMode { nameAsc, nameDesc, dateAsc, dateDesc }
 
@@ -32,9 +33,9 @@ class _ContentsPageState extends State<ContentsPage> {
   bool _splitAssigned = false;
   bool _previousSplitAssigned = false;
   int _sortTick = 0;
-  Map<int, int> _previousAllContentIndexes = const {};
-  Map<int, int> _previousAssignedContentIndexes = const {};
-  Map<int, int> _previousUnassignedContentIndexes = const {};
+  Map<int, int> _previousAllContentIndexes = const <int, int>{};
+  Map<int, int> _previousAssignedContentIndexes = const <int, int>{};
+  Map<int, int> _previousUnassignedContentIndexes = const <int, int>{};
 
   void _startContentDragFromGlobalList() {
     if (_isDraggingContent && !_dragFromEventDropZone) return;
@@ -64,12 +65,12 @@ class _ContentsPageState extends State<ContentsPage> {
 
   void _setSortMode(ContentSortMode? mode) {
     if (mode == null || mode == _sortMode) return;
-    final before = _sortedContentsFor(_sortMode);
-    final beforeAssigned = before
-        .where((item) => item.eventId != null)
+    final List<ContentItem> before = _sortedContentsFor(_sortMode);
+    final List<ContentItem> beforeAssigned = before
+        .where((ContentItem item) => item.eventId != null)
         .toList();
-    final beforeUnassigned = before
-        .where((item) => item.eventId == null)
+    final List<ContentItem> beforeUnassigned = before
+        .where((ContentItem item) => item.eventId == null)
         .toList();
     setState(() {
       // A pure sort change should not trigger split lane transition animation.
@@ -83,7 +84,7 @@ class _ContentsPageState extends State<ContentsPage> {
   }
 
   List<ContentItem> _sortedContentsFor(ContentSortMode mode) {
-    return [...controller.contents]..sort((a, b) {
+    return <ContentItem>[...controller.contents]..sort((ContentItem a, ContentItem b) {
       switch (mode) {
         case ContentSortMode.nameAsc:
           return a.title.toLowerCase().compareTo(b.title.toLowerCase());
@@ -98,7 +99,7 @@ class _ContentsPageState extends State<ContentsPage> {
   }
 
   Map<int, int> _indexByContentId(List<ContentItem> items) {
-    return {for (var i = 0; i < items.length; i++) items[i].id: i};
+    return <int, int>{for (int i = 0; i < items.length; i++) items[i].id: i};
   }
 
   void _setSplitAssigned(bool value) {
@@ -123,7 +124,7 @@ class _ContentsPageState extends State<ContentsPage> {
   }
 
   Future<void> _openCreateDialog() async {
-    final result = await showDialog<ContentFormResult>(
+    final ContentFormResult? result = await showDialog<ContentFormResult>(
       context: context,
       builder: (_) => const ContentFormDialog(),
     );
@@ -142,7 +143,7 @@ class _ContentsPageState extends State<ContentsPage> {
   }
 
   Future<void> _openEditDialog(ContentItem item) async {
-    final result = await showDialog<ContentFormResult>(
+    final ContentFormResult? result = await showDialog<ContentFormResult>(
       context: context,
       builder: (_) => ContentFormDialog(initial: item),
     );
@@ -175,12 +176,12 @@ class _ContentsPageState extends State<ContentsPage> {
   }
 
   Future<void> _confirmDelete(ContentItem item) async {
-    final confirm = await showDialog<bool>(
+    final bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (BuildContext ctx) => AlertDialog(
         title: const Text('Eliminare contenuto?'),
         content: Text('"${item.title}" verrà rimosso definitivamente.'),
-        actions: [
+        actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Annulla'),
@@ -208,7 +209,7 @@ class _ContentsPageState extends State<ContentsPage> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (context, _) {
+      builder: (BuildContext context, _) {
         return Container(
           color: _bgColor,
           child: SingleChildScrollView(
@@ -216,7 +217,7 @@ class _ContentsPageState extends State<ContentsPage> {
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 _Header(
                   onCreate: _openCreateDialog,
                   onRefresh: controller.loadContents,
@@ -242,7 +243,7 @@ class _ContentsPageState extends State<ContentsPage> {
                   onGlobalListDragStart: _startContentDragFromGlobalList,
                   onSidebarDragStart: _startContentDragFromEventDropZone,
                   onDragEnd: _endContentDrag,
-                  onDragCursorMove: (position) {
+                  onDragCursorMove: (Offset position) {
                     _assignmentSidebarKey.currentState?.autoScrollAt(position);
                   },
                   assignmentSidebarKey: _assignmentSidebarKey,
@@ -269,11 +270,11 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               const Text(
                 'Contenuti',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
@@ -316,7 +317,7 @@ class _Card extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _borderColor),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 20,
             offset: Offset(0, 8),
@@ -381,11 +382,11 @@ class _ContentsWorkspace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 1120;
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool compact = constraints.maxWidth < 1120;
         if (compact) {
           return Column(
-            children: [
+            children: <Widget>[
               _ContentsBody(
                 controller: controller,
                 sortMode: sortMode,
@@ -422,7 +423,7 @@ class _ContentsWorkspace extends StatelessWidget {
         }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             Expanded(
               flex: 7,
               child: _ContentsBody(
@@ -510,24 +511,24 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
   void autoScrollAt(Offset globalPosition) {
     if (!widget.dragActive) return;
     if (!_scrollController.hasClients) return;
-    final box = context.findRenderObject();
+    final RenderObject? box = context.findRenderObject();
     if (box is! RenderBox) return;
-    final local = box.globalToLocal(globalPosition);
+    final Offset local = box.globalToLocal(globalPosition);
     if (local.dx < 0 || local.dx > box.size.width) return;
-    final h = box.size.height;
-    const edge = 56.0;
+    final double h = box.size.height;
+    const double edge = 56.0;
     double delta = 0;
     if (local.dy < edge) delta = -16;
     if (local.dy > h - edge) delta = 16;
     if (delta == 0) return;
-    final max = _scrollController.position.maxScrollExtent;
-    final next = (_scrollController.offset + delta).clamp(0.0, max);
+    final double max = _scrollController.position.maxScrollExtent;
+    final double next = (_scrollController.offset + delta).clamp(0.0, max);
     _scrollController.jumpTo(next);
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
+    final ContentsController controller = widget.controller;
     if (controller.isLoadingMeta) {
       return const _Card(
         padding: EdgeInsets.all(20),
@@ -543,7 +544,7 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
           constraints: const BoxConstraints(minHeight: 420, maxHeight: 680),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               const Text(
                 'Eventi (area di rilascio)',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
@@ -558,10 +559,10 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
                 child: ListView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
-                  children: [
-                    ...controller.events.map((event) {
-                      final items = controller.contents
-                          .where((item) => item.eventId == event.id)
+                  children: <Widget>[
+                    ...controller.events.map((Event event) {
+                      final List<ContentItem> items = controller.contents
+                          .where((ContentItem item) => item.eventId == event.id)
                           .toList();
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
@@ -573,7 +574,7 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
                           onDragStart: widget.onSidebarDragStart,
                           onDragEnd: widget.onDragEnd,
                           onDragCursorMove: widget.onDragCursorMove,
-                          onAccept: (item) => widget.onAssign(item, event.id),
+                          onAccept: (ContentItem item) => widget.onAssign(item, event.id),
                         ),
                       );
                     }),
@@ -618,9 +619,9 @@ class _ContentDropZone extends StatelessWidget {
   Widget build(BuildContext context) {
     return DragTarget<ContentItem>(
       onWillAcceptWithDetails: (_) => true,
-      onAcceptWithDetails: (details) => onAccept(details.data),
-      builder: (context, candidateData, rejectedData) {
-        final isActive = candidateData.isNotEmpty;
+      onAcceptWithDetails: (DragTargetDetails<ContentItem> details) => onAccept(details.data),
+      builder: (BuildContext context, List<ContentItem?> candidateData, List<dynamic> rejectedData) {
+        final bool isActive = candidateData.isNotEmpty;
         return AnimatedContainer(
           duration: AnimationConfig.hoverDuration,
           padding: const EdgeInsets.all(12),
@@ -635,16 +636,16 @@ class _ContentDropZone extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Row(
-                children: [
+                children: <Widget>[
                   Icon(icon, size: 18, color: const Color(0xFFB45309)),
                   const SizedBox(width: 8),
                   Text(
                     title,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  if (subtitle != null) ...[
+                  if (subtitle != null) ...<Widget>[
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -669,10 +670,10 @@ class _ContentDropZone extends StatelessWidget {
                   runSpacing: 8,
                   children: items
                       .map(
-                        (item) => Draggable<ContentItem>(
+                        (ContentItem item) => Draggable<ContentItem>(
                           data: item,
                           onDragStarted: onDragStart,
-                          onDragUpdate: (details) =>
+                          onDragUpdate: (DragUpdateDetails details) =>
                               onDragCursorMove(details.globalPosition),
                           onDragEnd: (_) => onDragEnd(),
                           onDragCompleted: onDragEnd,
@@ -711,9 +712,9 @@ class _ScopedContentUnassignZone extends StatelessWidget {
   Widget build(BuildContext context) {
     return DragTarget<ContentItem>(
       onWillAcceptWithDetails: (_) => enabled,
-      onAcceptWithDetails: (details) => onAccept(details.data),
-      builder: (context, candidateData, _) {
-        final active = enabled && candidateData.isNotEmpty;
+      onAcceptWithDetails: (DragTargetDetails<ContentItem> details) => onAccept(details.data),
+      builder: (BuildContext context, List<ContentItem?> candidateData, _) {
+        final bool active = enabled && candidateData.isNotEmpty;
         return AnimatedContainer(
           duration: AnimationConfig.hoverDuration,
           width: double.infinity,
@@ -726,7 +727,7 @@ class _ScopedContentUnassignZone extends StatelessWidget {
             ),
           ),
           child: Row(
-            children: [
+            children: <Widget>[
               Icon(
                 Icons.link_off_rounded,
                 size: 18,
@@ -771,7 +772,7 @@ class _ContentChip extends StatelessWidget {
         color: dragging ? const Color(0xFFF59E0B) : Colors.white,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 10,
             offset: Offset(0, 4),
@@ -840,7 +841,7 @@ class _ContentsBody extends StatelessWidget {
       return _Card(
         padding: const EdgeInsets.all(24),
         child: Column(
-          children: [
+          children: <Widget>[
             const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 32),
             const SizedBox(height: 12),
             Text(controller.error!),
@@ -857,7 +858,7 @@ class _ContentsBody extends StatelessWidget {
       return _Card(
         padding: const EdgeInsets.all(32),
         child: Column(
-          children: [
+          children: <Widget>[
             const Icon(
               Icons.layers_clear_rounded,
               size: 48,
@@ -884,8 +885,8 @@ class _ContentsBody extends StatelessWidget {
       );
     }
 
-    final sorted = [...controller.contents]
-      ..sort((a, b) {
+    final List<ContentItem> sorted = <ContentItem>[...controller.contents]
+      ..sort((ContentItem a, ContentItem b) {
         switch (sortMode) {
           case ContentSortMode.nameAsc:
             return a.title.toLowerCase().compareTo(b.title.toLowerCase());
@@ -898,15 +899,15 @@ class _ContentsBody extends StatelessWidget {
         }
       });
 
-    final assigned = sorted.where((item) => item.eventId != null).toList();
-    final unassigned = sorted.where((item) => item.eventId == null).toList();
+    final List<ContentItem> assigned = sorted.where((ContentItem item) => item.eventId != null).toList();
+    final List<ContentItem> unassigned = sorted.where((ContentItem item) => item.eventId == null).toList();
 
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               const Expanded(
                 child: Text(
                   'Contenuti',
@@ -925,20 +926,20 @@ class _ContentsBody extends StatelessWidget {
                       vertical: 10,
                     ),
                   ),
-                  items: const [
-                    DropdownMenuItem(
+                  items: const <DropdownMenuItem<ContentSortMode>>[
+                    DropdownMenuItem<ContentSortMode>(
                       value: ContentSortMode.nameAsc,
                       child: Text('Nome A-Z'),
                     ),
-                    DropdownMenuItem(
+                    DropdownMenuItem<ContentSortMode>(
                       value: ContentSortMode.nameDesc,
                       child: Text('Nome Z-A'),
                     ),
-                    DropdownMenuItem(
+                    DropdownMenuItem<ContentSortMode>(
                       value: ContentSortMode.dateAsc,
                       child: Text('Data crescente'),
                     ),
-                    DropdownMenuItem(
+                    DropdownMenuItem<ContentSortMode>(
                       value: ContentSortMode.dateDesc,
                       child: Text('Data decrescente'),
                     ),
@@ -950,7 +951,7 @@ class _ContentsBody extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Row(
-            children: [
+            children: <Widget>[
               const Expanded(
                 child: Text(
                   'Dividi vista: assegnati a sinistra, non assegnati a destra',
@@ -971,11 +972,11 @@ class _ContentsBody extends StatelessWidget {
             )
           else
             LayoutBuilder(
-              builder: (context, constraints) {
-                final compactSplit = constraints.maxWidth < 900;
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final bool compactSplit = constraints.maxWidth < 900;
                 if (compactSplit) {
                   return Column(
-                    children: [
+                    children: <Widget>[
                       _SplitSection(title: 'Assegnati', count: assigned.length),
                       ..._buildContentCards(
                         assigned,
@@ -997,10 +998,10 @@ class _ContentsBody extends StatelessWidget {
                 }
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Expanded(
                       child: Column(
-                        children: [
+                        children: <Widget>[
                           _SplitSection(
                             title: 'Assegnati',
                             count: assigned.length,
@@ -1016,7 +1017,7 @@ class _ContentsBody extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
-                        children: [
+                        children: <Widget>[
                           _SplitSection(
                             title: 'Non assegnati',
                             count: unassigned.length,
@@ -1048,26 +1049,26 @@ class _ContentsBody extends StatelessWidget {
     Map<int, int> previousIndexes, {
     required _SplitLane lane,
   }) {
-    const itemStep = 122.0;
-    return [
-      for (var i = 0; i < source.length; i++)
+    const double itemStep = 122.0;
+    return <Widget>[
+      for (int i = 0; i < source.length; i++)
         Padding(
-          key: ValueKey('content-${source[i].id}-$sortTick'),
+          key: ValueKey<String>('content-${source[i].id}-$sortTick'),
           padding: const EdgeInsets.only(bottom: 12),
           child: PreservedTweenAnimationBuilder(
             duration: AnimationConfig.reorderDuration(i),
             begin: 1,
             end: 0,
             curve: Curves.easeInOutCubicEmphasized,
-            builder: (context, value, child) {
-              final previousIndex = previousIndexes[source[i].id];
-              final fromOffsetY = previousIndex == null
+            builder: (BuildContext context, double value, Widget? child) {
+              final int? previousIndex = previousIndexes[source[i].id];
+              final double fromOffsetY = previousIndex == null
                   ? 0.0
                   : (previousIndex - i) * itemStep;
-              final toggledSplit = splitAssigned != previousSplitAssigned;
-              var fromOffsetX = 0.0;
+              final bool toggledSplit = splitAssigned != previousSplitAssigned;
+              double fromOffsetX = 0.0;
               if (toggledSplit) {
-                final isAssigned = source[i].eventId != null;
+                final bool isAssigned = source[i].eventId != null;
                 if (splitAssigned && lane == _SplitLane.unassigned) {
                   fromOffsetX = -220;
                 }
@@ -1083,7 +1084,7 @@ class _ContentsBody extends StatelessWidget {
             child: Draggable<ContentItem>(
               data: source[i],
               onDragStarted: onGlobalListDragStart,
-              onDragUpdate: (details) =>
+              onDragUpdate: (DragUpdateDetails details) =>
                   onDragCursorMove(details.globalPosition),
               onDragEnd: (_) => onDragEnd(),
               onDragCompleted: onDragEnd,
@@ -1136,7 +1137,7 @@ class _SplitSection extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7EAF0)),
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           Expanded(
             child: Text(
               title,

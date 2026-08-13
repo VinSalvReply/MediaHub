@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/utils/date.dart';
+import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
 
 class OverviewTab extends StatelessWidget {
@@ -9,16 +10,16 @@ class OverviewTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = data.user;
+    final User user = data.user;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               Expanded(
                 child: _InfoCard(
                   title: "Email",
@@ -38,7 +39,7 @@ class OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Row(
-            children: [
+            children: <Widget>[
               Expanded(
                 child: _InfoCard(
                   title: "Creato il",
@@ -83,7 +84,7 @@ class _InfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         color: Colors.white,
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 18,
             offset: Offset(0, 8),
@@ -93,7 +94,7 @@ class _InfoCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Icon(icon, size: 20),
           const SizedBox(height: 10),
           Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),

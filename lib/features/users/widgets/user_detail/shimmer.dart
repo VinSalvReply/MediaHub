@@ -34,20 +34,20 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (context, child) {
+      builder: (BuildContext context, Widget? child) {
         return ShaderMask(
-          shaderCallback: (bounds) {
+          shaderCallback: (Rect bounds) {
             return LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
-              colors: const [
+              colors: const <Color>[
                 Color(0xFFBDBDBD), // base scura
                 Color(0xFFE6E6E6), // highlight morbido
                 Color(0xFFFFFFFF), // luce forte
                 Color(0xFFE6E6E6),
                 Color(0xFFBDBDBD),
               ],
-              stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
+              stops: const <double>[0.0, 0.35, 0.5, 0.65, 1.0],
               transform: _SlidingGradientTransform(controller.value),
             ).createShader(bounds);
           },

@@ -15,7 +15,7 @@ class NavEntry {
 }
 
 /// Ordered list of all top-level navigation destinations.
-const navEntries = <NavEntry>[
+const List<NavEntry> navEntries = <NavEntry>[
   NavEntry(
     icon: Icons.dashboard_rounded,
     label: 'Dashboard',

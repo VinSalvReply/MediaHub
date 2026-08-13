@@ -20,10 +20,10 @@ class ContentItem {
     required this.createdAt,
     this.userId,
     this.eventId,
-    this.mediaUrls = const [],
+    this.mediaUrls = const <String>[],
     this.postBody,
     this.callToActionLabel,
     this.callToActionUrl,
-    this.tags = const [],
+    this.tags = const <String>[],
   });
 }

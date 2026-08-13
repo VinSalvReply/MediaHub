@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mediahub/layout/main_layout.dart';
 import 'package:mediahub/features/dashboard/pages/dashboard_page.dart';
@@ -5,27 +6,27 @@ import 'package:mediahub/features/events/pages/events_page.dart';
 import 'package:mediahub/features/users/pages/users_page.dart';
 
 class AppRoutes {
-  static const dashboard = '/';
-  static const users = '/users';
-  static const events = '/events';
+  static const String dashboard = '/';
+  static const String users = '/users';
+  static const String events = '/events';
 }
 
-final router = GoRouter(
-  routes: [
+final GoRouter router = GoRouter(
+  routes: <RouteBase>[
     ShellRoute(
-      builder: (context, state, child) => MainLayout(child: child),
-      routes: [
+      builder: (BuildContext context, GoRouterState state, Widget child) => MainLayout(child: child),
+      routes: <RouteBase>[
         GoRoute(
           path: AppRoutes.dashboard,
-          builder: (context, state) => const DashboardPage(),
+          builder: (BuildContext context, GoRouterState state) => const DashboardPage(),
         ),
         GoRoute(
           path: AppRoutes.users,
-          builder: (context, state) => const UsersPage(),
+          builder: (BuildContext context, GoRouterState state) => const UsersPage(),
         ),
         GoRoute(
           path: AppRoutes.events,
-          builder: (context, state) => const EventsPage(),
+          builder: (BuildContext context, GoRouterState state) => const EventsPage(),
         ),
       ],
     ),

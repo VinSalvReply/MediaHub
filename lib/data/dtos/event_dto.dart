@@ -20,7 +20,7 @@ class EventDto {
   });
 
   factory EventDto.fromJson(Map<String, dynamic> json) {
-    final fallbackId = Object.hash(
+    final int fallbackId = Object.hash(
       json['title'],
       json['date'],
       json['status'],
@@ -33,7 +33,7 @@ class EventDto {
       attendees: (json['attendees'] as num?)?.toInt() ?? 0,
       status: (json['status'] as String?) ?? 'upcoming',
       userId: (json['user_id'] as num?)?.toInt(),
-      contents: ((json['contents'] as List?) ?? const [])
+        contents: ((json['contents'] as List<dynamic>?) ?? const <dynamic>[])
           .whereType<Map<String, dynamic>>()
           .map(ContentItemDto.fromJson)
           .toList(),

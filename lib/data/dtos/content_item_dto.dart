@@ -28,7 +28,7 @@ class ContentItemDto {
   });
 
   factory ContentItemDto.fromJson(Map<String, dynamic> json) {
-    final fallbackId = Object.hash(
+    final int fallbackId = Object.hash(
       json['title'],
       json['created_at'],
       json['type'],
@@ -43,22 +43,22 @@ class ContentItemDto {
           (json['created_at'] as String?) ?? DateTime.now().toIso8601String(),
       userId: (json['user_id'] as num?)?.toInt(),
       eventId: (json['event_id'] as num?)?.toInt(),
-      mediaUrls:
-          ((json['media_urls'] as List?) ??
+        mediaUrls:
+          ((json['media_urls'] as List<dynamic>?) ??
                   ((json['attachment_url'] as String?)?.isNotEmpty ?? false
-                      ? [json['attachment_url']]
-                      : const []))
+                      ? <dynamic>[json['attachment_url']]
+                      : const <dynamic>[]))
               .whereType<String>()
-              .map((url) => url.trim())
-              .where((url) => url.isNotEmpty)
+              .map((String url) => url.trim())
+              .where((String url) => url.isNotEmpty)
               .toList(),
       postBody: json['post_body'] as String?,
       callToActionLabel: json['cta_label'] as String?,
       callToActionUrl: json['cta_url'] as String?,
-      tags: ((json['tags'] as List?) ?? const [])
+        tags: ((json['tags'] as List<dynamic>?) ?? const <dynamic>[])
           .whereType<String>()
-          .map((tag) => tag.trim())
-          .where((tag) => tag.isNotEmpty)
+          .map((String tag) => tag.trim())
+          .where((String tag) => tag.isNotEmpty)
           .toList(),
     );
   }

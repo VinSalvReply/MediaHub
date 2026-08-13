@@ -1,0 +1,8 @@
+WARNING|STATIC_WARNING|INVALID_NULL_AWARE_OPERATOR|C:\\Applicazioni\\MediaHub\\lib\\features\\events\\pages\\events_page.dart|1224|42|2|The receiver can't be null, so the null-aware operator '?.' is unnecessary.
+WARNING|STATIC_WARNING|DEAD_CODE|C:\\Applicazioni\\MediaHub\\lib\\features\\events\\pages\\events_page.dart|1478|64|5|Dead code.
+WARNING|STATIC_WARNING|DEAD_NULL_AWARE_EXPRESSION|C:\\Applicazioni\\MediaHub\\lib\\features\\events\\pages\\events_page.dart|1478|67|2|The left operand can't be null, so the right operand is never executed.
+INFO|LINT|UNNECESSARY_UNDERSCORES|C:\\Applicazioni\\MediaHub\\lib\\features\\users\\widgets\\user_card.dart|59|35|2|Unnecessary use of multiple underscores.
+INFO|LINT|UNNECESSARY_UNDERSCORES|C:\\Applicazioni\\MediaHub\\lib\\features\\users\\widgets\\user_card.dart|60|35|3|Unnecessary use of multiple underscores.
+INFO|LINT|UNNECESSARY_UNDERSCORES|C:\\Applicazioni\\MediaHub\\lib\\features\\users\\widgets\\user_list_tile.dart|83|37|2|Unnecessary use of multiple underscores.
+INFO|LINT|UNNECESSARY_UNDERSCORES|C:\\Applicazioni\\MediaHub\\lib\\features\\users\\widgets\\user_list_tile.dart|84|37|3|Unnecessary use of multiple underscores.
+INFO|LINT|IMPLEMENTATION_IMPORTS|C:\\Applicazioni\\MediaHub\\lib\\routes\\app_router.dart|1|8|44|Import of a library in the 'lib/src' directory of another package.

@@ -4,7 +4,7 @@ enum EventStatus { upcoming, live, ended }
 
 EventStatus eventStatusFromString(String value) {
   return EventStatus.values.firstWhere(
-    (e) => e.name == value,
+    (EventStatus e) => e.name == value,
     orElse: () => EventStatus.upcoming,
   );
 }
@@ -25,6 +25,6 @@ class Event {
     this.attendees = 0,
     this.status = EventStatus.upcoming,
     this.userId,
-    this.contents = const [],
+    this.contents = const <ContentItem>[],
   });
 }

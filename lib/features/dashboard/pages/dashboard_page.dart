@@ -59,7 +59,7 @@ class _DashboardPageState extends State<DashboardPage>
           opacity: _fadeIn,
           child: FutureBuilder<DashboardData>(
             future: _future,
-            builder: (context, snapshot) {
+            builder: (BuildContext context, AsyncSnapshot<DashboardData> snapshot) {
               if (snapshot.hasError) {
                 return _DashboardError(
                   message: snapshot.error.toString(),
@@ -94,11 +94,11 @@ class _DashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide =
+    final bool wide =
         MediaQuery.sizeOf(context).width >= ResponsiveBreakpoints.tablet;
 
     return LayoutBuilder(
-      builder: (context, constraints) {
+      builder: (BuildContext context, BoxConstraints constraints) {
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(24),
@@ -106,7 +106,7 @@ class _DashboardView extends StatelessWidget {
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 _TopBar(
                   title: 'Dashboard MediaHub',
                   subtitle:
@@ -124,7 +124,7 @@ class _DashboardView extends StatelessWidget {
                     height: 876,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                      children: <Widget>[
                         Expanded(
                           flex: 3,
 
@@ -141,7 +141,7 @@ class _DashboardView extends StatelessWidget {
                           flex: 2,
                           child: SingleChildScrollView(
                             child: Column(
-                              children: [
+                              children: <Widget>[
                                 _SectionCard(
                                   title: 'Copertura operativa',
                                   subtitle:
@@ -165,7 +165,7 @@ class _DashboardView extends StatelessWidget {
                       ],
                     ),
                   )
-                else ...[
+                else ...<Widget>[
                   _SectionCard(
                     title: 'Attività recenti',
                     subtitle:
@@ -227,11 +227,11 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 title,
                 style: const TextStyle(
@@ -284,14 +284,14 @@ class _IconActionButtonState extends State<_IconActionButton> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFE7EAF0)),
           boxShadow: hovered
-              ? const [
+              ? const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 20,
                     offset: Offset(0, 8),
                     color: Color(0x12000000),
                   ),
                 ]
-              : const [],
+              : const <BoxShadow>[],
         ),
         child: IconButton(
           onPressed: widget.onTap,
@@ -314,7 +314,7 @@ class _AlertStrip extends StatelessWidget {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: alerts.map((alert) => _AlertChip(alert: alert)).toList(),
+      children: alerts.map((DashboardAlert alert) => _AlertChip(alert: alert)).toList(),
     );
   }
 }
@@ -352,7 +352,7 @@ class _AlertChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _colorFor(alert.type);
+    final Color color = _colorFor(alert.type);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -363,7 +363,7 @@ class _AlertChip extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: <Widget>[
           Icon(_iconFor(alert.type), size: 18, color: color),
           const SizedBox(width: 10),
           Text(
@@ -383,7 +383,7 @@ class _MetricsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cards = <_MetricCardData>[
+    final List<_MetricCardData> cards = <_MetricCardData>[
       _MetricCardData(
         title: 'Eventi',
         value: metrics.totalEvents.toString(),
@@ -415,8 +415,8 @@ class _MetricsGrid extends StatelessWidget {
     ];
 
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount =
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final int crossAxisCount =
             constraints.maxWidth >= ResponsiveBreakpoints.tablet
             ? 4
             : constraints.maxWidth >= 900
@@ -433,7 +433,7 @@ class _MetricsGrid extends StatelessWidget {
             mainAxisSpacing: 16,
             childAspectRatio: 2.8,
           ),
-          itemBuilder: (context, index) {
+          itemBuilder: (BuildContext context, int index) {
             return _MetricCard(metric: cards[index]);
           },
         );
@@ -456,7 +456,7 @@ class _MetricCardState extends State<_MetricCard> {
 
   @override
   Widget build(BuildContext context) {
-    final metric = widget.metric;
+    final _MetricCardData metric = widget.metric;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -472,14 +472,14 @@ class _MetricCardState extends State<_MetricCard> {
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: const Color(0xFFE7EAF0)),
           boxShadow: hovered
-              ? const [
+              ? const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 30,
                     offset: Offset(0, 12),
                     color: Color(0x12000000),
                   ),
                 ]
-              : const [
+              : const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 18,
                     offset: Offset(0, 8),
@@ -490,7 +490,7 @@ class _MetricCardState extends State<_MetricCard> {
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(
-            children: [
+            children: <Widget>[
               Container(
                 width: 52,
                 height: 52,
@@ -505,7 +505,7 @@ class _MetricCardState extends State<_MetricCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     Text(
                       metric.title,
                       style: const TextStyle(
@@ -516,7 +516,7 @@ class _MetricCardState extends State<_MetricCard> {
                     ),
                     const SizedBox(height: 4),
                     Row(
-                      children: [
+                      children: <Widget>[
                         Text(
                           metric.value,
                           style: const TextStyle(
@@ -571,7 +571,7 @@ class _SectionCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
             Text(
@@ -595,8 +595,8 @@ class _ActivityFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: items.asMap().entries.map((entry) {
-        final isLast = entry.key == items.length - 1;
+      children: items.asMap().entries.map((MapEntry<int, DashboardActivity> entry) {
+        final bool isLast = entry.key == items.length - 1;
         return Padding(
           padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
           child: _ActivityRow(item: entry.value),
@@ -620,8 +620,8 @@ class _ActivityRowState extends State<_ActivityRow> {
 
   @override
   Widget build(BuildContext context) {
-    final item = widget.item;
-    final color = _activityColor(item.type);
+    final DashboardActivity item = widget.item;
+    final Color color = _activityColor(item.type);
 
     return RepaintBoundary(
       child: MouseRegion(
@@ -637,7 +637,7 @@ class _ActivityRowState extends State<_ActivityRow> {
             border: Border.all(color: const Color(0xFFE7EAF0)),
           ),
           child: Row(
-            children: [
+            children: <Widget>[
               Container(
                 width: 42,
                 height: 42,
@@ -651,7 +651,7 @@ class _ActivityRowState extends State<_ActivityRow> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Text(
                       item.title,
                       style: const TextStyle(fontWeight: FontWeight.w700),
@@ -683,7 +683,7 @@ class _InsightsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = <Color>[
+    final List<Color> palette = <Color>[
       const Color(0xFF4F46E5),
       const Color(0xFF14B8A6),
       const Color(0xFFEC4899),
@@ -695,7 +695,7 @@ class _InsightsPanel extends StatelessWidget {
           .asMap()
           .entries
           .map(
-            (entry) => Padding(
+            (MapEntry<int, DashboardInsight> entry) => Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: _InsightBar(
                 item: entry.value,
@@ -725,10 +725,10 @@ class _InsightBar extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            children: <Widget>[
               Text(
                 item.label,
                 style: const TextStyle(fontWeight: FontWeight.w700),
@@ -767,7 +767,7 @@ class _FocusEventsPanel extends StatelessWidget {
           .asMap()
           .entries
           .map(
-            (entry) => Padding(
+            (MapEntry<int, DashboardFocusEvent> entry) => Padding(
               padding: EdgeInsets.only(
                 bottom: entry.key == events.length - 1 ? 0 : 12,
               ),
@@ -786,10 +786,10 @@ class _FocusEventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = event.contentCount == 0
+    final double progress = event.contentCount == 0
         ? 0.0
         : event.publishedCount / event.contentCount;
-    final statusColor = _focusStatusColor(event.status, event.needsAttention);
+    final Color statusColor = _focusStatusColor(event.status, event.needsAttention);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -800,9 +800,9 @@ class _FocusEventTile extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
-            children: [
+            children: <Widget>[
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -878,43 +878,43 @@ class _TrendPanelState extends State<_TrendPanel> {
   }
 
   double? _tooltipLeft(double availableWidth) {
-    final index = hoveredIndex;
+    final int? index = hoveredIndex;
     if (index == null) return null;
 
-    final groupContext = _groupKeyForIndex(index).currentContext;
-    final stackContext = _stackKey.currentContext;
+    final BuildContext? groupContext = _groupKeyForIndex(index).currentContext;
+    final BuildContext? stackContext = _stackKey.currentContext;
     if (groupContext == null || stackContext == null) return null;
 
-    final groupBox = groupContext.findRenderObject() as RenderBox?;
-    final stackBox = stackContext.findRenderObject() as RenderBox?;
+    final RenderBox? groupBox = groupContext.findRenderObject() as RenderBox?;
+    final RenderBox? stackBox = stackContext.findRenderObject() as RenderBox?;
     if (groupBox == null || stackBox == null) return null;
 
-    const tooltipWidth = _TrendInfoCard.cardWidth;
-    final centerInStack = groupBox.localToGlobal(
+    const double tooltipWidth = _TrendInfoCard.cardWidth;
+    final Offset centerInStack = groupBox.localToGlobal(
       groupBox.size.center(Offset.zero),
       ancestor: stackBox,
     );
 
-    final rawLeft = centerInStack.dx - (tooltipWidth / 2);
-    final maxLeft = math.max(0.0, availableWidth - tooltipWidth);
+    final double rawLeft = centerInStack.dx - (tooltipWidth / 2);
+    final double maxLeft = math.max(0.0, availableWidth - tooltipWidth);
     return rawLeft.clamp(0.0, maxLeft);
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.trend.isEmpty) return const SizedBox.shrink();
-    final isPhone = MediaQuery.sizeOf(context).width < 700;
+    final bool isPhone = MediaQuery.sizeOf(context).width < 700;
 
-    final maxValue = widget.trend
-        .map((e) => math.max(e.activeUsers, e.contentCreated))
+    final double maxValue = widget.trend
+        .map((DashboardTrendPoint e) => math.max(e.activeUsers, e.contentCreated))
         .reduce(math.max)
         .toDouble();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         const Row(
-          children: [
+          children: <Widget>[
             _TrendLegend(color: Color(0xFF4F46E5), label: 'Utenti attivi'),
             SizedBox(width: 16),
             _TrendLegend(color: Color(0xFFEC4899), label: 'Contenuti creati'),
@@ -928,19 +928,19 @@ class _TrendPanelState extends State<_TrendPanel> {
           child: Stack(
             key: _stackKey,
             clipBehavior: Clip.none,
-            children: [
+            children: <Widget>[
               LayoutBuilder(
-                builder: (context, constraints) {
-                  const spacing = 14.0;
-                  const minGroupWidth = 72.0;
-                  final count = widget.trend.length;
-                  final requiredMinWidth =
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  const double spacing = 14.0;
+                  const double minGroupWidth = 72.0;
+                  final int count = widget.trend.length;
+                  final double requiredMinWidth =
                       (count * minGroupWidth) + ((count - 1) * spacing);
-                  final shouldScroll = requiredMinWidth > constraints.maxWidth;
-                  final chartWidth = shouldScroll
+                  final bool shouldScroll = requiredMinWidth > constraints.maxWidth;
+                  final double chartWidth = shouldScroll
                       ? requiredMinWidth
                       : constraints.maxWidth;
-                  final groupWidth =
+                  final double groupWidth =
                       (chartWidth - ((count - 1) * spacing)) / count;
 
                   return SingleChildScrollView(
@@ -949,11 +949,11 @@ class _TrendPanelState extends State<_TrendPanel> {
                       width: chartWidth,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: widget.trend.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final point = entry.value;
+                        children: widget.trend.asMap().entries.map((MapEntry<int, DashboardTrendPoint> entry) {
+                          final int index = entry.key;
+                          final DashboardTrendPoint point = entry.value;
 
-                          final group = SizedBox(
+                          final SizedBox group = SizedBox(
                             key: _groupKeyForIndex(index),
                             width: groupWidth,
                             child: _TrendGroup(
@@ -1002,12 +1002,12 @@ class _TrendPanelState extends State<_TrendPanel> {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final left = _tooltipLeft(constraints.maxWidth);
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        final double? left = _tooltipLeft(constraints.maxWidth);
                         if (left == null) return const SizedBox.shrink();
 
                         return Stack(
-                          children: [
+                          children: <Widget>[
                             Positioned(
                               top: 0,
                               left: left,
@@ -1055,11 +1055,11 @@ class _TrendGroup extends StatefulWidget {
 class _TrendGroupState extends State<_TrendGroup> {
   @override
   Widget build(BuildContext context) {
-    final point = widget.point;
-    final maxValue = widget.maxValue;
+    final DashboardTrendPoint point = widget.point;
+    final double maxValue = widget.maxValue;
 
-    final activeHeight = 150 * (point.activeUsers / maxValue);
-    final contentHeight = 150 * (point.contentCreated / maxValue);
+    final double activeHeight = 150 * (point.activeUsers / maxValue);
+    final double contentHeight = 150 * (point.contentCreated / maxValue);
 
     return AnimatedScale(
       scale: widget.hovered ? 1.06 : 1.0,
@@ -1071,14 +1071,14 @@ class _TrendGroupState extends State<_TrendGroup> {
           height: 220,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
-            children: [
+            children: <Widget>[
               Container(
                 height: 170,
                 alignment: Alignment.bottomCenter,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     _TrendBar(
                       height: activeHeight,
                       color: const Color(0xFF4F46E5),
@@ -1120,7 +1120,7 @@ class _TrendInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = point;
+    final DashboardTrendPoint? p = point;
     if (p == null) return const SizedBox(width: 220);
 
     return Container(
@@ -1130,7 +1130,7 @@ class _TrendInfoCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 16,
             offset: Offset(0, 6),
@@ -1142,9 +1142,9 @@ class _TrendInfoCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+        children: <Widget>[
           Column(
-            children: [
+            children: <Widget>[
               Text(
                 _dayLabel(p.date),
                 style: const TextStyle(fontWeight: FontWeight.w800),
@@ -1175,7 +1175,7 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
+      children: <Widget>[
         Text(
           label,
           style: const TextStyle(
@@ -1213,7 +1213,7 @@ class _TrendMiniStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
+      children: <Widget>[
         Text(
           label,
           style: TextStyle(
@@ -1258,14 +1258,14 @@ class _TrendBar extends StatelessWidget {
         color: color.withValues(alpha: highlighted ? 1.0 : 0.82),
         borderRadius: BorderRadius.circular(999),
         boxShadow: highlighted
-            ? [
+            ? <BoxShadow>[
                 BoxShadow(
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                   color: color.withValues(alpha: 0.28),
                 ),
               ]
-            : const [],
+            : const <BoxShadow>[],
       ),
     );
   }
@@ -1281,7 +1281,7 @@ class _TrendLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
+      children: <Widget>[
         Container(
           width: 10,
           height: 10,
@@ -1309,7 +1309,7 @@ class _QuickActionsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actions = const [
+    final List<_QuickAction> actions = const <_QuickAction>[
       _QuickAction(
         title: 'Crea utente',
         subtitle: 'Aggiungi un operatore o un editor',
@@ -1331,14 +1331,14 @@ class _QuickActionsGrid extends StatelessWidget {
     ];
 
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final crossAxisCount = constraints.maxWidth >= 1000
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth;
+        final int crossAxisCount = constraints.maxWidth >= 1000
             ? 3
             : constraints.maxWidth >= 700
             ? 2
             : 1;
-        final childAspectRatio = width >= 1000
+        final double childAspectRatio = width >= 1000
             ? 3.2
             : width >= 700
             ? 2.5
@@ -1356,7 +1356,7 @@ class _QuickActionsGrid extends StatelessWidget {
             mainAxisSpacing: 14,
             childAspectRatio: childAspectRatio,
           ),
-          itemBuilder: (context, index) {
+          itemBuilder: (BuildContext context, int index) {
             return _QuickActionCard(action: actions[index]);
           },
         );
@@ -1379,8 +1379,8 @@ class _QuickActionCardState extends State<_QuickActionCard> {
 
   @override
   Widget build(BuildContext context) {
-    final action = widget.action;
-    final compact = MediaQuery.sizeOf(context).width < 430;
+    final _QuickAction action = widget.action;
+    final bool compact = MediaQuery.sizeOf(context).width < 430;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1392,9 +1392,9 @@ class _QuickActionCardState extends State<_QuickActionCard> {
           end: hovered ? 1 : 0,
           duration: AnimationConfig.hoverDuration,
           curve: Curves.easeOutCubic,
-          builder: (context, t, child) {
+          builder: (BuildContext context, double t, Widget? child) {
             return Stack(
-              children: [
+              children: <Widget>[
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -1424,9 +1424,9 @@ class _QuickActionCardState extends State<_QuickActionCard> {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     Row(
-                      children: [
+                      children: <Widget>[
                         Container(
                           width: 40,
                           height: 40,
@@ -1465,7 +1465,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                   ],
                 )
               : Row(
-                  children: [
+                  children: <Widget>[
                     Container(
                       width: 44,
                       height: 44,
@@ -1480,7 +1480,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                        children: <Widget>[
                           Text(
                             action.title,
                             maxLines: 1,
@@ -1522,7 +1522,7 @@ class _DashboardSkeleton extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           const _SkeletonBar(width: 260, height: 34),
           const SizedBox(height: 10),
           const _SkeletonBar(width: 320, height: 18),
@@ -1530,15 +1530,15 @@ class _DashboardSkeleton extends StatelessWidget {
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: List.generate(
+            children: List<Widget>.generate(
               2,
-              (_) => const _SkeletonPill(width: 220, height: 44),
+              (int _) => const _SkeletonPill(width: 220, height: 44),
             ),
           ),
           const SizedBox(height: 24),
           LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth >= 900 ? 4 : 2;
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final int crossAxisCount = constraints.maxWidth >= 900 ? 4 : 2;
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1555,17 +1555,17 @@ class _DashboardSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth >= ResponsiveBreakpoints.tablet) {
+            builder: (BuildContext context, BoxConstraints constraints) {
+              if (constraints.maxWidth >= ResponsiveBreakpoints.desktop) {
                 return const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Expanded(flex: 3, child: _PanelSkeleton(lines: 4)),
                     SizedBox(width: 20),
                     Expanded(
                       flex: 2,
                       child: Column(
-                        children: [
+                        children: <Widget>[
                           _PanelSkeleton(lines: 4),
                           SizedBox(height: 20),
                           _PanelSkeleton(lines: 4),
@@ -1577,7 +1577,7 @@ class _DashboardSkeleton extends StatelessWidget {
               }
 
               return const Column(
-                children: [
+                children: <Widget>[
                   _PanelSkeleton(lines: 4),
                   SizedBox(height: 20),
                   _PanelSkeleton(lines: 4),
@@ -1610,14 +1610,14 @@ class _MetricSkeleton extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7EAF0)),
       ),
       child: Row(
-        children: const [
+        children: const <Widget>[
           _SkeletonPill(width: 52, height: 52),
           SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 _SkeletonBar(width: 70, height: 12),
                 SizedBox(height: 8),
                 _SkeletonBar(width: 100, height: 22),
@@ -1646,14 +1646,14 @@ class _PanelSkeleton extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           const _SkeletonBar(width: 160, height: 18),
           const SizedBox(height: 6),
           const _SkeletonBar(width: 220, height: 12),
           const SizedBox(height: 16),
-          ...List.generate(
+          ...List<Widget>.generate(
             lines,
-            (index) => Padding(
+            (int index) => Padding(
               padding: EdgeInsets.only(bottom: index == lines - 1 ? 0 : 12),
               child: const _SkeletonBar(width: double.infinity, height: 58),
             ),
@@ -1724,7 +1724,7 @@ class _DashboardError extends StatelessWidget {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
             const SizedBox(height: 12),
             const Text(
@@ -1777,15 +1777,15 @@ class _QuickAction {
 }
 
 String _dayLabel(DateTime date) {
-  const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+  const List<String> days = <String>['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   return days[date.weekday - 1];
 }
 
 String _formatShortDateTime(DateTime date) {
-  final d = date.day.toString().padLeft(2, '0');
-  final m = date.month.toString().padLeft(2, '0');
-  final h = date.hour.toString().padLeft(2, '0');
-  final min = date.minute.toString().padLeft(2, '0');
+  final String d = date.day.toString().padLeft(2, '0');
+  final String m = date.month.toString().padLeft(2, '0');
+  final String h = date.hour.toString().padLeft(2, '0');
+  final String min = date.minute.toString().padLeft(2, '0');
   return '$d/$m $h:$min';
 }
 

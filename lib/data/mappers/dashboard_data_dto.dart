@@ -15,7 +15,7 @@ class DashboardMapper {
       ),
       activities: dto.activities
           .map(
-            (a) => DashboardActivity(
+            (DashboardActivityDto a) => DashboardActivity(
               title: a.title,
               subtitle: a.subtitle,
               type: a.type,
@@ -24,11 +24,11 @@ class DashboardMapper {
           )
           .toList(),
       insights: dto.insights
-          .map((i) => DashboardInsight(label: i.label, value: i.value))
+          .map((DashboardInsightDto i) => DashboardInsight(label: i.label, value: i.value))
           .toList(),
       trend: dto.trend
           .map(
-            (t) => DashboardTrendPoint(
+            (DashboardTrendDto t) => DashboardTrendPoint(
               date: t.date,
               activeUsers: t.activeUsers,
               contentCreated: t.contentCreated,
@@ -36,11 +36,11 @@ class DashboardMapper {
           )
           .toList(),
       alerts: dto.alerts
-          .map((a) => DashboardAlert(type: a.type, message: a.message))
+          .map((DashboardAlertDto a) => DashboardAlert(type: a.type, message: a.message))
           .toList(),
       focusEvents: dto.focusEvents
           .map(
-            (f) => DashboardFocusEvent(
+            (DashboardFocusEventDto f) => DashboardFocusEvent(
               title: f.title,
               date: f.date,
               status: f.status,

@@ -25,7 +25,7 @@ class Sidebar extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 30,
             offset: Offset(0, 12),
@@ -38,11 +38,11 @@ class Sidebar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             const _BrandHeader(),
             const SizedBox(height: 24),
             ...navEntries.map(
-              (entry) => _SidebarTile(
+              (NavEntry entry) => _SidebarTile(
                 icon: entry.icon,
                 label: entry.label,
                 selected: location == entry.route,
@@ -64,14 +64,14 @@ class _BrandHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
+      children: <Widget>[
         Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             gradient: const LinearGradient(
-              colors: [Color(0xFF4F46E5), Color(0xFFEC4899)],
+              colors: <Color>[Color(0xFF4F46E5), Color(0xFFEC4899)],
             ),
           ),
           child: const Icon(Icons.grid_view_rounded, color: Colors.white),
@@ -79,7 +79,7 @@ class _BrandHeader extends StatelessWidget {
         const SizedBox(width: 12),
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             Text(
               'MediaHub',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
@@ -168,25 +168,9 @@ class _SidebarFooter extends StatefulWidget {
 class _SidebarFooterState extends State<_SidebarFooter> {
   bool hovered = false;
 
-  Future<void> _openProfilePopup() async {
-    await Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: AnimationConfig.heroForwardDuration,
-        reverseTransitionDuration: AnimationConfig.heroReverseDuration,
-        // opaque: false keeps the route transparent so the dimmed backdrop shows.
-        opaque: false,
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const ProfilePopupRoute(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return child;
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF4F46E5);
+    const Color accent = Color(0xFF4F46E5);
 
     return RepaintBoundary(
       child: AnimatedContainer(
@@ -198,14 +182,14 @@ class _SidebarFooterState extends State<_SidebarFooter> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE7EAF0)),
           boxShadow: hovered
-              ? const [
+              ? const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 18,
                     offset: Offset(0, 8),
                     color: Color(0x12000000),
                   ),
                 ]
-              : const [],
+              : const <BoxShadow>[],
         ),
         child: MouseRegion(
           onEnter: (_) => setState(() => hovered = true),
@@ -217,7 +201,7 @@ class _SidebarFooterState extends State<_SidebarFooter> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
-                children: [
+                children: <Widget>[
                   Hero(
                     tag: 'sidebar-profile-avatar',
                     child: CircleAvatar(
@@ -236,7 +220,7 @@ class _SidebarFooterState extends State<_SidebarFooter> {
                   const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         Text(
                           'Utente Admin',
                           style: TextStyle(fontWeight: FontWeight.w700),
@@ -267,6 +251,22 @@ class _SidebarFooterState extends State<_SidebarFooter> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _openProfilePopup() async {
+    await Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        transitionDuration: AnimationConfig.heroForwardDuration,
+        reverseTransitionDuration: AnimationConfig.heroReverseDuration,
+        // opaque: false keeps the route transparent so that the background is shown
+        opaque: false,
+        pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) =>
+            const ProfileCardRoute(),
+        transitionsBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
+          return child;
+        },
       ),
     );
   }

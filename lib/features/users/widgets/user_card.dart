@@ -29,9 +29,9 @@ class _UserCardState extends State<UserCard> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
-    final color = widget.color;
-    final isMobile = ResponsiveBreakpoints.isMobile(
+    final User user = widget.user;
+    final Color color = widget.color;
+    final bool isMobile = ResponsiveBreakpoints.isMobile(
       MediaQuery.sizeOf(context).width,
     );
 
@@ -42,23 +42,27 @@ class _UserCardState extends State<UserCard> {
       child: GestureDetector(
         onTap: () async {
           setState(() => isTransitioning = true);
-          final transitionDuration = isMobile
+          final Duration transitionDuration = isMobile
               ? Duration.zero
               : AnimationConfig.heroForwardDuration;
-          final reverseTransitionDuration = isMobile
+          final Duration reverseTransitionDuration = isMobile
               ? Duration.zero
               : AnimationConfig.heroReverseDuration;
 
           await Navigator.of(context).push(
-            PageRouteBuilder(
+            PageRouteBuilder<void>(
               transitionDuration: transitionDuration,
               reverseTransitionDuration: reverseTransitionDuration,
               opaque: false,
-              pageBuilder: (_, _, _) {
+              pageBuilder: (
+                BuildContext _,
+                Animation<double> animation,
+                Animation<double> secondaryAnimation,
+              ) {
                 return Scaffold(
                   backgroundColor: Colors.transparent,
                   body: Stack(
-                    children: [
+                    children: <Widget>[
                       ModalBarrier(
                         dismissible: true,
                         color: Colors.black.withValues(alpha: 0.5),
@@ -75,7 +79,7 @@ class _UserCardState extends State<UserCard> {
                   ),
                 );
               },
-              transitionsBuilder: (_, animation, _, child) {
+              transitionsBuilder: (_, Animation<double> animation, _, Widget child) {
                 return child;
               },
             ),
@@ -88,8 +92,8 @@ class _UserCardState extends State<UserCard> {
           end: 1,
           duration: AnimationConfig.gridEntryDuration(widget.index),
           curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
-            final slide = (1 - value);
+          builder: (BuildContext context, double value, Widget? child) {
+            final double slide = (1 - value);
             return Opacity(
               opacity: value,
               child: Transform.translate(
@@ -110,7 +114,7 @@ class _UserCardState extends State<UserCard> {
               curve: Curves.easeOutCubic,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
-                boxShadow: [
+                boxShadow: <BoxShadow>[
                   BoxShadow(
                     blurRadius: hovered ? 28 : 18,
                     offset: Offset(0, hovered ? 14 : 8),
@@ -158,32 +162,32 @@ class _CardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = user.isActive
+    final Color statusColor = user.isActive
         ? const Color(0xFF22C55E)
         : const Color(0xFFEF4444);
 
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final isMobileSize = width < 340;
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth;
+        final bool isMobileSize = width < 340;
 
         // Valori responsivi
-        final headerHeight = isMobileSize ? 95.0 : 110.0;
-        final avatarRadius = isMobileSize ? 38.0 : 43.0;
-        final avatarSize = isMobileSize ? 96.0 : 106.0;
-        final avatarFontSize = isMobileSize ? 24.0 : 28.0;
-        final nameSize = isMobileSize ? 16.0 : 18.0;
-        final horizontalPadding = isMobileSize ? 20.0 : 28.0;
-        final headerTranslate = isMobileSize ? -48.0 : -55.0;
+        final double headerHeight = isMobileSize ? 95.0 : 110.0;
+        final double avatarRadius = isMobileSize ? 38.0 : 43.0;
+        final double avatarSize = isMobileSize ? 96.0 : 106.0;
+        final double avatarFontSize = isMobileSize ? 24.0 : 28.0;
+        final double nameSize = isMobileSize ? 16.0 : 18.0;
+        final double horizontalPadding = isMobileSize ? 20.0 : 28.0;
+        final double headerTranslate = isMobileSize ? -48.0 : -55.0;
 
         return Column(
-          children: [
+          children: <Widget>[
             Container(
               height: headerHeight,
               width: double.infinity,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
+                  colors: <Color>[
                     color.withValues(alpha: 0.95),
                     color.withValues(alpha: 0.65),
                   ],
@@ -198,10 +202,10 @@ class _CardContent extends StatelessWidget {
             Transform.translate(
               offset: Offset(0, headerTranslate),
               child: Column(
-                children: [
+                children: <Widget>[
                   Stack(
                     alignment: Alignment.bottomRight,
-                    children: [
+                    children: <Widget>[
                       Container(
                         width: avatarSize,
                         height: avatarSize,
@@ -231,7 +235,7 @@ class _CardContent extends StatelessWidget {
                           shape: BoxShape.circle,
                           color: statusColor,
                           border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
+                          boxShadow: <BoxShadow>[
                             BoxShadow(
                               blurRadius: user.isActive ? 10 : 4,
                               color: statusColor.withValues(alpha: 0.30),
@@ -281,7 +285,7 @@ class _CardContent extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         _InfoRow(
                           icon: Icons.email_rounded,
                           text: user.email,
@@ -321,7 +325,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
+      children: <Widget>[
         Icon(icon, size: compact ? 13 : 14, color: Colors.grey),
         const SizedBox(width: 8),
         Expanded(

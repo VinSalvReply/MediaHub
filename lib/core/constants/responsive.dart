@@ -1,13 +1,12 @@
 class ResponsiveBreakpoints {
   // Breakpoints in pixels
   static const double mobile = 600;
-  static const double tablet = 1200;
-  static const double desktop = 1440;
+  static const double tablet = 950;
+  static const double desktop = 1300;
 
   // Layout dimensions
   static const double sidebarWidthDesktop = 280;
   static const double sidebarWidthTablet = 240;
-  static const double sidebarCollapsedWidth = 80;
 
   // Content padding
   static const double contentPaddingDesktop = 24;

@@ -10,8 +10,8 @@ class EventsController extends ChangeNotifier {
   EventsController({UserRepository? repository})
     : _repository = repository ?? UserRepository();
 
-  List<User> users = [];
-  List<Event> events = [];
+  List<User> users = <User>[];
+  List<Event> events = <Event>[];
 
   bool isLoadingUsers = false;
   bool isLoadingEvents = false;
@@ -38,7 +38,7 @@ class EventsController extends ChangeNotifier {
       error = null;
       notifyListeners();
       events = await _repository.getGlobalEvents();
-      events.sort((a, b) => a.date.compareTo(b.date));
+      events.sort((Event a, Event b) => a.date.compareTo(b.date));
     } catch (e) {
       error = 'Impossibile caricare gli eventi';
     } finally {
@@ -52,7 +52,7 @@ class EventsController extends ChangeNotifier {
     required DateTime date,
     required int attendees,
     required EventStatus status,
-    List<ContentItem> contents = const [],
+    List<ContentItem> contents = const <ContentItem>[],
   }) async {
     return _mutate(() async {
       await _repository.createGlobalEvent(
@@ -75,7 +75,7 @@ class EventsController extends ChangeNotifier {
     required DateTime date,
     required int attendees,
     required EventStatus status,
-    List<ContentItem> contents = const [],
+    List<ContentItem> contents = const <ContentItem>[],
   }) async {
     return _mutate(() async {
       await _repository.updateGlobalEvent(

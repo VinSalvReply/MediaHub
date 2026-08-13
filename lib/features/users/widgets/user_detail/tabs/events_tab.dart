@@ -27,7 +27,7 @@ class EventsTab extends StatelessWidget {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               const Icon(
                 Icons.event_busy_rounded,
                 size: 46,
@@ -64,16 +64,16 @@ class EventsTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: data.events.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, i) {
-        final e = data.events[i];
-        final linked = e.contents;
+      itemBuilder: (BuildContext context, int i) {
+        final Event e = data.events[i];
+        final List<ContentItem> linked = e.contents;
 
         return PreservedTweenAnimationBuilder(
           duration: AnimationConfig.detailEventsEntryDuration(i),
           begin: 0,
           end: 1,
           curve: Curves.easeOutCubic,
-          builder: (context, v, child) {
+          builder: (BuildContext context, double v, Widget? child) {
             return Opacity(
               opacity: v,
               child: Transform.translate(
@@ -104,8 +104,8 @@ class _EventCardState extends State<_EventCard> {
 
   @override
   Widget build(BuildContext context) {
-    final e = widget.event;
-    final linked = widget.linkedContents;
+    final Event e = widget.event;
+    final List<ContentItem> linked = widget.linkedContents;
 
     return MouseRegion(
       onEnter: (_) => setState(() => hover = true),
@@ -119,20 +119,20 @@ class _EventCardState extends State<_EventCard> {
           color: hover ? const Color(0xFFFCFCFD) : Colors.white,
           border: Border.all(color: const Color(0xFFE7EAF0)),
           boxShadow: hover
-              ? const [
+              ? const <BoxShadow>[
                   BoxShadow(
                     blurRadius: 14,
                     offset: Offset(0, 6),
                     color: Color(0x0E000000),
                   ),
                 ]
-              : const [],
+              : const <BoxShadow>[],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             Row(
-              children: [
+              children: <Widget>[
                 Container(
                   width: 46,
                   height: 46,
@@ -149,7 +149,7 @@ class _EventCardState extends State<_EventCard> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                       Text(
                         e.title,
                         style: const TextStyle(
@@ -183,7 +183,7 @@ class _EventCardState extends State<_EventCard> {
                 runSpacing: 8,
                 children: linked
                     .take(4)
-                    .map((item) => _ContentPill(title: item.title))
+                    .map((ContentItem item) => _ContentPill(title: item.title))
                     .toList(),
               ),
           ],

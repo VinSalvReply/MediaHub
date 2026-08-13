@@ -49,12 +49,12 @@ class _UserListTileState extends State<UserListTile>
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
-    final color = widget.color;
-    final isMobile = ResponsiveBreakpoints.isMobile(
+    final User user = widget.user;
+    final Color color = widget.color;
+    final bool isMobile = ResponsiveBreakpoints.isMobile(
       MediaQuery.sizeOf(context).width,
     );
-    final statusColor = user.isActive
+    final Color statusColor = user.isActive
         ? const Color(0xFF22C55E)
         : const Color(0xFFEF4444);
 
@@ -66,23 +66,27 @@ class _UserListTileState extends State<UserListTile>
         onExit: (_) => setState(() => hovered = false),
         child: GestureDetector(
           onTap: () async {
-            final transitionDuration = isMobile
+            final Duration transitionDuration = isMobile
                 ? Duration.zero
                 : AnimationConfig.heroForwardDuration;
-            final reverseTransitionDuration = isMobile
+            final Duration reverseTransitionDuration = isMobile
                 ? Duration.zero
                 : AnimationConfig.heroReverseDuration;
 
             await Navigator.of(context).push(
-              PageRouteBuilder(
+              PageRouteBuilder<void>(
                 transitionDuration: transitionDuration,
                 reverseTransitionDuration: reverseTransitionDuration,
                 opaque: false,
-                pageBuilder: (_, _, _) {
+                pageBuilder: (
+                  BuildContext _,
+                  Animation<double> animation,
+                  Animation<double> secondaryAnimation,
+                ) {
                   return Scaffold(
                     backgroundColor: Colors.transparent,
                     body: Stack(
-                      children: [
+                      children: <Widget>[
                         ModalBarrier(
                           dismissible: true,
                           color: Colors.black.withValues(alpha: 0.5),
@@ -98,7 +102,7 @@ class _UserListTileState extends State<UserListTile>
                     ),
                   );
                 },
-                transitionsBuilder: (_, animation, _, child) {
+                transitionsBuilder: (_, Animation<double> animation, _, Widget child) {
                   return child;
                 },
               ),
@@ -117,7 +121,7 @@ class _UserListTileState extends State<UserListTile>
                     : Colors.grey.shade200,
                 width: hovered ? 2 : 1,
               ),
-              boxShadow: [
+              boxShadow: <BoxShadow>[
                 BoxShadow(
                   blurRadius: hovered ? 12 : 4,
                   offset: Offset(0, hovered ? 4 : 2),
@@ -126,18 +130,18 @@ class _UserListTileState extends State<UserListTile>
               ],
             ),
             child: Row(
-              children: [
+              children: <Widget>[
                 // Avatar
                 Stack(
                   alignment: Alignment.bottomRight,
-                  children: [
+                  children: <Widget>[
                     Container(
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
-                          colors: [
+                          colors: <Color>[
                             color.withValues(alpha: 0.8),
                             color.withValues(alpha: 0.5),
                           ],
@@ -163,7 +167,7 @@ class _UserListTileState extends State<UserListTile>
                         shape: BoxShape.circle,
                         color: statusColor,
                         border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: [
+                        boxShadow: <BoxShadow>[
                           BoxShadow(
                             blurRadius: user.isActive ? 6 : 2,
                             color: statusColor.withValues(alpha: 0.4),
@@ -179,9 +183,9 @@ class _UserListTileState extends State<UserListTile>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: <Widget>[
                       Row(
-                        children: [
+                        children: <Widget>[
                           Expanded(
                             child: Text(
                               '${user.name} ${user.lastName}',

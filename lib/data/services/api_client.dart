@@ -23,12 +23,12 @@ class ApiClient {
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
 
   Future<dynamic> get(String path) async {
-    final res = await _client.get(_uri(path), headers: _jsonHeaders);
+    final http.Response res = await _client.get(_uri(path), headers: _jsonHeaders);
     return _decode(res);
   }
 
   Future<dynamic> post(String path, [Object? body]) async {
-    final res = await _client.post(
+    final http.Response res = await _client.post(
       _uri(path),
       headers: _jsonHeaders,
       body: body == null ? null : jsonEncode(body),
@@ -44,7 +44,7 @@ class ApiClient {
     String? filePath,
     String fileField = 'file',
   }) async {
-    final request = http.MultipartRequest('POST', _uri(path));
+    final http.MultipartRequest request = http.MultipartRequest('POST', _uri(path));
     request.headers['Accept'] = 'application/json';
 
     if (fields != null) {
@@ -65,13 +65,13 @@ class ApiClient {
       );
     }
 
-    final streamed = await _client.send(request);
-    final response = await http.Response.fromStream(streamed);
+    final http.StreamedResponse streamed = await _client.send(request);
+    final http.Response response = await http.Response.fromStream(streamed);
     return _decode(response);
   }
 
   Future<dynamic> put(String path, [Object? body]) async {
-    final res = await _client.put(
+    final http.Response res = await _client.put(
       _uri(path),
       headers: _jsonHeaders,
       body: body == null ? null : jsonEncode(body),
@@ -80,7 +80,7 @@ class ApiClient {
   }
 
   Future<void> delete(String path) async {
-    final res = await _client.delete(_uri(path), headers: _jsonHeaders);
+    final http.Response res = await _client.delete(_uri(path), headers: _jsonHeaders);
     if (res.statusCode >= 400) {
       throw ApiException(res.statusCode, res.body);
     }
@@ -94,7 +94,7 @@ class ApiClient {
     return jsonDecode(res.body);
   }
 
-  static const _jsonHeaders = {
+  static const Map<String, String> _jsonHeaders = <String, String>{
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };

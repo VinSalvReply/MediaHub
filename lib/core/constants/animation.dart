@@ -38,7 +38,7 @@ class AnimationConfig {
   }
 
   static Duration reorderDuration(int index) {
-    final extra = (index * 35).clamp(0, 260);
+    final int extra = (index * 35).clamp(0, 260);
     return Duration(milliseconds: 700 + extra);
   }
 

@@ -13,10 +13,10 @@ class UsersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final isMobile = ResponsiveBreakpoints.isMobile(screenWidth);
-        final isTablet = ResponsiveBreakpoints.isTablet(screenWidth);
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double screenWidth = constraints.maxWidth;
+        final bool isMobile = ResponsiveBreakpoints.isMobile(screenWidth);
+        final bool isTablet = ResponsiveBreakpoints.isTablet(screenWidth);
 
         // Su mobile: mostra lista verticale compatta
         if (isMobile) {
@@ -27,9 +27,9 @@ class UsersList extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                final baseColor = cardColors[index % cardColors.length];
+              itemBuilder: (BuildContext context, int index) {
+                final User user = users[index];
+                final Color baseColor = cardColors[index % cardColors.length];
                 return UserListTile(user: user, color: baseColor, index: index);
               },
             ),
@@ -71,9 +71,9 @@ class UsersList extends StatelessWidget {
               mainAxisExtent: mainAxisExtent,
             ),
             itemCount: users.length,
-            itemBuilder: (context, index) {
-              final user = users[index];
-              final baseColor = cardColors[index % cardColors.length];
+            itemBuilder: (BuildContext context, int index) {
+              final User user = users[index];
+              final Color baseColor = cardColors[index % cardColors.length];
               return UserCard(user: user, color: baseColor, index: index);
             },
           ),

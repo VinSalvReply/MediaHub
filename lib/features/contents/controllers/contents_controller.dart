@@ -10,9 +10,9 @@ class ContentsController extends ChangeNotifier {
   ContentsController({UserRepository? repository})
     : _repository = repository ?? UserRepository();
 
-  List<User> users = [];
-  List<Event> events = [];
-  List<ContentItem> contents = [];
+  List<User> users = <User>[];
+  List<Event> events = <Event>[];
+  List<ContentItem> contents = <ContentItem>[];
 
   bool isLoadingMeta = false;
   bool isLoadingContents = false;
@@ -40,7 +40,7 @@ class ContentsController extends ChangeNotifier {
       error = null;
       notifyListeners();
       contents = await _repository.getGlobalContents();
-      contents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      contents.sort((ContentItem a, ContentItem b) => b.createdAt.compareTo(a.createdAt));
     } catch (_) {
       error = 'Impossibile caricare i contenuti';
     } finally {
@@ -53,11 +53,11 @@ class ContentsController extends ChangeNotifier {
     required String title,
     required String type,
     required String status,
-    List<String> mediaUrls = const [],
+    List<String> mediaUrls = const <String>[],
     String? postBody,
     String? callToActionLabel,
     String? callToActionUrl,
-    List<String> tags = const [],
+    List<String> tags = const <String>[],
   }) async {
     await _mutate(() async {
       await _repository.createGlobalContent(
@@ -84,11 +84,11 @@ class ContentsController extends ChangeNotifier {
     required String title,
     required String type,
     required String status,
-    List<String> mediaUrls = const [],
+    List<String> mediaUrls = const <String>[],
     String? postBody,
     String? callToActionLabel,
     String? callToActionUrl,
-    List<String> tags = const [],
+    List<String> tags = const <String>[],
   }) async {
     await _mutate(() async {
       await _repository.updateGlobalContent(

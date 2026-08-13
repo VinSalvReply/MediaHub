@@ -7,7 +7,7 @@ class UsersController extends ChangeNotifier {
 
   UsersController();
 
-  List<User> users = [];
+  List<User> users = <User>[];
   bool isLoading = false;
   String? error;
 

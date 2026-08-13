@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/features/users/controllers/users_controller.dart';
+import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/widgets/users_list.dart';
 
 class UsersPage extends StatefulWidget {
@@ -36,19 +37,19 @@ class _UsersPageState extends State<UsersPage> {
   }
 
   void _handleScroll() {
-    final shouldShow = _scrollController.hasClients
+    final bool shouldShow = _scrollController.hasClients
         ? _scrollController.offset > 120
         : false;
     if (_showScrollToTop == shouldShow) return;
     setState(() => _showScrollToTop = shouldShow);
   }
 
-  List<dynamic> _filterUsers(List<dynamic> users) {
+  List<User> _filterUsers(List<User> users) {
     if (_searchQuery.trim().isEmpty) return users;
-    final query = _searchQuery.toLowerCase().trim();
-    return users.where((user) {
-      final fullName = '${user.name} ${user.lastName}'.toLowerCase();
-      final email = user.email.toLowerCase();
+    final String query = _searchQuery.toLowerCase().trim();
+    return users.where((User user) {
+      final String fullName = '${user.name} ${user.lastName}'.toLowerCase();
+      final String email = user.email.toLowerCase();
       return fullName.contains(query) || email.contains(query);
     }).toList();
   }
@@ -57,7 +58,7 @@ class _UsersPageState extends State<UsersPage> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (context, _) {
+      builder: (BuildContext context, _) {
         if (controller.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -66,23 +67,23 @@ class _UsersPageState extends State<UsersPage> {
           return Center(child: Text(controller.error!));
         }
 
-        final users = controller.users;
-        final filteredUsers = _filterUsers(users);
-        final hasActiveSearch = _searchQuery.trim().isNotEmpty;
+        final List<User> users = controller.users;
+        final List<User> filteredUsers = _filterUsers(users);
+        final bool hasActiveSearch = _searchQuery.trim().isNotEmpty;
 
         return Container(
           color: const Color(0xFFF5F7FB),
           child: Column(
-            children: [
+            children: <Widget>[
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                        children: <Widget>[
                           Text(
                             'Utenti',
                             style: TextStyle(
@@ -108,7 +109,7 @@ class _UsersPageState extends State<UsersPage> {
                   query: _searchQuery,
                   resultCount: filteredUsers.length,
                   totalCount: users.length,
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                  onChanged: (String value) => setState(() => _searchQuery = value),
                   onClear: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -117,20 +118,20 @@ class _UsersPageState extends State<UsersPage> {
               ),
               Expanded(
                 child: Stack(
-                  children: [
+                  children: <Widget>[
                     SingleChildScrollView(
                       controller: _scrollController,
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                        children: <Widget>[
                           _UsersStats(users: users),
                           const SizedBox(height: 24),
                           if (filteredUsers.isEmpty && hasActiveSearch)
                             _UsersSearchEmptyState(query: _searchQuery)
                           else
-                            UsersList(users: filteredUsers.cast()),
+                            UsersList(users: filteredUsers),
                         ],
                       ),
                     ),
@@ -211,9 +212,9 @@ class _UsersSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final isMobile = width < 700;
-    final hasQuery = query.trim().isNotEmpty;
+    final double width = MediaQuery.sizeOf(context).width;
+    final bool isMobile = width < 700;
+    final bool hasQuery = query.trim().isNotEmpty;
 
     return Container(
       constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 680),
@@ -225,7 +226,7 @@ class _UsersSearchBar extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(isMobile ? 16 : 18),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 18,
             offset: Offset(0, 8),
@@ -234,7 +235,7 @@ class _UsersSearchBar extends StatelessWidget {
         ],
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           Container(
             width: isMobile ? 34 : 38,
             height: isMobile ? 34 : 38,
@@ -281,7 +282,7 @@ class _UsersSearchBar extends StatelessWidget {
               ),
             ),
           ),
-          if (hasQuery) ...[
+          if (hasQuery) ...<Widget>[
             const SizedBox(width: 6),
             IconButton(
               tooltip: 'Pulisci ricerca',
@@ -314,7 +315,7 @@ class _UsersSearchEmptyState extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7EAF0)),
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           Container(
             width: 46,
             height: 46,
@@ -361,14 +362,14 @@ class _TopActionButtonState extends State<_TopActionButton> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFFE7EAF0)),
             boxShadow: hovered
-                ? const [
+                ? const <BoxShadow>[
                     BoxShadow(
                       blurRadius: 18,
                       offset: Offset(0, 8),
                       color: Color(0x12000000),
                     ),
                   ]
-                : const [],
+                : const <BoxShadow>[],
           ),
           child: IconButton(
             onPressed: widget.onTap,
@@ -381,19 +382,19 @@ class _TopActionButtonState extends State<_TopActionButton> {
 }
 
 class _UsersStats extends StatelessWidget {
-  final List<dynamic> users;
+  final List<User> users;
 
   const _UsersStats({required this.users});
 
   @override
   Widget build(BuildContext context) {
-    final total = users.length;
-    final active = users.where((u) => u.isActive == true).length;
-    final inactive = total - active;
+    final int total = users.length;
+    final int active = users.where((User u) => u.isActive == true).length;
+    final int inactive = total - active;
 
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 900 ? 3 : 1;
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final int columns = constraints.maxWidth >= 900 ? 3 : 1;
 
         return GridView(
           shrinkWrap: true,
@@ -404,7 +405,7 @@ class _UsersStats extends StatelessWidget {
             mainAxisSpacing: 16,
             childAspectRatio: 3.2,
           ),
-          children: [
+          children: <Widget>[
             _StatCard(
               title: 'Utenti totali',
               value: '$total',
@@ -451,7 +452,7 @@ class _StatCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 22,
             offset: Offset(0, 10),
@@ -460,7 +461,7 @@ class _StatCard extends StatelessWidget {
         ],
       ),
       child: Row(
-        children: [
+        children: <Widget>[
           Container(
             width: 48,
             height: 48,
@@ -475,7 +476,7 @@ class _StatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Text(
                   title,
                   style: const TextStyle(color: Colors.grey, fontSize: 13),

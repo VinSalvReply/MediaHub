@@ -55,7 +55,7 @@ class EventFormDialog extends StatefulWidget {
   const EventFormDialog({
     super.key,
     this.initial,
-    this.users = const [],
+    this.users = const <User>[],
     this.enableUserLink = false,
   });
 
@@ -64,18 +64,18 @@ class EventFormDialog extends StatefulWidget {
 }
 
 class _EventFormDialogState extends State<EventFormDialog> {
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleCtrl;
   late final TextEditingController _attendeesCtrl;
   late DateTime _date;
   late EventStatus _status;
   int? _userId;
-  List<ContentItem> _contents = const [];
+  List<ContentItem> _contents = const <ContentItem>[];
 
   @override
   void initState() {
     super.initState();
-    final e = widget.initial;
+    final Event? e = widget.initial;
     _titleCtrl = TextEditingController(text: e?.title ?? '');
     _attendeesCtrl = TextEditingController(
       text: (e?.attendees ?? 0).toString(),
@@ -83,7 +83,7 @@ class _EventFormDialogState extends State<EventFormDialog> {
     _date = e?.date ?? DateTime.now().add(const Duration(days: 1));
     _status = e?.status ?? EventStatus.upcoming;
     _userId = e?.userId;
-    _contents = [...?e?.contents];
+    _contents = <ContentItem>[...?e?.contents];
   }
 
   @override
@@ -94,15 +94,15 @@ class _EventFormDialogState extends State<EventFormDialog> {
   }
 
   Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
+    final DateTime now = DateTime.now();
+    final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _date,
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
     );
     if (picked == null || !mounted) return;
-    final time = await showTimePicker(
+    final TimeOfDay? time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_date),
     );
@@ -132,13 +132,13 @@ class _EventFormDialogState extends State<EventFormDialog> {
   }
 
   Future<void> _openContentDialog({ContentItem? initial, int? index}) async {
-    final result = await showDialog<ContentFormResult>(
+    final ContentFormResult? result = await showDialog<ContentFormResult>(
       context: context,
       builder: (_) => ContentFormDialog(initial: initial),
     );
     if (result == null || !mounted) return;
 
-    final item = ContentItem(
+    final ContentItem item = ContentItem(
       id: initial?.id ?? DateTime.now().microsecondsSinceEpoch,
       title: result.title,
       type: result.type,
@@ -152,7 +152,7 @@ class _EventFormDialogState extends State<EventFormDialog> {
     );
 
     setState(() {
-      final next = [..._contents];
+      final List<ContentItem> next = <ContentItem>[..._contents];
       if (index != null) {
         next[index] = item;
       } else {
@@ -164,16 +164,16 @@ class _EventFormDialogState extends State<EventFormDialog> {
 
   void _removeContent(int index) {
     setState(() {
-      _contents = [..._contents]..removeAt(index);
+      _contents = <ContentItem>[..._contents]..removeAt(index);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.initial != null;
-    final formatter = DateFormat('dd MMM yyyy · HH:mm');
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final isCompact = screenWidth < 640;
+    final bool isEdit = widget.initial != null;
+    final DateFormat formatter = DateFormat('dd MMM yyyy · HH:mm');
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+    final bool isCompact = screenWidth < 640;
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
@@ -194,7 +194,7 @@ class _EventFormDialogState extends State<EventFormDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Text(
                     isEdit ? 'Modifica evento' : 'Nuovo evento',
                     style: TextStyle(
@@ -216,7 +216,7 @@ class _EventFormDialogState extends State<EventFormDialog> {
                       labelText: 'Titolo',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (v) =>
+                    validator: (String? v) =>
                         (v == null || v.trim().isEmpty) ? 'Obbligatorio' : null,
                   ),
                   const SizedBox(height: 14),
@@ -240,8 +240,8 @@ class _EventFormDialogState extends State<EventFormDialog> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (v) {
-                      final n = int.tryParse(v ?? '');
+                    validator: (String? v) {
+                      final int? n = int.tryParse(v ?? '');
                       if (n == null || n < 0) return 'Numero non valido';
                       return null;
                     },
@@ -255,25 +255,25 @@ class _EventFormDialogState extends State<EventFormDialog> {
                     ),
                     items: EventStatus.values
                         .map(
-                          (s) => DropdownMenuItem(
+                          (EventStatus s) => DropdownMenuItem<EventStatus>(
                             value: s,
                             child: Text(_eventStatusLabel(s)),
                           ),
                         )
                         .toList(),
-                    onChanged: (v) => setState(() => _status = v ?? _status),
+                    onChanged: (EventStatus? v) => setState(() => _status = v ?? _status),
                   ),
                   const SizedBox(height: 18),
                   _EventContentsSection(
                     contents: _contents,
                     onAdd: () => _openContentDialog(),
-                    onEdit: (index) => _openContentDialog(
+                    onEdit: (int index) => _openContentDialog(
                       initial: _contents[index],
                       index: index,
                     ),
                     onDelete: _removeContent,
                   ),
-                  if (widget.enableUserLink) ...[
+                  if (widget.enableUserLink) ...<Widget>[
                     const SizedBox(height: 14),
                     DropdownButtonFormField<int?>(
                       initialValue: _userId,
@@ -281,26 +281,26 @@ class _EventFormDialogState extends State<EventFormDialog> {
                         labelText: 'Utente collegato (opzionale)',
                         border: OutlineInputBorder(),
                       ),
-                      items: [
+                      items: <DropdownMenuItem<int?>>[
                         const DropdownMenuItem<int?>(
                           value: null,
                           child: Text('Nessuno (evento globale)'),
                         ),
                         ...widget.users.map(
-                          (u) => DropdownMenuItem<int?>(
+                          (User u) => DropdownMenuItem<int?>(
                             value: u.id,
                             child: Text('${u.name} ${u.lastName} — ${u.email}'),
                           ),
                         ),
                       ],
-                      onChanged: (value) => setState(() => _userId = value),
+                      onChanged: (int? value) => setState(() => _userId = value),
                     ),
                   ],
                   const SizedBox(height: 24),
                   isCompact
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
+                          children: <Widget>[
                             FilledButton(
                               onPressed: _submit,
                               child: Text(isEdit ? 'Salva' : 'Crea'),
@@ -314,7 +314,7 @@ class _EventFormDialogState extends State<EventFormDialog> {
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
+                          children: <Widget>[
                             TextButton(
                               onPressed: () => Navigator.of(context).pop(),
                               child: const Text('Annulla'),
@@ -351,7 +351,7 @@ class _EventContentsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 640;
+    final bool compact = MediaQuery.sizeOf(context).width < 640;
 
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
@@ -362,13 +362,13 @@ class _EventContentsSection extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           if (compact)
             Wrap(
               spacing: 8,
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
+              children: <Widget>[
                 const SizedBox(
                   width: double.infinity,
                   child: Text(
@@ -385,7 +385,7 @@ class _EventContentsSection extends StatelessWidget {
             )
           else
             Row(
-              children: [
+              children: <Widget>[
                 const Expanded(
                   child: Text(
                     'Contenuti dell\'evento',
@@ -412,8 +412,8 @@ class _EventContentsSection extends StatelessWidget {
             )
           else
             Column(
-              children: [
-                for (var i = 0; i < contents.length; i++)
+              children: <Widget>[
+                for (int i = 0; i < contents.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _EventContentRow(
@@ -443,7 +443,7 @@ class _EventContentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaCount = content.mediaUrls.length;
+    final int mediaCount = content.mediaUrls.length;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -452,10 +452,10 @@ class _EventContentRow extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE7EAF0)),
       ),
       child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 460;
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool compact = constraints.maxWidth < 460;
 
-          final leading = Container(
+          final Container leading = Container(
             width: 42,
             height: 42,
             decoration: BoxDecoration(
@@ -472,9 +472,9 @@ class _EventContentRow extends StatelessWidget {
             ),
           );
 
-          final details = Column(
+          final Column details = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 content.title,
                 maxLines: compact ? 2 : 2,
@@ -491,9 +491,9 @@ class _EventContentRow extends StatelessWidget {
             ],
           );
 
-          final actions = Row(
+          final Row actions = Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: <Widget>[
               IconButton(
                 tooltip: 'Modifica contenuto',
                 onPressed: onEdit,
@@ -510,7 +510,7 @@ class _EventContentRow extends StatelessWidget {
 
           if (!compact) {
             return Row(
-              children: [
+              children: <Widget>[
                 leading,
                 const SizedBox(width: 12),
                 Expanded(
@@ -526,10 +526,10 @@ class _EventContentRow extends StatelessWidget {
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   leading,
                   const SizedBox(width: 12),
                   Expanded(child: details),

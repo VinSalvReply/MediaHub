@@ -57,7 +57,7 @@ class _PreservedTweenAnimationBuilderState
     super.didUpdateWidget(oldWidget);
     _controller.duration = widget.duration;
 
-    final shouldRetween =
+    final bool shouldRetween =
         oldWidget.begin != widget.begin ||
         oldWidget.end != widget.end ||
         oldWidget.curve != widget.curve;
@@ -86,7 +86,7 @@ class _PreservedTweenAnimationBuilderState
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _animation,
-      builder: (context, _) {
+      builder: (BuildContext context, _) {
         return widget.builder(context, _animation.value, widget.child);
       },
     );

@@ -10,7 +10,7 @@ class DashboardRepository {
     : _userService = userService ?? UserService();
 
   Future<DashboardData> getDashboard() async {
-    final json = await _userService.getDashboard();
+    final Map<String, dynamic> json = await _userService.getDashboard();
     return DashboardMapper.toDashboard(DashboardDataDto.fromJson(json));
   }
 }

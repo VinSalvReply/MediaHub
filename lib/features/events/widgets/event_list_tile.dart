@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
 
 class EventListTile extends StatelessWidget {
@@ -22,9 +23,9 @@ class EventListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = DateFormat('dd MMM yyyy · HH:mm');
-    final statusChip = _StatusChip(status: event.status);
-    final attendeesChip = _AttendeesChip(count: event.attendees);
+    final DateFormat formatter = DateFormat('dd MMM yyyy · HH:mm');
+    final _StatusChip statusChip = _StatusChip(status: event.status);
+    final _AttendeesChip attendeesChip = _AttendeesChip(count: event.attendees);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -32,7 +33,7 @@ class EventListTile extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE7EAF0)),
-        boxShadow: const [
+        boxShadow: const <BoxShadow>[
           BoxShadow(
             blurRadius: 18,
             offset: Offset(0, 8),
@@ -41,12 +42,12 @@ class EventListTile extends StatelessWidget {
         ],
       ),
       child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 860;
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool compact = constraints.maxWidth < 860;
 
           Widget details = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 event.title,
                 maxLines: compact ? 2 : 1,
@@ -63,12 +64,12 @@ class EventListTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
               ),
-              if (event.contents.isNotEmpty) ...[
+              if (event.contents.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
-                  children: [
+                  children: <Widget>[
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -92,7 +93,7 @@ class EventListTile extends StatelessWidget {
                     ...event.contents
                         .take(2)
                         .map(
-                          (content) => Container(
+                          (ContentItem content) => Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 4,
@@ -112,7 +113,7 @@ class EventListTile extends StatelessWidget {
                   ],
                 ),
               ],
-              if (event.userId != null) ...[
+              if (event.userId != null) ...<Widget>[
                 const SizedBox(height: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -161,14 +162,14 @@ class EventListTile extends StatelessWidget {
                 child: IconButton(
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () async {
-                    final confirm = await showDialog<bool>(
+                    final bool? confirm = await showDialog<bool>(
                       context: context,
-                      builder: (ctx) => AlertDialog(
+                      builder: (BuildContext ctx) => AlertDialog(
                         title: const Text('Rimuovere assegnazione?'),
                         content: const Text(
                           'L\'evento sarà disassegnato dall\'utente.',
                         ),
-                        actions: [
+                        actions: <Widget>[
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(false),
                             child: const Text('Annulla'),
@@ -205,9 +206,9 @@ class EventListTile extends StatelessWidget {
             );
           }
 
-          final body = !compact
+          final Flex body = !compact
               ? Row(
-                  children: [
+                  children: <Widget>[
                     leadingIcon,
                     const SizedBox(width: 14),
                     Expanded(child: details),
@@ -222,10 +223,10 @@ class EventListTile extends StatelessWidget {
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: <Widget>[
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         leadingIcon,
                         const SizedBox(width: 12),
                         Expanded(child: details),
@@ -237,7 +238,7 @@ class EventListTile extends StatelessWidget {
                     Wrap(
                       spacing: 10,
                       runSpacing: 8,
-                      children: [statusChip, attendeesChip],
+                      children: <Widget>[statusChip, attendeesChip],
                     ),
                   ],
                 );
@@ -248,7 +249,7 @@ class EventListTile extends StatelessWidget {
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [body, const SizedBox(height: 12), footer!],
+            children: <Widget>[body, const SizedBox(height: 12), footer!],
           );
         },
       ),
@@ -265,25 +266,25 @@ class _EventMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<_EventAction>(
-      onSelected: (action) {
+      onSelected: (_EventAction action) {
         if (action == _EventAction.edit) onEdit();
         if (action == _EventAction.delete) onDelete();
       },
-      itemBuilder: (_) => [
-        const PopupMenuItem(
+      itemBuilder: (BuildContext _) => <PopupMenuEntry<_EventAction>>[
+        const PopupMenuItem<_EventAction>(
           value: _EventAction.edit,
           child: Row(
-            children: [
+            children: <Widget>[
               Icon(Icons.edit_rounded, size: 18),
               SizedBox(width: 10),
               Text('Modifica'),
             ],
           ),
         ),
-        const PopupMenuItem(
+        const PopupMenuItem<_EventAction>(
           value: _EventAction.delete,
           child: Row(
-            children: [
+            children: <Widget>[
               Icon(
                 Icons.delete_outline_rounded,
                 size: 18,
@@ -315,7 +316,7 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
+    final Color color = switch (status) {
       EventStatus.upcoming => const Color(0xFF4F46E5),
       EventStatus.live => const Color(0xFF22C55E),
       EventStatus.ended => const Color(0xFF9CA3AF),
@@ -348,7 +349,7 @@ class _AttendeesChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
+      children: <Widget>[
         const Icon(
           Icons.people_alt_rounded,
           size: 16,
