@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mediahub/data/repositories/event_repository.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
@@ -6,9 +7,13 @@ import 'package:mediahub/features/users/models/user.dart';
 
 class EventsController extends ChangeNotifier {
   final UserRepository _repository;
+  final EventRepository _eventRepository;
 
-  EventsController({UserRepository? repository})
-    : _repository = repository ?? UserRepository();
+  EventsController({
+    UserRepository? repository,
+    EventRepository? eventRepository,
+  }) : _repository = repository ?? UserRepository(),
+       _eventRepository = eventRepository ?? EventRepository();
 
   List<User> users = <User>[];
   List<Event> events = <Event>[];
@@ -38,7 +43,7 @@ class EventsController extends ChangeNotifier {
       isLoadingEvents = true;
       error = null;
       notifyListeners();
-      events = await _repository.getGlobalEvents();
+      events = await _eventRepository.getGlobalEvents();
       events.sort((Event a, Event b) => a.date.compareTo(b.date));
     } catch (e, st) {
       debugPrint('EventsController.loadEvents error: $e\n$st');
@@ -57,7 +62,7 @@ class EventsController extends ChangeNotifier {
     List<ContentItem> contents = const <ContentItem>[],
   }) async {
     return _mutate(() async {
-      await _repository.createGlobalEvent(
+      await _eventRepository.createGlobalEvent(
         Event(
           id: 0,
           title: title,
@@ -80,7 +85,7 @@ class EventsController extends ChangeNotifier {
     List<ContentItem> contents = const <ContentItem>[],
   }) async {
     return _mutate(() async {
-      await _repository.updateGlobalEvent(
+      await _eventRepository.updateGlobalEvent(
         Event(
           id: original.id,
           title: title,
@@ -96,7 +101,7 @@ class EventsController extends ChangeNotifier {
 
   Future<bool> assignEventToUser(Event event, int? userId) async {
     return _mutate(() async {
-      await _repository.updateGlobalEvent(
+      await _eventRepository.updateGlobalEvent(
         Event(
           id: event.id,
           title: event.title,
@@ -112,7 +117,7 @@ class EventsController extends ChangeNotifier {
 
   Future<bool> removeEvent(Event event) async {
     return _mutate(() async {
-      await _repository.deleteGlobalEvent(event.id);
+      await _eventRepository.deleteGlobalEvent(event.id);
     });
   }
 

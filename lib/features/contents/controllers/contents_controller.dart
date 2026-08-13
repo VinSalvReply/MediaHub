@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mediahub/data/repositories/event_repository.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
@@ -6,9 +7,13 @@ import 'package:mediahub/features/users/models/user.dart';
 
 class ContentsController extends ChangeNotifier {
   final UserRepository _repository;
+  final EventRepository _eventRepository;
 
-  ContentsController({UserRepository? repository})
-    : _repository = repository ?? UserRepository();
+  ContentsController({
+    UserRepository? repository,
+    EventRepository? eventRepository,
+  }) : _repository = repository ?? UserRepository(),
+       _eventRepository = eventRepository ?? EventRepository();
 
   List<User> users = <User>[];
   List<Event> events = <Event>[];
@@ -24,7 +29,7 @@ class ContentsController extends ChangeNotifier {
       isLoadingMeta = true;
       notifyListeners();
       users = await _repository.getUsers();
-      events = await _repository.getGlobalEvents();
+      events = await _eventRepository.getGlobalEvents();
     } catch (e, st) {
       debugPrint('ContentsController.init error: $e\n$st');
       error = 'Impossibile caricare metadati contenuti';
