@@ -1,8 +1,6 @@
 import 'package:mediahub/data/dtos/event_dto.dart';
-import 'package:mediahub/data/mappers/content_item_mapper.dart';
 import 'package:mediahub/data/mappers/event_mapper.dart';
 import 'package:mediahub/data/services/event_service.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
 
 /// Repository responsible for loading and mutating events.
@@ -21,7 +19,7 @@ class EventRepository {
   Future<Event> createUserEvent(int userId, Event event) async {
     final Map<String, dynamic> response = await _eventService.addUserEvent(
       userId,
-      _toJson(event),
+      event.toJson(),
     );
     return _toEvent(response);
   }
@@ -30,7 +28,7 @@ class EventRepository {
     final Map<String, dynamic> response = await _eventService.updateUserEvent(
       userId,
       event.id,
-      _toJson(event),
+      event.toJson(),
     );
     return _toEvent(response);
   }
@@ -48,7 +46,7 @@ class EventRepository {
 
   Future<Event> createGlobalEvent(Event event) async {
     final Map<String, dynamic> response = await _eventService.addEvent(
-      _toJson(event),
+      event.toJson(),
     );
     return _toEvent(response);
   }
@@ -56,7 +54,7 @@ class EventRepository {
   Future<Event> updateGlobalEvent(Event event) async {
     final Map<String, dynamic> response = await _eventService.updateEvent(
       event.id,
-      _toJson(event),
+      event.toJson(),
     );
     return _toEvent(response);
   }
@@ -72,15 +70,4 @@ class EventRepository {
   Event _toEvent(Map<String, dynamic> json) {
     return EventDto.fromJson(json).toModel();
   }
-
-  Map<String, dynamic> _toJson(Event event) => <String, dynamic>{
-    'title': event.title,
-    'date': event.date.toIso8601String(),
-    'attendees': event.attendees,
-    'status': event.status.name,
-    'user_id': event.userId,
-    'contents': event.contents
-        .map((ContentItem content) => content.toJson())
-        .toList(),
-  };
 }

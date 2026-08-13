@@ -16,3 +16,14 @@ extension EventMapper on EventDto {
     );
   }
 }
+
+extension EventRequestMapper on Event {
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'title': title,
+    'date': date.toIso8601String(),
+    'attendees': attendees,
+    'status': status.name,
+    'user_id': userId,
+    'contents': contents.map((content) => content.toJson()).toList(),
+  };
+}
