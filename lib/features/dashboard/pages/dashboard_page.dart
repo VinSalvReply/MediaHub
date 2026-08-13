@@ -63,7 +63,6 @@ class _DashboardPageState extends State<DashboardPage>
                 (BuildContext context, AsyncSnapshot<DashboardData> snapshot) {
                   if (snapshot.hasError) {
                     return _DashboardError(
-                      message: snapshot.error.toString(),
                       onRetry: _reload,
                     );
                   }
@@ -1723,10 +1722,9 @@ class _SkeletonPill extends StatelessWidget {
 }
 
 class _DashboardError extends StatelessWidget {
-  final String message;
   final VoidCallback onRetry;
 
-  const _DashboardError({required this.message, required this.onRetry});
+  const _DashboardError({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -1746,12 +1744,6 @@ class _DashboardError extends StatelessWidget {
             const Text(
               'Impossibile caricare la dashboard',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),

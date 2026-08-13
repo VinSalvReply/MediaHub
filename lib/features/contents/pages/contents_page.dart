@@ -852,21 +852,7 @@ class _ContentsBody extends StatelessWidget {
       );
     }
     if (controller.error != null && controller.contents.isEmpty) {
-      return _Card(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: <Widget>[
-            const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 32),
-            const SizedBox(height: 12),
-            Text(controller.error!),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: controller.loadContents,
-              child: const Text('Riprova'),
-            ),
-          ],
-        ),
-      );
+      return _ContentsError(onRetry: () => controller.init());
     }
     if (controller.contents.isEmpty) {
       return _Card(
@@ -1164,6 +1150,39 @@ class _SplitSection extends StatelessWidget {
           ),
           Text('$count', style: const TextStyle(color: _textMuted)),
         ],
+      ),
+    );
+  }
+}
+
+class _ContentsError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _ContentsError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE7EAF0)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
+            const SizedBox(height: 12),
+            const Text(
+              'Impossibile caricare i contenuti',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
+          ],
+        ),
       ),
     );
   }

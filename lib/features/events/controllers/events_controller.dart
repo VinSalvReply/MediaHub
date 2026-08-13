@@ -23,7 +23,8 @@ class EventsController extends ChangeNotifier {
       isLoadingUsers = true;
       notifyListeners();
       users = await _repository.getUsers();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('EventsController.init error: $e\n$st');
       error = 'Impossibile caricare gli utenti';
     } finally {
       isLoadingUsers = false;
@@ -39,7 +40,8 @@ class EventsController extends ChangeNotifier {
       notifyListeners();
       events = await _repository.getGlobalEvents();
       events.sort((Event a, Event b) => a.date.compareTo(b.date));
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('EventsController.loadEvents error: $e\n$st');
       error = 'Impossibile caricare gli eventi';
     } finally {
       isLoadingEvents = false;
@@ -121,7 +123,8 @@ class EventsController extends ChangeNotifier {
       await action();
       await loadEvents();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('EventsController._mutate error: $e\n$st');
       error = 'Operazione fallita';
       notifyListeners();
       return false;

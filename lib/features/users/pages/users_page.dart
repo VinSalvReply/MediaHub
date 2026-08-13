@@ -64,7 +64,7 @@ class _UsersPageState extends State<UsersPage> {
         }
 
         if (controller.error != null) {
-          return Center(child: Text(controller.error!));
+          return _UsersError(onRetry: controller.fetchUsers);
         }
 
         final List<User> users = controller.users;
@@ -192,6 +192,39 @@ class _TopActionButton extends StatefulWidget {
 
   @override
   State<_TopActionButton> createState() => _TopActionButtonState();
+}
+
+class _UsersError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _UsersError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE7EAF0)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
+            const SizedBox(height: 12),
+            const Text(
+              'Impossibile caricare gli utenti',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _UsersSearchBar extends StatelessWidget {

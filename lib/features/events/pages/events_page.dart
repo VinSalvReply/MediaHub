@@ -205,6 +205,24 @@ class _EventsPageState extends State<EventsPage> {
     return AnimatedBuilder(
       animation: controller,
       builder: (BuildContext context, _) {
+        final bool isInitialLoading =
+            (controller.isLoadingUsers || controller.isLoadingEvents) &&
+            controller.events.isEmpty;
+
+        if (isInitialLoading) {
+          return Container(
+            color: _bgColor,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (controller.error != null && controller.events.isEmpty) {
+          return Container(
+            color: _bgColor,
+            child: _EventsError(onRetry: () => controller.loadEvents()),
+          );
+        }
+
         return LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             return Container(
@@ -741,33 +759,6 @@ class _EventsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isInitialLoading =
-        (controller.isLoadingUsers || controller.isLoadingEvents) &&
-        controller.events.isEmpty;
-
-    if (isInitialLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 48),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (controller.error != null && controller.events.isEmpty) {
-      return _Card(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: <Widget>[
-            const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 32),
-            const SizedBox(height: 12),
-            Text(controller.error!),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: controller.loadEvents,
-              child: const Text('Riprova'),
-            ),
-          ],
-        ),
-      );
-    }
     if (controller.events.isEmpty) {
       return _Card(
         padding: const EdgeInsets.all(32),
@@ -1004,6 +995,39 @@ class _SplitSection extends StatelessWidget {
           ),
           Text('$count', style: const TextStyle(color: _textMuted)),
         ],
+      ),
+    );
+  }
+}
+
+class _EventsError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _EventsError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE7EAF0)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
+            const SizedBox(height: 12),
+            const Text(
+              'Impossibile caricare gli eventi',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
+          ],
+        ),
       ),
     );
   }

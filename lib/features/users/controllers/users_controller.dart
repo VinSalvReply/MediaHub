@@ -18,7 +18,8 @@ class UsersController extends ChangeNotifier {
       notifyListeners();
 
       users = await repository.getUsers();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('UsersController.fetchUsers error: $e\n$st');
       error = "Errore nel caricamento";
     } finally {
       isLoading = false;

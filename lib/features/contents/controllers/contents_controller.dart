@@ -25,7 +25,8 @@ class ContentsController extends ChangeNotifier {
       notifyListeners();
       users = await _repository.getUsers();
       events = await _repository.getGlobalEvents();
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('ContentsController.init error: $e\n$st');
       error = 'Impossibile caricare metadati contenuti';
     } finally {
       isLoadingMeta = false;
@@ -41,7 +42,8 @@ class ContentsController extends ChangeNotifier {
       notifyListeners();
       contents = await _repository.getGlobalContents();
       contents.sort((ContentItem a, ContentItem b) => b.createdAt.compareTo(a.createdAt));
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('ContentsController.loadContents error: $e\n$st');
       error = 'Impossibile caricare i contenuti';
     } finally {
       isLoadingContents = false;
@@ -143,7 +145,8 @@ class ContentsController extends ChangeNotifier {
       notifyListeners();
       await action();
       await loadContents();
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('ContentsController._mutate error: $e\n$st');
       error = 'Operazione contenuto fallita';
       notifyListeners();
     } finally {
