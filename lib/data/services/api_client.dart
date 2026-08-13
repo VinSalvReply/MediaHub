@@ -22,18 +22,18 @@ class ApiClient {
 
   Uri _uri(String path) => Uri.parse('$baseUrl$path');
 
-  Future<dynamic> get(String path) async {
-    final http.Response res = await _client.get(_uri(path), headers: _jsonHeaders);
-    return _decode(res);
+  Future<dynamic> get(String path) {
+    return _send(() => _client.get(_uri(path), headers: _jsonHeaders));
   }
 
-  Future<dynamic> post(String path, [Object? body]) async {
-    final http.Response res = await _client.post(
-      _uri(path),
-      headers: _jsonHeaders,
-      body: body == null ? null : jsonEncode(body),
+  Future<dynamic> post(String path, [Object? body]) {
+    return _send(
+      () => _client.post(
+        _uri(path),
+        headers: _jsonHeaders,
+        body: _encodeBody(body),
+      ),
     );
-    return _decode(res);
   }
 
   Future<dynamic> multipartPost(
@@ -44,7 +44,10 @@ class ApiClient {
     String? filePath,
     String fileField = 'file',
   }) async {
-    final http.MultipartRequest request = http.MultipartRequest('POST', _uri(path));
+    final http.MultipartRequest request = http.MultipartRequest(
+      'POST',
+      _uri(path),
+    );
     request.headers['Accept'] = 'application/json';
 
     if (fields != null) {
@@ -70,20 +73,40 @@ class ApiClient {
     return _decode(response);
   }
 
-  Future<dynamic> put(String path, [Object? body]) async {
-    final http.Response res = await _client.put(
-      _uri(path),
-      headers: _jsonHeaders,
-      body: body == null ? null : jsonEncode(body),
+  Future<dynamic> put(String path, [Object? body]) {
+    return _send(
+      () => _client.put(
+        _uri(path),
+        headers: _jsonHeaders,
+        body: _encodeBody(body),
+      ),
     );
-    return _decode(res);
   }
 
-  Future<void> delete(String path) async {
-    final http.Response res = await _client.delete(_uri(path), headers: _jsonHeaders);
-    if (res.statusCode >= 400) {
-      throw ApiException(res.statusCode, res.body);
+  Future<void> delete(String path) {
+    // DELETE responses are often empty/plain text, so we only validate status
+    return _sendWithoutDecoding(
+      () => _client.delete(_uri(path), headers: _jsonHeaders),
+    );
+  }
+
+  Future<dynamic> _send(Future<http.Response> Function() request) async {
+    final http.Response response = await request();
+    return _decode(response);
+  }
+
+  Future<void> _sendWithoutDecoding(
+    Future<http.Response> Function() request,
+  ) async {
+    final http.Response response = await request();
+    if (response.statusCode >= 400) {
+      throw ApiException(response.statusCode, response.body);
     }
+  }
+
+  String? _encodeBody(Object? body) {
+    if (body == null) return null;
+    return jsonEncode(body);
   }
 
   dynamic _decode(http.Response res) {
