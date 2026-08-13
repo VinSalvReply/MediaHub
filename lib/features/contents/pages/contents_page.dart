@@ -622,7 +622,7 @@ class _ContentDropZone extends StatelessWidget {
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
         return AnimatedContainer(
-          duration: AnimationConfig.hoverSmooth,
+          duration: AnimationConfig.hoverDuration,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFFFFF7ED) : const Color(0xFFF8FAFC),
@@ -715,7 +715,7 @@ class _ScopedContentUnassignZone extends StatelessWidget {
       builder: (context, candidateData, _) {
         final active = enabled && candidateData.isNotEmpty;
         return AnimatedContainer(
-          duration: AnimationConfig.hoverFast,
+          duration: AnimationConfig.hoverDuration,
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(

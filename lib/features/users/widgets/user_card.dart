@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/constants/color.dart';
+import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/users/models/user.dart';
@@ -30,6 +31,9 @@ class _UserCardState extends State<UserCard> {
   Widget build(BuildContext context) {
     final user = widget.user;
     final color = widget.color;
+    final isMobile = ResponsiveBreakpoints.isMobile(
+      MediaQuery.sizeOf(context).width,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -38,11 +42,17 @@ class _UserCardState extends State<UserCard> {
       child: GestureDetector(
         onTap: () async {
           setState(() => isTransitioning = true);
+          final transitionDuration = isMobile
+              ? Duration.zero
+              : AnimationConfig.heroForwardDuration;
+          final reverseTransitionDuration = isMobile
+              ? Duration.zero
+              : AnimationConfig.heroReverseDuration;
 
           await Navigator.of(context).push(
             PageRouteBuilder(
-              transitionDuration: AnimationConfig.heroForwardDuration,
-              reverseTransitionDuration: AnimationConfig.heroReverseDuration,
+              transitionDuration: transitionDuration,
+              reverseTransitionDuration: reverseTransitionDuration,
               opaque: false,
               pageBuilder: (_, _, _) {
                 return Scaffold(
@@ -54,7 +64,12 @@ class _UserCardState extends State<UserCard> {
                         color: Colors.black.withValues(alpha: 0.5),
                       ),
                       Center(
-                        child: UserDetail(user: user, color: color),
+                        child: UserDetail(
+                          user: user,
+                          color: color,
+                          enableHero: !isMobile,
+                          startPulseImmediately: isMobile,
+                        ),
                       ),
                     ],
                   ),
@@ -87,11 +102,11 @@ class _UserCardState extends State<UserCard> {
             );
           },
           child: AnimatedScale(
-            duration: AnimationConfig.hoverSmooth,
+            duration: AnimationConfig.hoverDuration,
             scale: hovered && !isTransitioning ? 1.02 : 1.0,
             curve: Curves.easeOut,
             child: AnimatedContainer(
-              duration: AnimationConfig.hoverPanel,
+              duration: AnimationConfig.hoverDuration,
               curve: Curves.easeOutCubic,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
@@ -105,18 +120,28 @@ class _UserCardState extends State<UserCard> {
                   ),
                 ],
               ),
-              child: Hero(
-                tag: 'user-${user.id}',
-                child: Card(
-                  elevation: 0,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: _CardContent(user: user, color: color),
-                ),
-              ),
+              child: (isMobile
+                  ? Card(
+                      elevation: 0,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: _CardContent(user: user, color: color),
+                    )
+                  : Hero(
+                      tag: 'user-${user.id}',
+                      child: Card(
+                        elevation: 0,
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _CardContent(user: user, color: color),
+                      ),
+                    )),
             ),
           ),
         ),
@@ -199,7 +224,7 @@ class _CardContent extends StatelessWidget {
                         ),
                       ),
                       AnimatedContainer(
-                        duration: AnimationConfig.statusPulse,
+                        duration: AnimationConfig.statusPulseDuration,
                         width: 18,
                         height: 18,
                         decoration: BoxDecoration(

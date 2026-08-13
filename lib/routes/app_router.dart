@@ -13,9 +13,7 @@ class AppRoutes {
 final router = GoRouter(
   routes: [
     ShellRoute(
-      builder: (context, state, child) {
-        return MainLayout(child: child);
-      },
+      builder: (context, state, child) => MainLayout(child: child),
       routes: [
         GoRoute(
           path: AppRoutes.dashboard,

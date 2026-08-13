@@ -9,19 +9,16 @@ class AnimationConfig {
   static const Duration heroReverseDuration = Duration(seconds: 6);
 
   // Shared fixed animation durations.
-  static const Duration hoverFast = Duration(milliseconds: 140);
-  static const Duration hoverQuick = Duration(milliseconds: 150);
-  static const Duration hoverStandard = Duration(milliseconds: 160);
-  static const Duration hoverSmooth = Duration(milliseconds: 180);
-  static const Duration hoverCard = Duration(milliseconds: 200);
-  static const Duration hoverPanel = Duration(milliseconds: 220);
-  static const Duration statusPulse = Duration(milliseconds: 250);
-  static const Duration scrollToTop = Duration(milliseconds: 320);
-  static const Duration dashboardIntro = Duration(milliseconds: 700);
-  static const Duration shimmerCycle = Duration(milliseconds: 1200);
-  static const Duration dialogScale = Duration(milliseconds: 550);
-  static const Duration dialogStartDelay = Duration(milliseconds: 220);
-  static const Duration dialogStartShortDelay = Duration(milliseconds: 120);
+  static const Duration hoverDuration = Duration(milliseconds: 200);
+  static const Duration statusPulseDuration = Duration(milliseconds: 250);
+  static const Duration scrollToTopDuration = Duration(milliseconds: 320);
+  static const Duration dashboardIntroDuration = Duration(milliseconds: 700);
+  static const Duration shimmerCycleDuration = Duration(milliseconds: 1200);
+  static const Duration dialogScaleDuration = Duration(milliseconds: 550);
+  static const Duration dialogStartDelayDuration = Duration(milliseconds: 220);
+  static const Duration dialogStartShortDelayDuration = Duration(
+    milliseconds: 120,
+  );
 
   // Dynamic durations centralization.
   static Duration listFadeDuration(int index) {

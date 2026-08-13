@@ -63,7 +63,7 @@ class _ContentTileState extends State<_ContentTile> {
       onEnter: (_) => setState(() => hover = true),
       onExit: (_) => setState(() => hover = false),
       child: AnimatedContainer(
-        duration: AnimationConfig.hoverSmooth,
+        duration: AnimationConfig.hoverDuration,
         curve: Curves.easeOut,
         transform: Matrix4.identity()
           ..translateByDouble(0.0, hover ? -3.0 : 0.0, 0.0, 1.0)

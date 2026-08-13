@@ -6,7 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc -p .",
-    "start": "node dist/server.js",
+    "start": "tsc -p . && node dist/server.js",
     "start-ts": "ts-node ./src/index.ts",
     "dev": "tsx watch src/server.ts",
     "seed": "tsx src/scripts/seed.ts",

@@ -111,7 +111,7 @@ class _EventCardState extends State<_EventCard> {
       onEnter: (_) => setState(() => hover = true),
       onExit: (_) => setState(() => hover = false),
       child: AnimatedContainer(
-        duration: AnimationConfig.hoverSmooth,
+        duration: AnimationConfig.hoverDuration,
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -19,7 +19,7 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
 
     controller = AnimationController(
       vsync: this,
-      duration: AnimationConfig.shimmerCycle,
+      duration: AnimationConfig.shimmerCycleDuration,
       animationBehavior: AnimationBehavior.preserve,
     )..repeat();
   }

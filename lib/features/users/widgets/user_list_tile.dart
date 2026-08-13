@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/widgets/user_detail/user_detail.dart';
 
@@ -50,6 +51,9 @@ class _UserListTileState extends State<UserListTile>
   Widget build(BuildContext context) {
     final user = widget.user;
     final color = widget.color;
+    final isMobile = ResponsiveBreakpoints.isMobile(
+      MediaQuery.sizeOf(context).width,
+    );
     final statusColor = user.isActive
         ? const Color(0xFF22C55E)
         : const Color(0xFFEF4444);
@@ -62,10 +66,17 @@ class _UserListTileState extends State<UserListTile>
         onExit: (_) => setState(() => hovered = false),
         child: GestureDetector(
           onTap: () async {
+            final transitionDuration = isMobile
+                ? Duration.zero
+                : AnimationConfig.heroForwardDuration;
+            final reverseTransitionDuration = isMobile
+                ? Duration.zero
+                : AnimationConfig.heroReverseDuration;
+
             await Navigator.of(context).push(
               PageRouteBuilder(
-                transitionDuration: AnimationConfig.heroForwardDuration,
-                reverseTransitionDuration: AnimationConfig.heroReverseDuration,
+                transitionDuration: transitionDuration,
+                reverseTransitionDuration: reverseTransitionDuration,
                 opaque: false,
                 pageBuilder: (_, _, _) {
                   return Scaffold(
@@ -77,7 +88,11 @@ class _UserListTileState extends State<UserListTile>
                           color: Colors.black.withValues(alpha: 0.5),
                         ),
                         Center(
-                          child: UserDetail(user: user, color: color),
+                          child: UserDetail(
+                            user: user,
+                            color: color,
+                            startPulseImmediately: isMobile,
+                          ),
                         ),
                       ],
                     ),
@@ -90,7 +105,7 @@ class _UserListTileState extends State<UserListTile>
             );
           },
           child: AnimatedContainer(
-            duration: AnimationConfig.hoverCard,
+            duration: AnimationConfig.hoverDuration,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -141,7 +156,7 @@ class _UserListTileState extends State<UserListTile>
                     ),
                     // Status indicator
                     AnimatedContainer(
-                      duration: AnimationConfig.statusPulse,
+                      duration: AnimationConfig.statusPulseDuration,
                       width: 14,
                       height: 14,
                       decoration: BoxDecoration(
@@ -215,7 +230,7 @@ class _UserListTileState extends State<UserListTile>
                 // Arrow icon
                 AnimatedRotation(
                   turns: hovered ? 0.1 : 0,
-                  duration: AnimationConfig.hoverCard,
+                  duration: AnimationConfig.hoverDuration,
                   child: Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,

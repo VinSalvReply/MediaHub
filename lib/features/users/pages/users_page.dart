@@ -139,7 +139,7 @@ class _UsersPageState extends State<UsersPage> {
                       right: 0,
                       bottom: 12,
                       child: AnimatedOpacity(
-                        duration: AnimationConfig.hoverSmooth,
+                        duration: AnimationConfig.hoverDuration,
                         opacity: _showScrollToTop ? 1 : 0,
                         child: IgnorePointer(
                           ignoring: !_showScrollToTop,
@@ -153,7 +153,8 @@ class _UsersPageState extends State<UsersPage> {
                                 onPressed: () {
                                   _scrollController.animateTo(
                                     0,
-                                    duration: AnimationConfig.scrollToTop,
+                                    duration:
+                                        AnimationConfig.scrollToTopDuration,
                                     curve: Curves.easeOutCubic,
                                   );
                                 },
@@ -352,7 +353,7 @@ class _TopActionButtonState extends State<_TopActionButton> {
         onEnter: (_) => setState(() => hovered = true),
         onExit: (_) => setState(() => hovered = false),
         child: AnimatedContainer(
-          duration: AnimationConfig.hoverStandard,
+          duration: AnimationConfig.hoverDuration,
           width: 44,
           height: 44,
           decoration: BoxDecoration(

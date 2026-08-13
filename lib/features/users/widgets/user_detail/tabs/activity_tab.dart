@@ -61,7 +61,7 @@ class _ActivityTileState extends State<_ActivityTile> {
       onEnter: (_) => setState(() => hover = true),
       onExit: (_) => setState(() => hover = false),
       child: AnimatedContainer(
-        duration: AnimationConfig.hoverSmooth,
+        duration: AnimationConfig.hoverDuration,
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(

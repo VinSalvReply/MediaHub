@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
@@ -11,8 +12,16 @@ import 'package:mediahub/features/users/widgets/user_detail/tabs/overview_tab.da
 class UserDetail extends StatefulWidget {
   final User user;
   final Color color;
+  final bool enableHero;
+  final bool startPulseImmediately;
 
-  const UserDetail({super.key, required this.user, required this.color});
+  const UserDetail({
+    super.key,
+    required this.user,
+    required this.color,
+    this.enableHero = true,
+    this.startPulseImmediately = false,
+  });
 
   @override
   State<UserDetail> createState() => _UserDetailState();
@@ -33,7 +42,7 @@ class _UserDetailState extends State<UserDetail>
 
     controller = AnimationController(
       vsync: this,
-      duration: AnimationConfig.dialogScale,
+      duration: AnimationConfig.dialogScaleDuration,
       animationBehavior: AnimationBehavior.preserve,
     );
 
@@ -62,7 +71,9 @@ class _UserDetailState extends State<UserDetail>
     ]).animate(controller);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(AnimationConfig.dialogStartDelay);
+      if (!widget.startPulseImmediately) {
+        await Future.delayed(AnimationConfig.dialogStartDelayDuration);
+      }
       if (mounted) controller.forward();
     });
   }
@@ -75,76 +86,79 @@ class _UserDetailState extends State<UserDetail>
 
   @override
   Widget build(BuildContext context) {
-    return Hero(
-      tag: 'user-${widget.user.id}',
-      child: ScaleTransition(
-        scale: scaleAnim,
-        child: Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          clipBehavior: Clip.antiAlias,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Calcola dimensioni responsive
-              final screenWidth = MediaQuery.of(context).size.width;
-              final screenHeight = MediaQuery.of(context).size.height;
-              final isMobile = screenWidth < 600;
-              final isTablet = screenWidth < 1200;
+    final child = ScaleTransition(
+      scale: scaleAnim,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        clipBehavior: Clip.antiAlias,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Calcola dimensioni responsive
+            final screenWidth = MediaQuery.of(context).size.width;
+            final screenHeight = MediaQuery.of(context).size.height;
+            final isMobile = screenWidth < ResponsiveBreakpoints.mobile;
+            final isTablet = screenWidth < ResponsiveBreakpoints.tablet;
 
-              late double dialogWidth;
-              late double dialogHeight;
+            late double dialogWidth;
+            late double dialogHeight;
 
-              if (isMobile) {
-                dialogWidth = screenWidth - 32;
-                dialogHeight = screenHeight - 80;
-              } else if (isTablet) {
-                dialogWidth = screenWidth - 64;
-                dialogHeight = screenHeight - 120;
-              } else {
-                dialogWidth = 1000;
-                dialogHeight = 720;
-              }
+            if (isMobile) {
+              dialogWidth = screenWidth - 32;
+              dialogHeight = screenHeight - 80;
+            } else if (isTablet) {
+              dialogWidth = screenWidth - 64;
+              dialogHeight = screenHeight - 120;
+            } else {
+              dialogWidth = 1000;
+              dialogHeight = 720;
+            }
 
-              return SizedBox(
-                width: dialogWidth,
-                height: dialogHeight,
-                child: FutureBuilder<UserDetailData>(
-                  future: future,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: _UserDetailSkeleton(),
-                      );
-                    }
-
-                    final data = snapshot.data!;
-                    final padding = isMobile ? 16.0 : 24.0;
-
-                    return Padding(
-                      padding: EdgeInsets.all(padding),
-                      child: Column(
-                        children: [
-                          _Header(
-                            user: widget.user,
-                            color: widget.color,
-                            onClose: () => Navigator.of(context).maybePop(),
-                          ),
-                          SizedBox(height: isMobile ? 12 : 20),
-                          Expanded(
-                            child: _UserTabs(data: data, color: widget.color),
-                          ),
-                        ],
-                      ),
+            return SizedBox(
+              width: dialogWidth,
+              height: dialogHeight,
+              child: FutureBuilder<UserDetailData>(
+                future: future,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: _UserDetailSkeleton(),
                     );
-                  },
-                ),
-              );
-            },
-          ),
+                  }
+
+                  final data = snapshot.data!;
+                  final padding = isMobile ? 16.0 : 24.0;
+
+                  return Padding(
+                    padding: EdgeInsets.all(padding),
+                    child: Column(
+                      children: [
+                        _Header(
+                          user: widget.user,
+                          color: widget.color,
+                          onClose: () => Navigator.of(context).maybePop(),
+                        ),
+                        SizedBox(height: isMobile ? 12 : 20),
+                        Expanded(
+                          child: _UserTabs(data: data, color: widget.color),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         ),
       ),
     );
+
+    if (!widget.enableHero) {
+      return child;
+    }
+
+    return Hero(tag: 'user-${widget.user.id}', child: child);
   }
 }
 
@@ -311,7 +325,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               AnimatedContainer(
-                duration: AnimationConfig.statusPulse,
+                duration: AnimationConfig.statusPulseDuration,
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(

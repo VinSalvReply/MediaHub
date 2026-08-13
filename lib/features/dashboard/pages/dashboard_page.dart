@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/data/repositories/dashboard_repository.dart';
@@ -30,7 +31,7 @@ class _DashboardPageState extends State<DashboardPage>
 
     _controller = AnimationController(
       vsync: this,
-      duration: AnimationConfig.dashboardIntro,
+      duration: AnimationConfig.dashboardIntroDuration,
       animationBehavior: AnimationBehavior.preserve,
     );
     _fadeIn = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
@@ -93,7 +94,8 @@ class _DashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width >= 1200;
+    final wide =
+        MediaQuery.sizeOf(context).width >= ResponsiveBreakpoints.tablet;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -274,7 +276,7 @@ class _IconActionButtonState extends State<_IconActionButton> {
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: AnimatedContainer(
-        duration: AnimationConfig.hoverQuick,
+        duration: AnimationConfig.hoverDuration,
         width: 44,
         height: 44,
         decoration: BoxDecoration(
@@ -414,7 +416,8 @@ class _MetricsGrid extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth >= 1200
+        final crossAxisCount =
+            constraints.maxWidth >= ResponsiveBreakpoints.tablet
             ? 4
             : constraints.maxWidth >= 900
             ? 2
@@ -460,7 +463,7 @@ class _MetricCardState extends State<_MetricCard> {
       onEnter: (_) => setState(() => hovered = true),
       onExit: (_) => setState(() => hovered = false),
       child: AnimatedContainer(
-        duration: AnimationConfig.hoverSmooth,
+        duration: AnimationConfig.hoverDuration,
         transform: hovered
             ? (Matrix4.identity()..translateByDouble(0.0, -4.0, 0.0, 1.0))
             : Matrix4.identity(),
@@ -626,7 +629,7 @@ class _ActivityRowState extends State<_ActivityRow> {
         onEnter: (_) => setState(() => hovered = true),
         onExit: (_) => setState(() => hovered = false),
         child: AnimatedContainer(
-          duration: AnimationConfig.hoverStandard,
+          duration: AnimationConfig.hoverDuration,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: hovered ? const Color(0xFFF8FAFC) : const Color(0xFFFDFDFE),
@@ -1060,7 +1063,7 @@ class _TrendGroupState extends State<_TrendGroup> {
 
     return AnimatedScale(
       scale: widget.hovered ? 1.06 : 1.0,
-      duration: AnimationConfig.hoverSmooth,
+      duration: AnimationConfig.hoverDuration,
       curve: Curves.easeOutCubic,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 16),
@@ -1247,7 +1250,7 @@ class _TrendBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: AnimationConfig.hoverSmooth,
+      duration: AnimationConfig.hoverDuration,
       curve: Curves.easeOutCubic,
       width: highlighted ? 16 : 14,
       height: height.clamp(12, 150),
@@ -1387,7 +1390,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
         child: PreservedTweenAnimationBuilder(
           begin: 0,
           end: hovered ? 1 : 0,
-          duration: AnimationConfig.hoverSmooth,
+          duration: AnimationConfig.hoverDuration,
           curve: Curves.easeOutCubic,
           builder: (context, t, child) {
             return Stack(
@@ -1553,7 +1556,7 @@ class _DashboardSkeleton extends StatelessWidget {
           const SizedBox(height: 24),
           LayoutBuilder(
             builder: (context, constraints) {
-              if (constraints.maxWidth >= 1200) {
+              if (constraints.maxWidth >= ResponsiveBreakpoints.tablet) {
                 return const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

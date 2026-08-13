@@ -579,7 +579,7 @@ class _EventDropZone extends StatelessWidget {
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
         return AnimatedContainer(
-          duration: AnimationConfig.hoverSmooth,
+          duration: AnimationConfig.hoverDuration,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF8FAFC),
@@ -1521,7 +1521,7 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                             right: 0,
                             bottom: 12,
                             child: AnimatedOpacity(
-                              duration: AnimationConfig.hoverSmooth,
+                              duration: AnimationConfig.hoverDuration,
                               opacity: _showScrollToTop ? 1 : 0,
                               child: IgnorePointer(
                                 ignoring: !_showScrollToTop,
@@ -1535,7 +1535,8 @@ class _QuickAssignBottomSheetState extends State<_QuickAssignBottomSheet> {
                                       onPressed: () {
                                         scrollController.animateTo(
                                           0,
-                                          duration: AnimationConfig.scrollToTop,
+                                          duration: AnimationConfig
+                                              .scrollToTopDuration,
                                           curve: Curves.easeOutCubic,
                                         );
                                       },
