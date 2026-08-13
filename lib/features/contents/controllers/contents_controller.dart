@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mediahub/data/repositories/content_repository.dart';
 import 'package:mediahub/data/repositories/event_repository.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
@@ -8,12 +9,15 @@ import 'package:mediahub/features/users/models/user.dart';
 class ContentsController extends ChangeNotifier {
   final UserRepository _repository;
   final EventRepository _eventRepository;
+  final ContentRepository _contentRepository;
 
   ContentsController({
     UserRepository? repository,
     EventRepository? eventRepository,
+    ContentRepository? contentRepository,
   }) : _repository = repository ?? UserRepository(),
-       _eventRepository = eventRepository ?? EventRepository();
+       _eventRepository = eventRepository ?? EventRepository(),
+       _contentRepository = contentRepository ?? ContentRepository();
 
   List<User> users = <User>[];
   List<Event> events = <Event>[];
@@ -45,7 +49,7 @@ class ContentsController extends ChangeNotifier {
       isLoadingContents = true;
       error = null;
       notifyListeners();
-      contents = await _repository.getGlobalContents();
+      contents = await _contentRepository.getGlobalContents();
       contents.sort(
         (ContentItem a, ContentItem b) => b.createdAt.compareTo(a.createdAt),
       );
@@ -69,7 +73,7 @@ class ContentsController extends ChangeNotifier {
     List<String> tags = const <String>[],
   }) async {
     return _mutate(() async {
-      await _repository.createGlobalContent(
+      await _contentRepository.createGlobalContent(
         ContentItem(
           id: 0,
           title: title,
@@ -100,7 +104,7 @@ class ContentsController extends ChangeNotifier {
     List<String> tags = const <String>[],
   }) async {
     return _mutate(() async {
-      await _repository.updateGlobalContent(
+      await _contentRepository.updateGlobalContent(
         ContentItem(
           id: original.id,
           title: title,
@@ -121,7 +125,7 @@ class ContentsController extends ChangeNotifier {
 
   Future<bool> assignContentToEvent(ContentItem item, int? eventId) async {
     return _mutate(() async {
-      await _repository.updateGlobalContent(
+      await _contentRepository.updateGlobalContent(
         ContentItem(
           id: item.id,
           title: item.title,
@@ -142,7 +146,7 @@ class ContentsController extends ChangeNotifier {
 
   Future<bool> removeContent(ContentItem content) async {
     return _mutate(() async {
-      await _repository.deleteGlobalContent(content.id);
+      await _contentRepository.deleteGlobalContent(content.id);
     });
   }
 

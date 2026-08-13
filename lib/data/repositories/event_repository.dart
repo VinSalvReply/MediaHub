@@ -1,4 +1,5 @@
 import 'package:mediahub/data/dtos/event_dto.dart';
+import 'package:mediahub/data/mappers/content_item_mapper.dart';
 import 'package:mediahub/data/mappers/event_mapper.dart';
 import 'package:mediahub/data/services/user_service.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
@@ -6,19 +7,19 @@ import 'package:mediahub/features/users/models/event.dart';
 
 /// Repository responsible for loading and mutating events.
 class EventRepository {
-  final UserService _service;
+  final UserService _userService;
 
-  EventRepository({UserService? service}) : _service = service ?? UserService();
+  EventRepository({UserService? userService})
+    : _userService = userService ?? UserService();
 
   Future<List<Event>> getUserEvents(int userId) async {
-    final List<Map<String, dynamic>> response = await _service.getUserEvents(
-      userId,
-    );
+    final List<Map<String, dynamic>> response = await _userService
+        .getUserEvents(userId);
     return _toEvents(response);
   }
 
   Future<Event> createUserEvent(int userId, Event event) async {
-    final Map<String, dynamic> response = await _service.addUserEvent(
+    final Map<String, dynamic> response = await _userService.addUserEvent(
       userId,
       _toJson(event),
     );
@@ -26,7 +27,7 @@ class EventRepository {
   }
 
   Future<Event> updateUserEvent(int userId, Event event) async {
-    final Map<String, dynamic> response = await _service.updateUserEvent(
+    final Map<String, dynamic> response = await _userService.updateUserEvent(
       userId,
       event.id,
       _toJson(event),
@@ -35,25 +36,25 @@ class EventRepository {
   }
 
   Future<void> deleteUserEvent(int userId, int eventId) {
-    return _service.deleteUserEvent(userId, eventId);
+    return _userService.deleteUserEvent(userId, eventId);
   }
 
   Future<List<Event>> getGlobalEvents({int? userId}) async {
-    final List<Map<String, dynamic>> response = await _service.getEvents(
+    final List<Map<String, dynamic>> response = await _userService.getEvents(
       userId: userId,
     );
     return _toEvents(response);
   }
 
   Future<Event> createGlobalEvent(Event event) async {
-    final Map<String, dynamic> response = await _service.addEvent(
+    final Map<String, dynamic> response = await _userService.addEvent(
       _toJson(event),
     );
     return _toEvent(response);
   }
 
   Future<Event> updateGlobalEvent(Event event) async {
-    final Map<String, dynamic> response = await _service.updateEvent(
+    final Map<String, dynamic> response = await _userService.updateEvent(
       event.id,
       _toJson(event),
     );
@@ -61,7 +62,7 @@ class EventRepository {
   }
 
   Future<void> deleteGlobalEvent(int eventId) {
-    return _service.deleteEvent(eventId);
+    return _userService.deleteEvent(eventId);
   }
 
   List<Event> _toEvents(List<Map<String, dynamic>> response) {
@@ -78,20 +79,8 @@ class EventRepository {
     'attendees': event.attendees,
     'status': event.status.name,
     'user_id': event.userId,
-    'contents': event.contents.map(_contentToJson).toList(),
-  };
-
-  Map<String, dynamic> _contentToJson(ContentItem content) => <String, dynamic>{
-    'title': content.title,
-    'type': content.type,
-    'status': content.status,
-    'created_at': content.createdAt.toIso8601String(),
-    'user_id': content.userId,
-    'event_id': content.eventId,
-    'media_urls': content.mediaUrls,
-    'post_body': content.postBody,
-    'cta_label': content.callToActionLabel,
-    'cta_url': content.callToActionUrl,
-    'tags': content.tags,
+    'contents': event.contents
+        .map((ContentItem content) => content.toJson())
+        .toList(),
   };
 }

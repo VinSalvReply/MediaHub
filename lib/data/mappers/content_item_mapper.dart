@@ -19,3 +19,19 @@ extension ContentItemMapper on ContentItemDto {
     );
   }
 }
+
+extension ContentItemRequestMapper on ContentItem {
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'title': title,
+    'type': type,
+    'status': status,
+    'created_at': createdAt.toIso8601String(),
+    'user_id': userId,
+    'event_id': eventId,
+    'media_urls': mediaUrls,
+    'post_body': postBody,
+    'cta_label': callToActionLabel,
+    'cta_url': callToActionUrl,
+    'tags': tags,
+  };
+}
