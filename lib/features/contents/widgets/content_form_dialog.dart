@@ -6,7 +6,11 @@ import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const List<String> _contentTypes = <String>['post', 'image', 'video'];
-const List<String> _contentStatuses = <String>['draft', 'published', 'archived'];
+const List<String> _contentStatuses = <String>[
+  'draft',
+  'published',
+  'archived',
+];
 const double _mediaPreviewCardWidth = 160.0;
 
 String _contentTypeLabel(String type) {
@@ -133,7 +137,10 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   String _labelFromReference(String reference) {
     final Uri? uri = Uri.tryParse(reference);
     final String path = uri?.path ?? reference;
-    final List<String> segments = path.split('/').where((String part) => part.isNotEmpty).toList();
+    final List<String> segments = path
+        .split('/')
+        .where((String part) => part.isNotEmpty)
+        .toList();
     return segments.isEmpty ? reference : segments.last;
   }
 
@@ -168,7 +175,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
     final int dotIndex = fileName.lastIndexOf('.');
     if (dotIndex <= 0) return null;
 
-    final String thumbnailName = '${fileName.substring(0, dotIndex)}.poster.jpg';
+    final String thumbnailName =
+        '${fileName.substring(0, dotIndex)}.poster.jpg';
     final List<String> updatedSegments = <String>[...segments]
       ..[segments.length - 1] = thumbnailName;
     return uri.replace(pathSegments: updatedSegments).toString();
@@ -203,7 +211,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
       final List<PlatformFile> validFiles = result.files
           .where(
-            (PlatformFile file) => (file.path?.isNotEmpty ?? false) || file.bytes != null,
+            (PlatformFile file) =>
+                (file.path?.isNotEmpty ?? false) || file.bytes != null,
           )
           .toList();
 
@@ -345,7 +354,9 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         status: _status,
         userId: null,
         eventId: null,
-        mediaUrls: _selectedMedia.map((_SelectedMedia media) => media.reference).toList(),
+        mediaUrls: _selectedMedia
+            .map((_SelectedMedia media) => media.reference)
+            .toList(),
         postBody: postBody.isEmpty ? null : postBody,
         callToActionLabel: ctaLabel.isEmpty ? null : ctaLabel,
         callToActionUrl: ctaUrl.isEmpty ? null : ctaUrl,
@@ -369,7 +380,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
   Future<_PersistedMedia> _importRemoteMedia(String sourceUrl) async {
     final Map<String, dynamic> response = Map<String, dynamic>.from(
-      await _apiClient.post('/media/import', <String, String>{'url': sourceUrl}) as Map<String, dynamic>,
+      await _apiClient.post('/media/import', <String, String>{'url': sourceUrl})
+          as Map<String, dynamic>,
     );
     return _PersistedMedia.fromJson(response);
   }
@@ -914,8 +926,9 @@ class _MediaPreviewCard extends StatelessWidget {
         media.reference,
         fit: BoxFit.cover,
         width: double.infinity,
-        errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) =>
-            _buildFallbackIcon(isImage, isVideo),
+        errorBuilder:
+            (BuildContext context, Object error, StackTrace? stackTrace) =>
+                _buildFallbackIcon(isImage, isVideo),
       );
     }
 
@@ -927,8 +940,9 @@ class _MediaPreviewCard extends StatelessWidget {
             media.thumbnailReference!,
             fit: BoxFit.cover,
             width: double.infinity,
-            errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) =>
-                _buildFallbackIcon(isImage, isVideo),
+            errorBuilder:
+                (BuildContext context, Object error, StackTrace? stackTrace) =>
+                    _buildFallbackIcon(isImage, isVideo),
           ),
           const DecoratedBox(
             decoration: BoxDecoration(color: Color(0x33000000)),
@@ -968,7 +982,10 @@ class _MediaPreviewCard extends StatelessWidget {
     final Uri? uri = Uri.tryParse(media.reference);
     if (uri == null) return;
 
-    final bool opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final bool opened = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Impossibile aprire il media.')),

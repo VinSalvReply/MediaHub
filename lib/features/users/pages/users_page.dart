@@ -109,7 +109,8 @@ class _UsersPageState extends State<UsersPage> {
                   query: _searchQuery,
                   resultCount: filteredUsers.length,
                   totalCount: users.length,
-                  onChanged: (String value) => setState(() => _searchQuery = value),
+                  onChanged: (String value) =>
+                      setState(() => _searchQuery = value),
                   onClear: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');

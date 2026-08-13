@@ -119,34 +119,38 @@ class _UserDetailState extends State<UserDetail>
               height: dialogHeight,
               child: FutureBuilder<UserDetailData>(
                 future: future,
-                builder: (BuildContext context, AsyncSnapshot<UserDetailData> snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: _UserDetailSkeleton(),
-                    );
-                  }
+                builder:
+                    (
+                      BuildContext context,
+                      AsyncSnapshot<UserDetailData> snapshot,
+                    ) {
+                      if (!snapshot.hasData) {
+                        return const Padding(
+                          padding: EdgeInsets.all(24),
+                          child: _UserDetailSkeleton(),
+                        );
+                      }
 
-                  final UserDetailData data = snapshot.data!;
-                  final double padding = isMobile ? 16.0 : 24.0;
+                      final UserDetailData data = snapshot.data!;
+                      final double padding = isMobile ? 16.0 : 24.0;
 
-                  return Padding(
-                    padding: EdgeInsets.all(padding),
-                    child: Column(
-                      children: <Widget>[
-                        _Header(
-                          user: widget.user,
-                          color: widget.color,
-                          onClose: () => Navigator.of(context).maybePop(),
+                      return Padding(
+                        padding: EdgeInsets.all(padding),
+                        child: Column(
+                          children: <Widget>[
+                            _Header(
+                              user: widget.user,
+                              color: widget.color,
+                              onClose: () => Navigator.of(context).maybePop(),
+                            ),
+                            SizedBox(height: isMobile ? 12 : 20),
+                            Expanded(
+                              child: _UserTabs(data: data, color: widget.color),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: isMobile ? 12 : 20),
-                        Expanded(
-                          child: _UserTabs(data: data, color: widget.color),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
               ),
             );
           },

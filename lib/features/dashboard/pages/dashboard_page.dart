@@ -59,26 +59,27 @@ class _DashboardPageState extends State<DashboardPage>
           opacity: _fadeIn,
           child: FutureBuilder<DashboardData>(
             future: _future,
-            builder: (BuildContext context, AsyncSnapshot<DashboardData> snapshot) {
-              if (snapshot.hasError) {
-                return _DashboardError(
-                  message: snapshot.error.toString(),
-                  onRetry: _reload,
-                );
-              }
+            builder:
+                (BuildContext context, AsyncSnapshot<DashboardData> snapshot) {
+                  if (snapshot.hasError) {
+                    return _DashboardError(
+                      message: snapshot.error.toString(),
+                      onRetry: _reload,
+                    );
+                  }
 
-              if (!snapshot.hasData) {
-                return const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: _DashboardSkeleton(),
-                );
-              }
+                  if (!snapshot.hasData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: _DashboardSkeleton(),
+                    );
+                  }
 
-              return _DashboardView(
-                data: snapshot.data!,
-                onRefreshTap: _reload,
-              );
-            },
+                  return _DashboardView(
+                    data: snapshot.data!,
+                    onRefreshTap: _reload,
+                  );
+                },
           ),
         ),
       ),
@@ -314,7 +315,9 @@ class _AlertStrip extends StatelessWidget {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: alerts.map((DashboardAlert alert) => _AlertChip(alert: alert)).toList(),
+      children: alerts
+          .map((DashboardAlert alert) => _AlertChip(alert: alert))
+          .toList(),
     );
   }
 }
@@ -595,7 +598,9 @@ class _ActivityFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: items.asMap().entries.map((MapEntry<int, DashboardActivity> entry) {
+      children: items.asMap().entries.map((
+        MapEntry<int, DashboardActivity> entry,
+      ) {
         final bool isLast = entry.key == items.length - 1;
         return Padding(
           padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
@@ -789,7 +794,10 @@ class _FocusEventTile extends StatelessWidget {
     final double progress = event.contentCount == 0
         ? 0.0
         : event.publishedCount / event.contentCount;
-    final Color statusColor = _focusStatusColor(event.status, event.needsAttention);
+    final Color statusColor = _focusStatusColor(
+      event.status,
+      event.needsAttention,
+    );
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -906,7 +914,9 @@ class _TrendPanelState extends State<_TrendPanel> {
     final bool isPhone = MediaQuery.sizeOf(context).width < 700;
 
     final double maxValue = widget.trend
-        .map((DashboardTrendPoint e) => math.max(e.activeUsers, e.contentCreated))
+        .map(
+          (DashboardTrendPoint e) => math.max(e.activeUsers, e.contentCreated),
+        )
         .reduce(math.max)
         .toDouble();
 
@@ -936,7 +946,8 @@ class _TrendPanelState extends State<_TrendPanel> {
                   final int count = widget.trend.length;
                   final double requiredMinWidth =
                       (count * minGroupWidth) + ((count - 1) * spacing);
-                  final bool shouldScroll = requiredMinWidth > constraints.maxWidth;
+                  final bool shouldScroll =
+                      requiredMinWidth > constraints.maxWidth;
                   final double chartWidth = shouldScroll
                       ? requiredMinWidth
                       : constraints.maxWidth;
@@ -949,7 +960,9 @@ class _TrendPanelState extends State<_TrendPanel> {
                       width: chartWidth,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: widget.trend.asMap().entries.map((MapEntry<int, DashboardTrendPoint> entry) {
+                        children: widget.trend.asMap().entries.map((
+                          MapEntry<int, DashboardTrendPoint> entry,
+                        ) {
                           final int index = entry.key;
                           final DashboardTrendPoint point = entry.value;
 
@@ -1002,22 +1015,25 @@ class _TrendPanelState extends State<_TrendPanel> {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: LayoutBuilder(
-                      builder: (BuildContext context, BoxConstraints constraints) {
-                        final double? left = _tooltipLeft(constraints.maxWidth);
-                        if (left == null) return const SizedBox.shrink();
+                      builder:
+                          (BuildContext context, BoxConstraints constraints) {
+                            final double? left = _tooltipLeft(
+                              constraints.maxWidth,
+                            );
+                            if (left == null) return const SizedBox.shrink();
 
-                        return Stack(
-                          children: <Widget>[
-                            Positioned(
-                              top: 0,
-                              left: left,
-                              child: _TrendInfoCard(
-                                point: widget.trend[hoveredIndex!],
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                            return Stack(
+                              children: <Widget>[
+                                Positioned(
+                                  top: 0,
+                                  left: left,
+                                  child: _TrendInfoCard(
+                                    point: widget.trend[hoveredIndex!],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                     ),
                   ),
                 ),
@@ -1777,7 +1793,15 @@ class _QuickAction {
 }
 
 String _dayLabel(DateTime date) {
-  const List<String> days = <String>['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+  const List<String> days = <String>[
+    'Lun',
+    'Mar',
+    'Mer',
+    'Gio',
+    'Ven',
+    'Sab',
+    'Dom',
+  ];
   return days[date.weekday - 1];
 }
 

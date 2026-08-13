@@ -262,11 +262,21 @@ class _SidebarFooterState extends State<_SidebarFooter> {
         reverseTransitionDuration: AnimationConfig.heroReverseDuration,
         // opaque: false keeps the route transparent so that the background is shown
         opaque: false,
-        pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) =>
-            const ProfileCardRoute(),
-        transitionsBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
-          return child;
-        },
+        pageBuilder:
+            (
+              BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+            ) => const ProfileCardRoute(),
+        transitionsBuilder:
+            (
+              BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+              Widget child,
+            ) {
+              return child;
+            },
       ),
     );
   }

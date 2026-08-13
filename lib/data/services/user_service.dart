@@ -36,9 +36,12 @@ class UserService {
   // ================= USERS =================
 
   Future<List<Map<String, dynamic>>> getUsers() async {
-    final List<Map<String, dynamic>>? cached = _getCached<List<Map<String, dynamic>>>('users');
+    final List<Map<String, dynamic>>? cached =
+        _getCached<List<Map<String, dynamic>>>('users');
     if (cached != null) return cached;
-    final List<Map<String, dynamic>> result = _listJson(await _api.get('/users'));
+    final List<Map<String, dynamic>> result = _listJson(
+      await _api.get('/users'),
+    );
     _cacheResult('users', result);
     return result;
   }
@@ -83,7 +86,9 @@ class UserService {
     int userId,
     Map<String, dynamic> body,
   ) async {
-    final Map<String, dynamic> result = _mapJson(await _api.post('/users/$userId/events', body));
+    final Map<String, dynamic> result = _mapJson(
+      await _api.post('/users/$userId/events', body),
+    );
     _invalidateCache(<String>['events', 'dashboard']);
     return result;
   }
@@ -107,9 +112,12 @@ class UserService {
 
   Future<List<Map<String, dynamic>>> getEvents({int? userId}) async {
     if (userId == null) {
-      final List<Map<String, dynamic>>? cached = _getCached<List<Map<String, dynamic>>>('events');
+      final List<Map<String, dynamic>>? cached =
+          _getCached<List<Map<String, dynamic>>>('events');
       if (cached != null) return cached;
-      final List<Map<String, dynamic>> result = _listJson(await _api.get('/events'));
+      final List<Map<String, dynamic>> result = _listJson(
+        await _api.get('/events'),
+      );
       _cacheResult('events', result);
       return result;
     }
@@ -118,7 +126,9 @@ class UserService {
   }
 
   Future<Map<String, dynamic>> addEvent(Map<String, dynamic> body) async {
-    final Map<String, dynamic> result = _mapJson(await _api.post('/events', body));
+    final Map<String, dynamic> result = _mapJson(
+      await _api.post('/events', body),
+    );
     _invalidateCache(<String>['events', 'dashboard']);
     return result;
   }
@@ -127,7 +137,9 @@ class UserService {
     int eventId,
     Map<String, dynamic> body,
   ) async {
-    final Map<String, dynamic> result = _mapJson(await _api.put('/events/$eventId', body));
+    final Map<String, dynamic> result = _mapJson(
+      await _api.put('/events/$eventId', body),
+    );
     _invalidateCache(<String>['events', 'dashboard']);
     return result;
   }
@@ -166,9 +178,12 @@ class UserService {
     int? eventId,
   }) async {
     if (userId == null && eventId == null) {
-      final List<Map<String, dynamic>>? cached = _getCached<List<Map<String, dynamic>>>('contents');
+      final List<Map<String, dynamic>>? cached =
+          _getCached<List<Map<String, dynamic>>>('contents');
       if (cached != null) return cached;
-      final List<Map<String, dynamic>> result = _listJson(await _api.get('/contents'));
+      final List<Map<String, dynamic>> result = _listJson(
+        await _api.get('/contents'),
+      );
       _cacheResult('contents', result);
       return result;
     }
@@ -196,7 +211,9 @@ class UserService {
   // ================= DASHBOARD =================
 
   Future<Map<String, dynamic>> getDashboard() async {
-    final Map<String, dynamic>? cached = _getCached<Map<String, dynamic>>('dashboard');
+    final Map<String, dynamic>? cached = _getCached<Map<String, dynamic>>(
+      'dashboard',
+    );
     if (cached != null) return cached;
     final Map<String, dynamic> result = _mapJson(await _api.get('/dashboard'));
     _cacheResult('dashboard', result);

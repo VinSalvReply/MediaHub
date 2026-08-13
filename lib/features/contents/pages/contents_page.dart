@@ -84,18 +84,19 @@ class _ContentsPageState extends State<ContentsPage> {
   }
 
   List<ContentItem> _sortedContentsFor(ContentSortMode mode) {
-    return <ContentItem>[...controller.contents]..sort((ContentItem a, ContentItem b) {
-      switch (mode) {
-        case ContentSortMode.nameAsc:
-          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
-        case ContentSortMode.nameDesc:
-          return b.title.toLowerCase().compareTo(a.title.toLowerCase());
-        case ContentSortMode.dateAsc:
-          return a.createdAt.compareTo(b.createdAt);
-        case ContentSortMode.dateDesc:
-          return b.createdAt.compareTo(a.createdAt);
-      }
-    });
+    return <ContentItem>[...controller.contents]
+      ..sort((ContentItem a, ContentItem b) {
+        switch (mode) {
+          case ContentSortMode.nameAsc:
+            return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+          case ContentSortMode.nameDesc:
+            return b.title.toLowerCase().compareTo(a.title.toLowerCase());
+          case ContentSortMode.dateAsc:
+            return a.createdAt.compareTo(b.createdAt);
+          case ContentSortMode.dateDesc:
+            return b.createdAt.compareTo(a.createdAt);
+        }
+      });
   }
 
   Map<int, int> _indexByContentId(List<ContentItem> items) {
@@ -574,7 +575,8 @@ class _ContentAssignmentSidebarState extends State<_ContentAssignmentSidebar> {
                           onDragStart: widget.onSidebarDragStart,
                           onDragEnd: widget.onDragEnd,
                           onDragCursorMove: widget.onDragCursorMove,
-                          onAccept: (ContentItem item) => widget.onAssign(item, event.id),
+                          onAccept: (ContentItem item) =>
+                              widget.onAssign(item, event.id),
                         ),
                       );
                     }),
@@ -619,82 +621,93 @@ class _ContentDropZone extends StatelessWidget {
   Widget build(BuildContext context) {
     return DragTarget<ContentItem>(
       onWillAcceptWithDetails: (_) => true,
-      onAcceptWithDetails: (DragTargetDetails<ContentItem> details) => onAccept(details.data),
-      builder: (BuildContext context, List<ContentItem?> candidateData, List<dynamic> rejectedData) {
-        final bool isActive = candidateData.isNotEmpty;
-        return AnimatedContainer(
-          duration: AnimationConfig.hoverDuration,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFFFF7ED) : const Color(0xFFF8FAFC),
-            border: Border.all(
-              color: isActive
-                  ? const Color(0xFFF59E0B)
-                  : const Color(0xFFE7EAF0),
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
+      onAcceptWithDetails: (DragTargetDetails<ContentItem> details) =>
+          onAccept(details.data),
+      builder:
+          (
+            BuildContext context,
+            List<ContentItem?> candidateData,
+            List<dynamic> rejectedData,
+          ) {
+            final bool isActive = candidateData.isNotEmpty;
+            return AnimatedContainer(
+              duration: AnimationConfig.hoverDuration,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? const Color(0xFFFFF7ED)
+                    : const Color(0xFFF8FAFC),
+                border: Border.all(
+                  color: isActive
+                      ? const Color(0xFFF59E0B)
+                      : const Color(0xFFE7EAF0),
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Icon(icon, size: 18, color: const Color(0xFFB45309)),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  if (subtitle != null) ...<Widget>[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: _textMuted),
+                  Row(
+                    children: <Widget>[
+                      Icon(icon, size: 18, color: const Color(0xFFB45309)),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
+                      if (subtitle != null) ...<Widget>[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: _textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (items.isEmpty)
+                    const Text(
+                      'Trascina qui un contenuto',
+                      style: TextStyle(fontSize: 12, color: _textMuted),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: items
+                          .map(
+                            (ContentItem item) => Draggable<ContentItem>(
+                              data: item,
+                              onDragStarted: onDragStart,
+                              onDragUpdate: (DragUpdateDetails details) =>
+                                  onDragCursorMove(details.globalPosition),
+                              onDragEnd: (_) => onDragEnd(),
+                              onDragCompleted: onDragEnd,
+                              onDraggableCanceled: (_, _) => onDragEnd(),
+                              feedback: Material(
+                                color: Colors.transparent,
+                                child: _ContentChip(item: item, dragging: true),
+                              ),
+                              childWhenDragging: Opacity(
+                                opacity: 0.45,
+                                child: _ContentChip(item: item),
+                              ),
+                              child: _ContentChip(item: item),
+                            ),
+                          )
+                          .toList(),
                     ),
-                  ],
                 ],
               ),
-              const SizedBox(height: 10),
-              if (items.isEmpty)
-                const Text(
-                  'Trascina qui un contenuto',
-                  style: TextStyle(fontSize: 12, color: _textMuted),
-                )
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: items
-                      .map(
-                        (ContentItem item) => Draggable<ContentItem>(
-                          data: item,
-                          onDragStarted: onDragStart,
-                          onDragUpdate: (DragUpdateDetails details) =>
-                              onDragCursorMove(details.globalPosition),
-                          onDragEnd: (_) => onDragEnd(),
-                          onDragCompleted: onDragEnd,
-                          onDraggableCanceled: (_, _) => onDragEnd(),
-                          feedback: Material(
-                            color: Colors.transparent,
-                            child: _ContentChip(item: item, dragging: true),
-                          ),
-                          childWhenDragging: Opacity(
-                            opacity: 0.45,
-                            child: _ContentChip(item: item),
-                          ),
-                          child: _ContentChip(item: item),
-                        ),
-                      )
-                      .toList(),
-                ),
-            ],
-          ),
-        );
-      },
+            );
+          },
     );
   }
 }
@@ -712,7 +725,8 @@ class _ScopedContentUnassignZone extends StatelessWidget {
   Widget build(BuildContext context) {
     return DragTarget<ContentItem>(
       onWillAcceptWithDetails: (_) => enabled,
-      onAcceptWithDetails: (DragTargetDetails<ContentItem> details) => onAccept(details.data),
+      onAcceptWithDetails: (DragTargetDetails<ContentItem> details) =>
+          onAccept(details.data),
       builder: (BuildContext context, List<ContentItem?> candidateData, _) {
         final bool active = enabled && candidateData.isNotEmpty;
         return AnimatedContainer(
@@ -899,8 +913,12 @@ class _ContentsBody extends StatelessWidget {
         }
       });
 
-    final List<ContentItem> assigned = sorted.where((ContentItem item) => item.eventId != null).toList();
-    final List<ContentItem> unassigned = sorted.where((ContentItem item) => item.eventId == null).toList();
+    final List<ContentItem> assigned = sorted
+        .where((ContentItem item) => item.eventId != null)
+        .toList();
+    final List<ContentItem> unassigned = sorted
+        .where((ContentItem item) => item.eventId == null)
+        .toList();
 
     return _Card(
       child: Column(

@@ -43,7 +43,7 @@ class ContentItemDto {
           (json['created_at'] as String?) ?? DateTime.now().toIso8601String(),
       userId: (json['user_id'] as num?)?.toInt(),
       eventId: (json['event_id'] as num?)?.toInt(),
-        mediaUrls:
+      mediaUrls:
           ((json['media_urls'] as List<dynamic>?) ??
                   ((json['attachment_url'] as String?)?.isNotEmpty ?? false
                       ? <dynamic>[json['attachment_url']]
@@ -55,7 +55,7 @@ class ContentItemDto {
       postBody: json['post_body'] as String?,
       callToActionLabel: json['cta_label'] as String?,
       callToActionUrl: json['cta_url'] as String?,
-        tags: ((json['tags'] as List<dynamic>?) ?? const <dynamic>[])
+      tags: ((json['tags'] as List<dynamic>?) ?? const <dynamic>[])
           .whereType<String>()
           .map((String tag) => tag.trim())
           .where((String tag) => tag.isNotEmpty)

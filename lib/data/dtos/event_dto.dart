@@ -33,7 +33,7 @@ class EventDto {
       attendees: (json['attendees'] as num?)?.toInt() ?? 0,
       status: (json['status'] as String?) ?? 'upcoming',
       userId: (json['user_id'] as num?)?.toInt(),
-        contents: ((json['contents'] as List<dynamic>?) ?? const <dynamic>[])
+      contents: ((json['contents'] as List<dynamic>?) ?? const <dynamic>[])
           .whereType<Map<String, dynamic>>()
           .map(ContentItemDto.fromJson)
           .toList(),

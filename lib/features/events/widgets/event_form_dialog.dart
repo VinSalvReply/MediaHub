@@ -261,7 +261,8 @@ class _EventFormDialogState extends State<EventFormDialog> {
                           ),
                         )
                         .toList(),
-                    onChanged: (EventStatus? v) => setState(() => _status = v ?? _status),
+                    onChanged: (EventStatus? v) =>
+                        setState(() => _status = v ?? _status),
                   ),
                   const SizedBox(height: 18),
                   _EventContentsSection(
@@ -293,7 +294,8 @@ class _EventFormDialogState extends State<EventFormDialog> {
                           ),
                         ),
                       ],
-                      onChanged: (int? value) => setState(() => _userId = value),
+                      onChanged: (int? value) =>
+                          setState(() => _userId = value),
                     ),
                   ],
                   const SizedBox(height: 24),

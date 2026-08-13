@@ -499,7 +499,8 @@ class _AssignmentSidebarState extends State<_AssignmentSidebar> {
                           onUserDropZoneHoverChanged:
                               widget.onUserDropZoneHoverChanged,
                           onDragCursorMove: widget.onDragCursorMove,
-                          onAccept: (Event event) => widget.onAssign(event, user.id),
+                          onAccept: (Event event) =>
+                              widget.onAssign(event, user.id),
                           scrollController: _scrollController,
                         ),
                       );
@@ -577,79 +578,90 @@ class _EventDropZone extends StatelessWidget {
         onUserDropZoneHoverChanged(false);
         onAccept(details.data);
       },
-      builder: (BuildContext context, List<Event?> candidateData, List<dynamic> rejectedData) {
-        final bool isActive = candidateData.isNotEmpty;
-        return AnimatedContainer(
-          duration: AnimationConfig.hoverDuration,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF8FAFC),
-            border: Border.all(
-              color: isActive
-                  ? const Color(0xFF4F46E5)
-                  : const Color(0xFFE7EAF0),
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
+      builder:
+          (
+            BuildContext context,
+            List<Event?> candidateData,
+            List<dynamic> rejectedData,
+          ) {
+            final bool isActive = candidateData.isNotEmpty;
+            return AnimatedContainer(
+              duration: AnimationConfig.hoverDuration,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? const Color(0xFFEEF2FF)
+                    : const Color(0xFFF8FAFC),
+                border: Border.all(
+                  color: isActive
+                      ? const Color(0xFF4F46E5)
+                      : const Color(0xFFE7EAF0),
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Icon(icon, size: 18, color: const Color(0xFF4F46E5)),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  if (subtitle != null) ...<Widget>[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: _textMuted),
+                  Row(
+                    children: <Widget>[
+                      Icon(icon, size: 18, color: const Color(0xFF4F46E5)),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
+                      if (subtitle != null) ...<Widget>[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: _textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (events.isEmpty)
+                    const Text(
+                      'Trascina qui un evento',
+                      style: TextStyle(fontSize: 12, color: _textMuted),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: events
+                          .map(
+                            (Event event) => Draggable<Event>(
+                              data: event,
+                              onDragStarted: onDragStart,
+                              onDragUpdate: (DragUpdateDetails details) =>
+                                  onDragCursorMove(details.globalPosition),
+                              onDragEnd: (DraggableDetails details) =>
+                                  onDragEnd(event, details),
+                              feedback: Material(
+                                color: Colors.transparent,
+                                child: _EventChip(event: event, dragging: true),
+                              ),
+                              childWhenDragging: Opacity(
+                                opacity: 0.45,
+                                child: _EventChip(event: event),
+                              ),
+                              child: _EventChip(event: event),
+                            ),
+                          )
+                          .toList(),
                     ),
-                  ],
                 ],
               ),
-              const SizedBox(height: 10),
-              if (events.isEmpty)
-                const Text(
-                  'Trascina qui un evento',
-                  style: TextStyle(fontSize: 12, color: _textMuted),
-                )
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: events
-                      .map(
-                        (Event event) => Draggable<Event>(
-                          data: event,
-                          onDragStarted: onDragStart,
-                          onDragUpdate: (DragUpdateDetails details) =>
-                              onDragCursorMove(details.globalPosition),
-                          onDragEnd: (DraggableDetails details) => onDragEnd(event, details),
-                          feedback: Material(
-                            color: Colors.transparent,
-                            child: _EventChip(event: event, dragging: true),
-                          ),
-                          childWhenDragging: Opacity(
-                            opacity: 0.45,
-                            child: _EventChip(event: event),
-                          ),
-                          child: _EventChip(event: event),
-                        ),
-                      )
-                      .toList(),
-                ),
-            ],
-          ),
-        );
-      },
+            );
+          },
     );
   }
 }
@@ -801,8 +813,12 @@ class _EventsBody extends StatelessWidget {
         }
       });
 
-    final List<Event> assigned = sorted.where((Event e) => e.userId != null).toList();
-    final List<Event> unassigned = sorted.where((Event e) => e.userId == null).toList();
+    final List<Event> assigned = sorted
+        .where((Event e) => e.userId != null)
+        .toList();
+    final List<Event> unassigned = sorted
+        .where((Event e) => e.userId == null)
+        .toList();
 
     return _Card(
       child: Column(

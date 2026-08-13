@@ -18,20 +18,35 @@ class DashboardDataDto {
   factory DashboardDataDto.fromJson(Map<String, dynamic> json) {
     return DashboardDataDto(
       metrics: DashboardMetricsDto.fromJson(json['metrics']),
-        activities: (json['activities'] as List<dynamic>)
-          .map((dynamic j) => DashboardActivityDto.fromJson(j as Map<String, dynamic>))
+      activities: (json['activities'] as List<dynamic>)
+          .map(
+            (dynamic j) =>
+                DashboardActivityDto.fromJson(j as Map<String, dynamic>),
+          )
           .toList(),
-        insights: (json['insights'] as List<dynamic>)
-          .map((dynamic j) => DashboardInsightDto.fromJson(j as Map<String, dynamic>))
+      insights: (json['insights'] as List<dynamic>)
+          .map(
+            (dynamic j) =>
+                DashboardInsightDto.fromJson(j as Map<String, dynamic>),
+          )
           .toList(),
-        trend: (json['trend'] as List<dynamic>)
-          .map((dynamic j) => DashboardTrendDto.fromJson(j as Map<String, dynamic>))
+      trend: (json['trend'] as List<dynamic>)
+          .map(
+            (dynamic j) =>
+                DashboardTrendDto.fromJson(j as Map<String, dynamic>),
+          )
           .toList(),
-        alerts: (json['alerts'] as List<dynamic>)
-          .map((dynamic j) => DashboardAlertDto.fromJson(j as Map<String, dynamic>))
+      alerts: (json['alerts'] as List<dynamic>)
+          .map(
+            (dynamic j) =>
+                DashboardAlertDto.fromJson(j as Map<String, dynamic>),
+          )
           .toList(),
-        focusEvents: (json['focusEvents'] as List<dynamic>)
-          .map((dynamic j) => DashboardFocusEventDto.fromJson(j as Map<String, dynamic>))
+      focusEvents: (json['focusEvents'] as List<dynamic>)
+          .map(
+            (dynamic j) =>
+                DashboardFocusEventDto.fromJson(j as Map<String, dynamic>),
+          )
           .toList(),
     );
   }

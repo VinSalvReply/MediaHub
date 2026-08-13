@@ -78,33 +78,35 @@ class _UserListTileState extends State<UserListTile>
                 transitionDuration: transitionDuration,
                 reverseTransitionDuration: reverseTransitionDuration,
                 opaque: false,
-                pageBuilder: (
-                  BuildContext _,
-                  Animation<double> animation,
-                  Animation<double> secondaryAnimation,
-                ) {
-                  return Scaffold(
-                    backgroundColor: Colors.transparent,
-                    body: Stack(
-                      children: <Widget>[
-                        ModalBarrier(
-                          dismissible: true,
-                          color: Colors.black.withValues(alpha: 0.5),
+                pageBuilder:
+                    (
+                      BuildContext _,
+                      Animation<double> animation,
+                      Animation<double> secondaryAnimation,
+                    ) {
+                      return Scaffold(
+                        backgroundColor: Colors.transparent,
+                        body: Stack(
+                          children: <Widget>[
+                            ModalBarrier(
+                              dismissible: true,
+                              color: Colors.black.withValues(alpha: 0.5),
+                            ),
+                            Center(
+                              child: UserDetail(
+                                user: user,
+                                color: color,
+                                startPulseImmediately: isMobile,
+                              ),
+                            ),
+                          ],
                         ),
-                        Center(
-                          child: UserDetail(
-                            user: user,
-                            color: color,
-                            startPulseImmediately: isMobile,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                transitionsBuilder: (_, Animation<double> animation, _, Widget child) {
-                  return child;
-                },
+                      );
+                    },
+                transitionsBuilder:
+                    (_, Animation<double> animation, _, Widget child) {
+                      return child;
+                    },
               ),
             );
           },
