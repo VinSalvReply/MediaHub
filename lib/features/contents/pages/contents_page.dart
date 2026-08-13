@@ -130,7 +130,7 @@ class _ContentsPageState extends State<ContentsPage> {
       builder: (_) => const ContentFormDialog(),
     );
     if (result == null) return;
-    await controller.addContent(
+    final bool ok = await controller.addContent(
       title: result.title,
       type: result.type,
       status: result.status,
@@ -140,7 +140,7 @@ class _ContentsPageState extends State<ContentsPage> {
       callToActionUrl: result.callToActionUrl,
       tags: result.tags,
     );
-    _toast('Contenuto creato');
+    _toast(ok ? 'Contenuto creato' : (controller.error ?? 'Operazione fallita'));
   }
 
   Future<void> _openEditDialog(ContentItem item) async {
@@ -149,7 +149,7 @@ class _ContentsPageState extends State<ContentsPage> {
       builder: (_) => ContentFormDialog(initial: item),
     );
     if (result == null) return;
-    await controller.editContent(
+    final bool ok = await controller.editContent(
       original: item,
       title: result.title,
       type: result.type,
@@ -160,20 +160,24 @@ class _ContentsPageState extends State<ContentsPage> {
       callToActionUrl: result.callToActionUrl,
       tags: result.tags,
     );
-    _toast('Contenuto aggiornato');
+    _toast(ok ? 'Contenuto aggiornato' : (controller.error ?? 'Operazione fallita'));
   }
 
   Future<void> _assignContent(ContentItem item, int? eventId) async {
     if (eventId == null) return;
-    await controller.assignContentToEvent(item, eventId);
+    final bool ok = await controller.assignContentToEvent(item, eventId);
     if (!mounted) return;
-    _toast('Contenuto collegato all\'evento');
+    _toast(
+      ok
+          ? 'Contenuto collegato all\'evento'
+          : (controller.error ?? 'Operazione fallita'),
+    );
   }
 
   Future<void> _unassignContent(ContentItem item) async {
-    await controller.assignContentToEvent(item, null);
+    final bool ok = await controller.assignContentToEvent(item, null);
     if (!mounted) return;
-    _toast('Contenuto disassegnato');
+    _toast(ok ? 'Contenuto disassegnato' : (controller.error ?? 'Operazione fallita'));
   }
 
   Future<void> _confirmDelete(ContentItem item) async {
@@ -195,8 +199,8 @@ class _ContentsPageState extends State<ContentsPage> {
       ),
     );
     if (confirm != true) return;
-    await controller.removeContent(item);
-    _toast('Contenuto eliminato');
+    final bool ok = await controller.removeContent(item);
+    _toast(ok ? 'Contenuto eliminato' : (controller.error ?? 'Operazione fallita'));
   }
 
   void _toast(String message) {
@@ -211,6 +215,24 @@ class _ContentsPageState extends State<ContentsPage> {
     return AnimatedBuilder(
       animation: controller,
       builder: (BuildContext context, _) {
+        final bool isInitialLoading =
+            (controller.isLoadingMeta || controller.isLoadingContents) &&
+            controller.contents.isEmpty;
+
+        if (isInitialLoading) {
+          return Container(
+            color: _bgColor,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (controller.error != null && controller.contents.isEmpty) {
+          return Container(
+            color: _bgColor,
+            child: _ContentsError(onRetry: () => controller.init()),
+          );
+        }
+
         return Container(
           color: _bgColor,
           child: SingleChildScrollView(
@@ -845,15 +867,6 @@ class _ContentsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (controller.isLoadingMeta || controller.isLoadingContents) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 48),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (controller.error != null && controller.contents.isEmpty) {
-      return _ContentsError(onRetry: () => controller.init());
-    }
     if (controller.contents.isEmpty) {
       return _Card(
         padding: const EdgeInsets.all(32),

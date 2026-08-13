@@ -25,9 +25,8 @@ class UserRepository {
   }
 
   Future<User> getUser(int userId) async {
-    final List<User> users = await getUsers();
-
-    return users.firstWhere((User user) => user.id == userId);
+    final Map<String, dynamic> response = await _service.getUser(userId);
+    return UserDto.fromJson(response).toModel();
   }
 
   Future<List<UserActivity>> getUserActivity(int userId) async {

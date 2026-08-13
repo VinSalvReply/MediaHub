@@ -53,7 +53,7 @@ class ContentsController extends ChangeNotifier {
     }
   }
 
-  Future<void> addContent({
+  Future<bool> addContent({
     required String title,
     required String type,
     required String status,
@@ -63,7 +63,7 @@ class ContentsController extends ChangeNotifier {
     String? callToActionUrl,
     List<String> tags = const <String>[],
   }) async {
-    await _mutate(() async {
+    return _mutate(() async {
       await _repository.createGlobalContent(
         ContentItem(
           id: 0,
@@ -83,7 +83,7 @@ class ContentsController extends ChangeNotifier {
     });
   }
 
-  Future<void> editContent({
+  Future<bool> editContent({
     required ContentItem original,
     required String title,
     required String type,
@@ -94,7 +94,7 @@ class ContentsController extends ChangeNotifier {
     String? callToActionUrl,
     List<String> tags = const <String>[],
   }) async {
-    await _mutate(() async {
+    return _mutate(() async {
       await _repository.updateGlobalContent(
         ContentItem(
           id: original.id,
@@ -114,8 +114,8 @@ class ContentsController extends ChangeNotifier {
     });
   }
 
-  Future<void> assignContentToEvent(ContentItem item, int? eventId) async {
-    await _mutate(() async {
+  Future<bool> assignContentToEvent(ContentItem item, int? eventId) async {
+    return _mutate(() async {
       await _repository.updateGlobalContent(
         ContentItem(
           id: item.id,
@@ -135,22 +135,25 @@ class ContentsController extends ChangeNotifier {
     });
   }
 
-  Future<void> removeContent(ContentItem content) async {
-    await _mutate(() async {
+  Future<bool> removeContent(ContentItem content) async {
+    return _mutate(() async {
       await _repository.deleteGlobalContent(content.id);
     });
   }
 
-  Future<void> _mutate(Future<void> Function() action) async {
+  Future<bool> _mutate(Future<void> Function() action) async {
     try {
       isMutating = true;
+      error = null;
       notifyListeners();
       await action();
       await loadContents();
+      return true;
     } catch (e, st) {
       debugPrint('ContentsController._mutate error: $e\n$st');
       error = 'Operazione contenuto fallita';
       notifyListeners();
+      return false;
     } finally {
       isMutating = false;
       notifyListeners();

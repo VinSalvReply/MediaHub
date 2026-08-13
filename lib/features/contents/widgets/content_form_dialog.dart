@@ -244,11 +244,15 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         _selectedMedia = <_SelectedMedia>[..._selectedMedia, ...mediaToAdd];
         _isSyncingMedia = false;
       });
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('ContentFormDialog._pickLocalMedia error: $e\n$st');
       if (!mounted) return;
       setState(() => _isSyncingMedia = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore nel caricamento locale: $e')),
+        SnackBar(
+          content: const Text('Impossibile caricare media dal dispositivo.'),
+          action: SnackBarAction(label: 'Riprova', onPressed: _pickLocalMedia),
+        ),
       );
     }
   }
@@ -290,11 +294,15 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         _mediaUrlCtrl.clear();
         _isSyncingMedia = false;
       });
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('ContentFormDialog._addMediaUrl error: $e\n$st');
       if (!mounted) return;
       setState(() => _isSyncingMedia = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore durante l\'import del media: $e')),
+        SnackBar(
+          content: const Text('Impossibile importare il media dalla URL.'),
+          action: SnackBarAction(label: 'Riprova', onPressed: _addMediaUrl),
+        ),
       );
     }
   }

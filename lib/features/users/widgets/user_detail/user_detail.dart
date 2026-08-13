@@ -124,6 +124,16 @@ class _UserDetailState extends State<UserDetail>
                       BuildContext context,
                       AsyncSnapshot<UserDetailData> snapshot,
                     ) {
+                      if (snapshot.hasError) {
+                        return _UserDetailError(
+                          onRetry: () {
+                            setState(() {
+                              future = repo.getUserDetail(widget.user.id);
+                            });
+                          },
+                        );
+                      }
+
                       if (!snapshot.hasData) {
                         return const Padding(
                           padding: EdgeInsets.all(24),
@@ -282,6 +292,39 @@ class _UserDetailSkeleton extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _UserDetailError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _UserDetailError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE7EAF0)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
+            const SizedBox(height: 12),
+            const Text(
+              'Impossibile caricare i dettagli utente',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
+          ],
+        ),
+      ),
     );
   }
 }
