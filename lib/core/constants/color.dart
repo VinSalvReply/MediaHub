@@ -27,6 +27,16 @@ const Color dashboardPublishedColor = Color(0xFF22C55E);
 const Color dashboardSoftShadowColor = Color(0x08000000);
 const Color dashboardMediumShadowColor = Color(0x12000000);
 
+// Shared color for event surfaces.
+const Color eventDropActiveSurfaceColor = Color(0xFFEEF2FF);
+const Color eventCardShadowColor = Color(0x0A000000);
+const Color eventContentAccentColor = Color(0xFFBE185D);
+const Color eventInputSurfaceColor = Color(0xFFFAFAFA);
+const Color eventAssignedBorderColor = Color(0xFFE5E7EB);
+const Color eventSheetDividerColor = Color(0xFFF3F4F6);
+const Color eventSheetTitleColor = Color(0xFF1F2937);
+const Color eventSheetShadowColor = Color(0x15000000);
+
 /// Semantic aliases used by dashboard widgets.
 abstract final class DashboardColors {
   static const Color border = borderColor;
