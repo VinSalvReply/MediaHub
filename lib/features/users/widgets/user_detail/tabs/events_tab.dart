@@ -4,8 +4,8 @@ import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/routes/app_router.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
-import 'package:mediahub/features/users/models/event.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
+import 'package:mediahub/features/events/models/event.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
 
 class EventsTab extends StatelessWidget {

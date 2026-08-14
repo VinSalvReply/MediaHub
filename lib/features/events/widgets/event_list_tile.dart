@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
-import 'package:mediahub/features/users/models/event.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
+import 'package:mediahub/features/events/models/event.dart';
 
 class EventListTile extends StatelessWidget {
   final Event event;

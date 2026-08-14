@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mediahub/data/dtos/media_upload_result.dart';
 import 'package:mediahub/features/contents/controllers/contents_controller.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const List<String> _contentTypes = <String>['post', 'image', 'video'];

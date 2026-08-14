@@ -1,8 +1,8 @@
 import 'package:mediahub/data/dtos/content_item_dto.dart';
 import 'package:mediahub/data/dtos/event_dto.dart';
 import 'package:mediahub/data/mappers/content_item_mapper.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
-import 'package:mediahub/features/users/models/event.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
+import 'package:mediahub/features/events/models/event.dart';
 
 extension EventMapper on EventDto {
   Event toModel() {

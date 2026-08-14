@@ -4,7 +4,7 @@ import 'package:mediahub/data/dtos/content_item_dto.dart';
 import 'package:mediahub/data/dtos/media_upload_result.dart';
 import 'package:mediahub/data/mappers/content_item_mapper.dart';
 import 'package:mediahub/data/services/content_service.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
 
 /// Repository responsible for loading and mutating content items.
 class ContentRepository {

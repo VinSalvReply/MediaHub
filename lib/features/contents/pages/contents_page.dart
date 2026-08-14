@@ -6,8 +6,8 @@ import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/contents/controllers/contents_controller.dart';
 import 'package:mediahub/features/contents/widgets/content_form_dialog.dart';
 import 'package:mediahub/features/contents/widgets/content_list_tile.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
-import 'package:mediahub/features/users/models/event.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
+import 'package:mediahub/features/events/models/event.dart';
 
 const Color _bgColor = appBackgroundColor;
 const Color _borderColor = borderColor;

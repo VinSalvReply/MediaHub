@@ -1,7 +1,7 @@
 import 'package:mediahub/data/dtos/event_dto.dart';
 import 'package:mediahub/data/mappers/event_mapper.dart';
 import 'package:mediahub/data/services/event_service.dart';
-import 'package:mediahub/features/users/models/event.dart';
+import 'package:mediahub/features/events/models/event.dart';
 
 /// Repository responsible for loading and mutating events.
 class EventRepository {

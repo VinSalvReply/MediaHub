@@ -1,5 +1,5 @@
 import 'package:mediahub/data/dtos/content_item_dto.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
 
 extension ContentItemMapper on ContentItemDto {
   ContentItem toModel() {

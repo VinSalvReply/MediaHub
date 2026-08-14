@@ -1,3 +1,4 @@
+/// Aggregates the dashboard payload returned by the API.
 class DashboardData {
   final DashboardMetrics metrics;
   final List<DashboardActivity> activities;
@@ -6,7 +7,7 @@ class DashboardData {
   final List<DashboardAlert> alerts;
   final List<DashboardFocusEvent> focusEvents;
 
-  DashboardData({
+  const DashboardData({
     required this.metrics,
     required this.activities,
     required this.insights,
@@ -18,6 +19,7 @@ class DashboardData {
 
 // ================= METRICS =================
 
+/// Summary metrics displayed on the dashboard header and cards.
 class DashboardMetrics {
   final int totalEvents;
   final int liveEvents;
@@ -27,7 +29,7 @@ class DashboardMetrics {
   final int totalMediaAssets;
   final int eventsWithoutContents;
 
-  DashboardMetrics({
+  const DashboardMetrics({
     required this.totalEvents,
     required this.liveEvents,
     required this.upcomingThisWeek,
@@ -40,13 +42,14 @@ class DashboardMetrics {
 
 // ================= ACTIVITY =================
 
+/// A single entry in the dashboard activity feed.
 class DashboardActivity {
   final String title;
   final String subtitle;
   final String type;
   final DateTime date;
 
-  DashboardActivity({
+  const DashboardActivity({
     required this.title,
     required this.subtitle,
     required this.type,
@@ -56,21 +59,23 @@ class DashboardActivity {
 
 // ================= INSIGHTS =================
 
+/// A single summary item shown by the dashboard insights panel.
 class DashboardInsight {
   final String label;
   final double value;
 
-  DashboardInsight({required this.label, required this.value});
+  const DashboardInsight({required this.label, required this.value});
 }
 
 // ================= TREND =================
 
+/// A point in a trend chart for activity over time.
 class DashboardTrendPoint {
   final DateTime date;
   final int activeUsers;
   final int contentCreated;
 
-  DashboardTrendPoint({
+  const DashboardTrendPoint({
     required this.date,
     required this.activeUsers,
     required this.contentCreated,
@@ -79,15 +84,17 @@ class DashboardTrendPoint {
 
 // ================= ALERT =================
 
+/// A flag that highlights an issue or important event in the dashboard.
 class DashboardAlert {
   final String type;
   final String message;
 
-  DashboardAlert({required this.type, required this.message});
+  const DashboardAlert({required this.type, required this.message});
 }
 
 // ================= FOCUS EVENTS =================
 
+/// An event that needs special attention in the main dashboard overview.
 class DashboardFocusEvent {
   final String title;
   final DateTime date;
@@ -97,7 +104,7 @@ class DashboardFocusEvent {
   final int mediaCount;
   final bool needsAttention;
 
-  DashboardFocusEvent({
+  const DashboardFocusEvent({
     required this.title,
     required this.date,
     required this.status,

@@ -1,3 +1,4 @@
+/// Represents a content item such as a post, material, or announcement.
 class ContentItem {
   final int id;
   final String title;
@@ -12,7 +13,7 @@ class ContentItem {
   final String? callToActionUrl;
   final List<String> tags;
 
-  ContentItem({
+  const ContentItem({
     required this.id,
     required this.title,
     required this.type,

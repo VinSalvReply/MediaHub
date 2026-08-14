@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
 
 String _contentStatusLabel(String status) {
   switch (status) {

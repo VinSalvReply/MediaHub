@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:mediahub/data/repositories/event_repository.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
-import 'package:mediahub/features/users/models/content_item.dart';
-import 'package:mediahub/features/users/models/event.dart';
+import 'package:mediahub/features/contents/models/content_item.dart';
+import 'package:mediahub/features/events/models/event.dart';
 import 'package:mediahub/features/users/models/user.dart';
 
 /// Manages event-related data and the associated users used in the events screen.
