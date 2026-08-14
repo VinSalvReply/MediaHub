@@ -19,6 +19,10 @@ class AnimationConfig {
   static const Duration dialogStartShortDelayDuration = Duration(
     milliseconds: 120,
   );
+  static const Duration bottomSheetDuration = Duration(milliseconds: 2000);
+  static const Duration bottomSheetReverseDuration = Duration(
+    milliseconds: 2000,
+  );
 
   // Dynamic durations centralization.
   static Duration listFadeDuration(int index) {

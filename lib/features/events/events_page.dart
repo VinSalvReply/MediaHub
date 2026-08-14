@@ -205,21 +205,28 @@ class _EventsPageState extends State<EventsPage> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      barrierColor: Colors.transparent,
-      builder: (BuildContext sheetContext) => QuickAssignBottomSheet(
-        event: event,
-        users: _controller.users,
-        onAssign: (int? userId) async {
-          final bool ok = await _controller.assignEventToUser(event, userId);
-          if (!mounted) return;
-          _toast(
-            ok
-                ? 'Evento assegnato'
-                : (_controller.errorMessage ?? 'Assegnazione fallita'),
-          );
-          if (sheetContext.mounted) Navigator.pop(sheetContext);
-        },
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.32),
+      sheetAnimationStyle: const AnimationStyle(
+        duration: AnimationConfig.bottomSheetDuration,
+        reverseDuration: AnimationConfig.bottomSheetReverseDuration,
       ),
+      builder: (BuildContext sheetContext) {
+        return QuickAssignBottomSheet(
+          event: event,
+          users: _controller.users,
+          onAssign: (int? userId) async {
+            final bool ok = await _controller.assignEventToUser(event, userId);
+            if (!mounted) return;
+            _toast(
+              ok
+                  ? 'Evento assegnato'
+                  : (_controller.errorMessage ?? 'Assegnazione fallita'),
+            );
+            if (sheetContext.mounted) Navigator.pop(sheetContext);
+          },
+        );
+      },
     );
   }
 

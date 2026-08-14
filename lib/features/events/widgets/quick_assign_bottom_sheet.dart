@@ -56,6 +56,17 @@ class _QuickAssignBottomSheetState extends State<QuickAssignBottomSheet> {
           ),
           child: Column(
             children: <Widget>[
+              const SizedBox(height: 8),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: eventSheetDividerColor,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
               _SheetHeader(event: widget.event),
               _SearchField(
                 controller: _searchController,
