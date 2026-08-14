@@ -67,6 +67,7 @@ class DashboardMetricsGrid extends StatelessWidget {
   }
 }
 
+/// Metric tile with a subtle lift and shadow on desktop hover.
 class _MetricCard extends StatefulWidget {
   final _MetricData data;
 
@@ -174,6 +175,7 @@ class _MetricCardState extends State<_MetricCard> {
   }
 }
 
+/// Presentation data keeps API models out of the metric tile layout.
 class _MetricData {
   final String title;
   final String value;

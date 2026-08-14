@@ -25,6 +25,7 @@ class DashboardActivityFeed extends StatelessWidget {
   }
 }
 
+/// Single activity item with an intentionally lightweight hover state.
 class _ActivityRow extends StatefulWidget {
   final DashboardActivity item;
 
@@ -210,6 +211,7 @@ class DashboardFocusEventsPanel extends StatelessWidget {
   }
 }
 
+/// Displays completion progress and the operational status of one event.
 class _FocusEventTile extends StatelessWidget {
   final DashboardFocusEvent event;
 

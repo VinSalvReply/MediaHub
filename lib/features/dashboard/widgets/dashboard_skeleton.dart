@@ -40,6 +40,7 @@ class DashboardSkeleton extends StatelessWidget {
   }
 }
 
+/// Mirrors the metric grid while the dashboard data is loading.
 class _MetricsSkeletonGrid extends StatelessWidget {
   const _MetricsSkeletonGrid();
 
@@ -70,6 +71,7 @@ class _MetricsSkeletonGrid extends StatelessWidget {
   }
 }
 
+/// Mirrors the wide/tall section arrangement of the loaded dashboard.
 class _SectionsSkeleton extends StatelessWidget {
   const _SectionsSkeleton();
 

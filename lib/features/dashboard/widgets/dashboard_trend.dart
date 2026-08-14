@@ -30,13 +30,15 @@ class _DashboardTrendPanelState extends State<DashboardTrendPanel> {
     if (widget.trend.isEmpty) return const SizedBox.shrink();
 
     final bool isPhone = MediaQuery.sizeOf(context).width < 700;
-    final double maxValue = widget.trend
+    final double rawMaxValue = widget.trend
         .map(
           (DashboardTrendPoint point) =>
               math.max(point.activeUsers, point.contentCreated),
         )
         .reduce(math.max)
         .toDouble();
+    // Keep the bars renderable when the API returns an empty-valued trend.
+    final double maxValue = rawMaxValue == 0 ? 1 : rawMaxValue;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,6 +119,7 @@ class _DashboardTrendPanelState extends State<DashboardTrendPanel> {
   }
 }
 
+/// Calculates chart widths and handles horizontal scrolling on narrow layouts.
 class _ChartScroller extends StatelessWidget {
   final List<DashboardTrendPoint> points;
   final double maxValue;
@@ -205,6 +208,7 @@ class _TrendLegendRow extends StatelessWidget {
   }
 }
 
+/// Renders one date and its two comparable trend bars.
 class _TrendGroup extends StatelessWidget {
   final DashboardTrendPoint point;
   final double maxValue;
