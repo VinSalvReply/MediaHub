@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/features/contents/models/content_item.dart';
-import 'package:mediahub/features/contents/widgets/content_form_dialog.dart';
+import 'package:mediahub/features/contents/widgets/content_form/content_form_dialog.dart';
 import 'package:mediahub/features/events/models/event.dart';
 import 'package:mediahub/features/events/widgets/event_form/event_contents_section.dart';
 import 'package:mediahub/features/users/models/user.dart';

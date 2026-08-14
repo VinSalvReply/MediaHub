@@ -37,6 +37,27 @@ const Color eventSheetDividerColor = Color(0xFFF3F4F6);
 const Color eventSheetTitleColor = Color(0xFF1F2937);
 const Color eventSheetShadowColor = Color(0x15000000);
 
+// Content management colors.
+const Color contentDropSurfaceColor = Color(0xFFFFF7ED);
+const Color contentDropBorderColor = Color(0xFFF59E0B);
+const Color contentDropIconColor = Color(0xFFB45309);
+const Color contentUnassignSurfaceColor = Color(0xFFFFEDD5);
+const Color contentUnassignActiveColor = Color(0xFFEA580C);
+const Color contentUnassignTextColor = Color(0xFF7C2D12);
+const Color contentMediaSurfaceColor = Color(0xFFF9FAFB);
+const Color contentMediaBorderColor = Color(0xFFE5E7EB);
+const Color contentOverlayColor = Color(0xAA111827);
+const Color contentDividerColor = Color(0xFFF3F4F6);
+const Color contentTagForegroundColor = Color(0xFF0F766E);
+const Color contentEventForegroundColor = Color(0xFFB45309);
+const Color contentMediaColor = Color(0xFF0EA5E9);
+const Color contentMediaForegroundColor = Color(0xFF0369A1);
+const Color contentTagColor = Color(0xFF10B981);
+const Color contentTagTextColor = Color(0xFF047857);
+const Color contentPreviewBorderColor = Color(0xFFE5E7EB);
+const Color contentPreviewSurfaceColor = Color(0xFFF9FAFB);
+const Color contentScrimColor = Color(0x33000000);
+
 /// Semantic aliases used by dashboard widgets.
 abstract final class DashboardColors {
   static const Color border = borderColor;

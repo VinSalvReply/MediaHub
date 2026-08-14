@@ -14,9 +14,6 @@ import 'package:mediahub/features/events/widgets/quick_assign_bottom_sheet.dart'
 import 'package:mediahub/features/events/widgets/event_form/event_form_dialog.dart';
 import 'package:mediahub/features/events/widgets/event_list_tile/event_list_tile.dart';
 
-const Color _backgroundColor = appBackgroundColor;
-const Color _mutedTextColor = textMutedColor;
-
 enum _SplitLane { all, assigned, unassigned }
 
 /// Events page: owns CRUD actions and coordinates the event workspace.
@@ -53,13 +50,13 @@ class _EventsPageState extends State<EventsPage> {
             _controller.events.isEmpty;
         if (initialLoading) {
           return const ColoredBox(
-            color: _backgroundColor,
+            color: appBackgroundColor,
             child: Center(child: CircularProgressIndicator()),
           );
         }
         if (_controller.errorMessage != null && _controller.events.isEmpty) {
           return ColoredBox(
-            color: _backgroundColor,
+            color: appBackgroundColor,
             child: PageError(
               title: 'Impossibile caricare gli eventi',
               onRetry: _controller.loadEvents,
@@ -68,7 +65,7 @@ class _EventsPageState extends State<EventsPage> {
         }
 
         return ColoredBox(
-          color: _backgroundColor,
+          color: appBackgroundColor,
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(24),
@@ -410,7 +407,7 @@ class _EventsBody extends StatelessWidget {
             const SizedBox(height: 4),
             const Text(
               'Crea il primo evento globale per iniziare',
-              style: TextStyle(color: _mutedTextColor),
+              style: TextStyle(color: textMutedColor),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -608,7 +605,7 @@ class _SplitSection extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
-          Text('$count', style: const TextStyle(color: _mutedTextColor)),
+          Text('$count', style: const TextStyle(color: textMutedColor)),
         ],
       ),
     );
