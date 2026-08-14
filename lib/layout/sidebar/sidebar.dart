@@ -136,21 +136,23 @@ class _SidebarTileState extends State<_SidebarTile> {
           duration: AnimationConfig.hoverDuration,
           curve: Curves.easeOutCubic,
           margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+          child: Material(
             color: bg,
             borderRadius: BorderRadius.circular(16),
-          ),
-          child: ListTile(
-            dense: true,
-            leading: Icon(widget.icon, color: fg),
-            title: Text(
-              widget.label,
-              style: TextStyle(
-                color: fg,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+            clipBehavior: Clip.antiAlias,
+            child: ListTile(
+              dense: true,
+              leading: Icon(widget.icon, color: fg),
+              title: Text(
+                widget.label,
+                style: TextStyle(
+                  color: fg,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
+              onTap: widget.onTap,
             ),
-            onTap: widget.onTap,
           ),
         ),
       ),

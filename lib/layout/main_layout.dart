@@ -38,8 +38,9 @@ class MainLayout extends StatelessWidget {
   void _showMobileMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) => Container(
+      builder: (BuildContext context) => Material(
         color: surfaceColor,
+        clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: navEntries

@@ -419,10 +419,9 @@ class _MetricsGrid extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final int crossAxisCount =
-            constraints.maxWidth >= ResponsiveBreakpoints.tablet
+        final int crossAxisCount = constraints.maxWidth >= 1200
             ? 4
-            : constraints.maxWidth >= 900
+            : constraints.maxWidth >= 700
             ? 2
             : 1;
 
@@ -434,7 +433,7 @@ class _MetricsGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 2.8,
+            mainAxisExtent: 112,
           ),
           itemBuilder: (BuildContext context, int index) {
             return _MetricCard(metric: cards[index]);
@@ -519,21 +518,26 @@ class _MetricCardState extends State<_MetricCard> {
                     ),
                     const SizedBox(height: 4),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Text(
                           metric.value,
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          metric.detail,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: widget.metric.accent,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            metric.detail,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: widget.metric.accent,
+                            ),
                           ),
                         ),
                       ],
@@ -1554,7 +1558,11 @@ class _DashboardSkeleton extends StatelessWidget {
           const SizedBox(height: 24),
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              final int crossAxisCount = constraints.maxWidth >= 900 ? 4 : 2;
+              final int crossAxisCount = constraints.maxWidth >= 1200
+                  ? 4
+                  : constraints.maxWidth >= 700
+                  ? 2
+                  : 1;
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1563,7 +1571,7 @@ class _DashboardSkeleton extends StatelessWidget {
                   crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 2.8,
+                  mainAxisExtent: 112,
                 ),
                 itemBuilder: (_, _) => const _MetricSkeleton(),
               );
