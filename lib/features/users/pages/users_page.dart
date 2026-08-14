@@ -36,11 +36,14 @@ class _UsersPageState extends State<UsersPage> {
       animation: controller,
       builder: (BuildContext context, _) {
         if (controller.isLoading) {
-          return _buildLoadingState();
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (controller.errorMessage != null) {
-          return _buildErrorState();
+          return PageError(
+            title: 'Impossibile caricare gli utenti',
+            onRetry: controller.fetchUsers,
+          );
         }
 
         final List<User> users = controller.users;
@@ -162,17 +165,6 @@ class _UsersPageState extends State<UsersPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(child: CircularProgressIndicator());
-  }
-
-  Widget _buildErrorState() {
-    return PageError(
-      title: 'Impossibile caricare gli utenti',
-      onRetry: controller.fetchUsers,
     );
   }
 
