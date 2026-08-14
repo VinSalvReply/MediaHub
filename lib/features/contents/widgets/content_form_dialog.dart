@@ -41,6 +41,7 @@ String _contentStatusLabel(String status) {
   }
 }
 
+/// Payload returned to the parent screen after the user confirms the form.
 class ContentFormResult {
   final String title;
   final String type;
@@ -67,6 +68,8 @@ class ContentFormResult {
   });
 }
 
+/// Represents one option selected for the content, either imported from a URL
+/// or uploaded from the local device.
 class _SelectedMedia {
   final String reference;
   final String label;
@@ -92,6 +95,8 @@ class ContentFormDialog extends StatefulWidget {
 }
 
 class _ContentFormDialogState extends State<ContentFormDialog> {
+  // The dialog supports both create and edit flows. When the parent does not
+  // inject a controller, this state owns a private instance and disposes it.
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final ContentsController _contentsController;
   late final bool _ownsContentsController;
@@ -213,6 +218,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
     );
   }
 
+  // Keeps the responsive differences isolated from the rest of the form,
+  // making the main build method easier to read.
   Widget _buildTypeAndStatusFields({
     required bool isCompact,
     required bool canChangeType,
@@ -457,6 +464,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
     return null;
   }
 
+  // Upload flow for local files: validate, persist, and append the generated
+  // media references without blocking the rest of the form.
   Future<void> _pickLocalMedia() async {
     try {
       final FileType pickerType = switch (_type) {
@@ -529,7 +538,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
     if (_type == 'video') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Per i video e disponibile solo il caricamento da PC.'),
+          content: Text('Per i video è disponibile solo il caricamento da PC.'),
         ),
       );
       return;
@@ -603,6 +612,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
     });
   }
 
+  // Final validation keeps the submit branch small and makes the rules explicit.
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     if (_isSyncingMedia) {
