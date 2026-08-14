@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
 import 'package:mediahub/features/events/controllers/events_controller.dart';
 import 'package:mediahub/features/events/widgets/event_form_dialog.dart';
@@ -9,9 +10,9 @@ import 'package:mediahub/features/events/widgets/event_list_tile.dart';
 import 'package:mediahub/features/users/models/event.dart';
 import 'package:mediahub/features/users/models/user.dart';
 
-const Color _bgColor = Color(0xFFF5F7FB);
-const Color _borderColor = Color(0xFFE7EAF0);
-const Color _textMuted = Color(0xFF6B7280);
+const Color _bgColor = appBackgroundColor;
+const Color _borderColor = borderColor;
+const Color _textMuted = textMutedColor;
 
 enum EventSortMode { nameAsc, nameDesc, dateAsc, dateDesc }
 

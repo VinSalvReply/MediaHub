@@ -122,7 +122,7 @@ class _SidebarTileState extends State<_SidebarTile> {
     final Color bg = active
         ? const Color(0xFF4F46E5).withValues(alpha: 0.12)
         : hovered
-        ? defaultColorLight!.withValues(alpha: 0.1)
+        ? defaultColorLight.withValues(alpha: 0.1)
         : Colors.transparent;
 
     final Color fg = active ? const Color(0xFF4F46E5) : const Color(0xFF111827);

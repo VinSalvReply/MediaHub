@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/features/users/controllers/users_controller.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/widgets/users_list.dart';
@@ -72,7 +73,7 @@ class _UsersPageState extends State<UsersPage> {
         final bool hasActiveSearch = _searchQuery.trim().isNotEmpty;
 
         return Container(
-          color: const Color(0xFFF5F7FB),
+          color: appBackgroundColor,
           child: Column(
             children: <Widget>[
               Padding(
@@ -160,7 +161,7 @@ class _UsersPageState extends State<UsersPage> {
                                     curve: Curves.easeOutCubic,
                                   );
                                 },
-                                backgroundColor: const Color(0xFF4F46E5),
+                                backgroundColor: primaryColor,
                                 foregroundColor: Colors.white,
                                 elevation: 3,
                                 child: const Icon(
@@ -274,12 +275,12 @@ class _UsersSearchBar extends StatelessWidget {
             width: isMobile ? 34 : 38,
             height: isMobile ? 34 : 38,
             decoration: BoxDecoration(
-              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+              color: primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.search_rounded,
-              color: Color(0xFF4F46E5),
+              color: primaryColor,
               size: 20,
             ),
           ),

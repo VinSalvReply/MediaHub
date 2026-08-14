@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
+import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
@@ -53,7 +54,7 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: appBackgroundColor,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeIn,
@@ -327,11 +328,11 @@ class _AlertChip extends StatelessWidget {
   Color _colorFor(String type) {
     switch (type) {
       case 'warning':
-        return const Color(0xFFF59E0B);
+        return warningColor;
       case 'info':
-        return const Color(0xFF4F46E5);
+        return primaryColor;
       case 'error':
-        return const Color(0xFFEF4444);
+        return dangerColor;
       default:
         return const Color(0xFF64748B);
     }
@@ -389,28 +390,28 @@ class _MetricsGrid extends StatelessWidget {
         value: metrics.totalEvents.toString(),
         detail: '${metrics.upcomingThisWeek} nei prossimi 7g',
         icon: Icons.event_rounded,
-        accent: const Color(0xFF4F46E5),
+        accent: primaryColor,
       ),
       _MetricCardData(
         title: 'Live ora',
         value: metrics.liveEvents.toString(),
         detail: '${metrics.eventsWithoutContents} senza contenuti',
         icon: Icons.bolt_rounded,
-        accent: const Color(0xFF14B8A6),
+        accent: successColor,
       ),
       _MetricCardData(
         title: 'Contenuti',
         value: metrics.totalContents.toString(),
         detail: '${metrics.publishedContents} pubblicati',
         icon: Icons.article_rounded,
-        accent: const Color(0xFFF59E0B),
+        accent: warningColor,
       ),
       _MetricCardData(
         title: 'Media',
         value: metrics.totalMediaAssets.toString(),
         detail: 'asset collegati agli eventi',
         icon: Icons.perm_media_rounded,
-        accent: const Color(0xFFEC4899),
+        accent: accentPinkColor,
       ),
     ];
 

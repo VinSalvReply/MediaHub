@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 
-final Color? defaultColor = Colors.blueGrey[900];
-final Color? defaultColorLight = Colors.blueGrey[700];
+const Color appBackgroundColor = Color(0xFFF5F7FB);
+const Color surfaceColor = Colors.white;
+const Color borderColor = Color(0xFFE7EAF0);
+const Color textPrimaryColor = Color(0xFF111827);
+const Color textMutedColor = Color(0xFF6B7280);
+const Color textSubtleColor = Color(0xFF9CA3AF);
 
-final Color? greyLight = Colors.grey[700];
+const Color primaryColor = Color(0xFF4F46E5);
+const Color successColor = Color(0xFF14B8A6);
+const Color accentPinkColor = Color(0xFFEC4899);
+const Color warningColor = Color(0xFFF59E0B);
+const Color dangerColor = Color(0xFFEF4444);
 
-final List<Color> cardColors = <Color>[
-  Colors.green[900]!,
-  Colors.deepPurple[900]!,
-  Colors.deepOrange[900]!,
-  Colors.red[900]!,
+const Color defaultColor = Color(0xFF263238);
+const Color defaultColorLight = Color(0xFF455A64);
+
+const Color greyLight = Color(0xFF616161);
+
+const List<Color> cardColors = <Color>[
+  Color(0xFF1B5E20),
+  Color(0xFF4A148C),
+  Color(0xFFBF360C),
+  Color(0xFFB71C1C),
 ];

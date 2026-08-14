@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediahub/core/constants/color.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/layout/sidebar/nav_entries.dart';
@@ -13,7 +14,8 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final bool isMobile = constraints.maxWidth < ResponsiveBreakpoints.mobile;
+        final bool isMobile =
+            constraints.maxWidth < ResponsiveBreakpoints.mobile;
 
         return Scaffold(
           body: Row(
@@ -37,7 +39,7 @@ class MainLayout extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) => Container(
-        color: Colors.white,
+        color: surfaceColor,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: navEntries

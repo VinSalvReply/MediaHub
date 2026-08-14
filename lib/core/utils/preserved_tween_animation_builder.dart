@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+/// A tween animation that preserves the current animated value when the widget
+/// is rebuilt with new configuration.
+///
+/// This is useful when a view updates its target values while keeping the
+/// animation state continuous, instead of restarting from the initial value.
 class PreservedTweenAnimationBuilder extends StatefulWidget {
   final double begin;
   final double end;
@@ -48,10 +53,6 @@ class _PreservedTweenAnimationBuilderState
     _controller.forward();
   }
 
-  void _syncCurrent() {
-    _currentValue = _animation.value;
-  }
-
   @override
   void didUpdateWidget(covariant PreservedTweenAnimationBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -61,15 +62,12 @@ class _PreservedTweenAnimationBuilderState
         oldWidget.begin != widget.begin ||
         oldWidget.end != widget.end ||
         oldWidget.curve != widget.curve;
-    if (!shouldRetween) return;
 
-    _animation.removeListener(_syncCurrent);
-    _curved = CurvedAnimation(parent: _controller, curve: widget.curve);
-    _animation = Tween<double>(
-      begin: _currentValue,
-      end: widget.end,
-    ).animate(_curved)..addListener(_syncCurrent);
+    if (!shouldRetween) {
+      return;
+    }
 
+    _rebuildAnimation();
     _controller
       ..value = 0
       ..forward();
@@ -90,5 +88,22 @@ class _PreservedTweenAnimationBuilderState
         return widget.builder(context, _animation.value, widget.child);
       },
     );
+  }
+
+  void _syncCurrent() {
+    _currentValue = _animation.value;
+  }
+
+  /// Rebuilds the underlying tween using the last known animated value as the
+  /// new start point. This avoids jumping back to the original begin value when
+  /// the widget is updated.
+  void _rebuildAnimation() {
+    _animation.removeListener(_syncCurrent);
+
+    _curved = CurvedAnimation(parent: _controller, curve: widget.curve);
+    _animation = Tween<double>(
+      begin: _currentValue,
+      end: widget.end,
+    ).animate(_curved)..addListener(_syncCurrent);
   }
 }
