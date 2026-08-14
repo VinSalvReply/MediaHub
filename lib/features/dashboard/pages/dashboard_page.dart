@@ -6,6 +6,7 @@ import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
+import 'package:mediahub/core/widgets/page_error.dart';
 import 'package:mediahub/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:mediahub/features/dashboard/models/dashboard_data.dart';
 import 'package:mediahub/features/users/widgets/user_detail/shimmer.dart';
@@ -59,7 +60,10 @@ class _DashboardPageState extends State<DashboardPage>
             animation: controller,
             builder: (BuildContext context, _) {
               if (controller.errorMessage != null && controller.data == null) {
-                return _DashboardError(onRetry: _reload);
+                return PageError(
+                  title: 'Impossibile caricare la dashboard',
+                  onRetry: _reload,
+                );
               }
               if (controller.isLoading && controller.data == null) {
                 return const Padding(
@@ -1712,39 +1716,6 @@ class _SkeletonPill extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFFE6E6E6),
           borderRadius: BorderRadius.circular(999),
-        ),
-      ),
-    );
-  }
-}
-
-class _DashboardError extends StatelessWidget {
-  final VoidCallback onRetry;
-
-  const _DashboardError({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE7EAF0)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
-            const SizedBox(height: 12),
-            const Text(
-              'Impossibile caricare la dashboard',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
-          ],
         ),
       ),
     );

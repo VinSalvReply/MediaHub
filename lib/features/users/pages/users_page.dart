@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/constants/color.dart';
+import 'package:mediahub/core/widgets/page_error.dart';
 import 'package:mediahub/features/users/controllers/users_controller.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/widgets/users_list.dart';
 
+/// Page dedicated to the management and search of users.
 class UsersPage extends StatefulWidget {
   const UsersPage({super.key});
 
@@ -16,6 +18,7 @@ class _UsersPageState extends State<UsersPage> {
   late final UsersController controller;
   late final ScrollController _scrollController;
   late final TextEditingController _searchController;
+
   bool _showScrollToTop = false;
   String _searchQuery = '';
 
@@ -23,36 +26,8 @@ class _UsersPageState extends State<UsersPage> {
   void initState() {
     super.initState();
     controller = UsersController()..fetchUsers();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_handleScroll);
+    _scrollController = ScrollController()..addListener(_handleScroll);
     _searchController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_handleScroll);
-    _scrollController.dispose();
-    _searchController.dispose();
-    controller.dispose();
-    super.dispose();
-  }
-
-  void _handleScroll() {
-    final bool shouldShow = _scrollController.hasClients
-        ? _scrollController.offset > 120
-        : false;
-    if (_showScrollToTop == shouldShow) return;
-    setState(() => _showScrollToTop = shouldShow);
-  }
-
-  List<User> _filterUsers(List<User> users) {
-    if (_searchQuery.trim().isEmpty) return users;
-    final String query = _searchQuery.toLowerCase().trim();
-    return users.where((User user) {
-      final String fullName = '${user.name} ${user.lastName}'.toLowerCase();
-      final String email = user.email.toLowerCase();
-      return fullName.contains(query) || email.contains(query);
-    }).toList();
   }
 
   @override
@@ -61,11 +36,11 @@ class _UsersPageState extends State<UsersPage> {
       animation: controller,
       builder: (BuildContext context, _) {
         if (controller.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingState();
         }
 
         if (controller.errorMessage != null) {
-          return _UsersError(onRetry: controller.fetchUsers);
+          return _buildErrorState();
         }
 
         final List<User> users = controller.users;
@@ -80,8 +55,8 @@ class _UsersPageState extends State<UsersPage> {
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    const Expanded(
+                  children: const <Widget>[
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -110,12 +85,8 @@ class _UsersPageState extends State<UsersPage> {
                   query: _searchQuery,
                   resultCount: filteredUsers.length,
                   totalCount: users.length,
-                  onChanged: (String value) =>
-                      setState(() => _searchQuery = value),
-                  onClear: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
+                  onChanged: _onSearchChanged,
+                  onClear: _clearSearch,
                 ),
               ),
               Expanded(
@@ -137,43 +108,7 @@ class _UsersPageState extends State<UsersPage> {
                         ],
                       ),
                     ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 12,
-                      child: AnimatedOpacity(
-                        duration: AnimationConfig.hoverDuration,
-                        opacity: _showScrollToTop ? 1 : 0,
-                        child: IgnorePointer(
-                          ignoring: !_showScrollToTop,
-                          child: Center(
-                            child: SizedBox(
-                              width: 34,
-                              height: 34,
-                              child: FloatingActionButton(
-                                heroTag: null,
-                                mini: true,
-                                onPressed: () {
-                                  _scrollController.animateTo(
-                                    0,
-                                    duration:
-                                        AnimationConfig.scrollToTopDuration,
-                                    curve: Curves.easeOutCubic,
-                                  );
-                                },
-                                backgroundColor: primaryColor,
-                                foregroundColor: Colors.white,
-                                elevation: 3,
-                                child: const Icon(
-                                  Icons.keyboard_arrow_up,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildScrollToTopButton(),
                   ],
                 ),
               ),
@@ -183,51 +118,103 @@ class _UsersPageState extends State<UsersPage> {
       },
     );
   }
-}
-
-class _TopActionButton extends StatefulWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _TopActionButton({required this.icon, required this.onTap});
 
   @override
-  State<_TopActionButton> createState() => _TopActionButtonState();
-}
+  void dispose() {
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
+    _searchController.dispose();
+    controller.dispose();
+    super.dispose();
+  }
 
-class _UsersError extends StatelessWidget {
-  final VoidCallback onRetry;
-
-  const _UsersError({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE7EAF0)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
-            const SizedBox(height: 12),
-            const Text(
-              'Impossibile caricare gli utenti',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+  Widget _buildScrollToTopButton() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 12,
+      child: AnimatedOpacity(
+        duration: AnimationConfig.hoverDuration,
+        opacity: _showScrollToTop ? 1 : 0,
+        child: IgnorePointer(
+          ignoring: !_showScrollToTop,
+          child: Center(
+            child: SizedBox(
+              width: 34,
+              height: 34,
+              child: FloatingActionButton(
+                heroTag: null,
+                mini: true,
+                onPressed: () {
+                  _scrollController.animateTo(
+                    0,
+                    duration: AnimationConfig.scrollToTopDuration,
+                    curve: Curves.easeOutCubic,
+                  );
+                },
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                child: const Icon(Icons.keyboard_arrow_up, size: 18),
+              ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
-          ],
+          ),
         ),
       ),
     );
   }
+
+  Widget _buildLoadingState() {
+    return const Center(child: CircularProgressIndicator());
+  }
+
+  Widget _buildErrorState() {
+    return PageError(
+      title: 'Impossibile caricare gli utenti',
+      onRetry: controller.fetchUsers,
+    );
+  }
+
+  /// Filters users by name and email using the current query.
+  List<User> _filterUsers(List<User> users) {
+    if (_searchQuery.trim().isEmpty) {
+      return users;
+    }
+
+    final String query = _searchQuery.toLowerCase().trim();
+
+    return users.where((User user) {
+      final String fullName = '${user.name} ${user.lastName}'.toLowerCase();
+      final String email = user.email.toLowerCase();
+      return fullName.contains(query) || email.contains(query);
+    }).toList();
+  }
+
+  /// Shows or hides the floating button for returning to the top.
+  void _handleScroll() {
+    final bool shouldShow = _scrollController.hasClients
+        ? _scrollController.offset > 120
+        : false;
+
+    if (_showScrollToTop == shouldShow) {
+      return;
+    }
+
+    setState(() => _showScrollToTop = shouldShow);
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() => _searchQuery = value);
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _searchQuery = '');
+  }
 }
 
+/// Search box for users with live result count and clear action.
 class _UsersSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final String query;
@@ -334,6 +321,7 @@ class _UsersSearchBar extends StatelessWidget {
   }
 }
 
+/// Empty state for a search without results.
 class _UsersSearchEmptyState extends StatelessWidget {
   final String query;
 
@@ -379,43 +367,7 @@ class _UsersSearchEmptyState extends StatelessWidget {
   }
 }
 
-class _TopActionButtonState extends State<_TopActionButton> {
-  bool hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: MouseRegion(
-        onEnter: (_) => setState(() => hovered = true),
-        onExit: (_) => setState(() => hovered = false),
-        child: AnimatedContainer(
-          duration: AnimationConfig.hoverDuration,
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: hovered ? Colors.white : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE7EAF0)),
-            boxShadow: hovered
-                ? const <BoxShadow>[
-                    BoxShadow(
-                      blurRadius: 18,
-                      offset: Offset(0, 8),
-                      color: Color(0x12000000),
-                    ),
-                  ]
-                : const <BoxShadow>[],
-          ),
-          child: IconButton(
-            onPressed: widget.onTap,
-            icon: Icon(widget.icon, size: 20),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
+/// Summary cards for total, active and inactive users.
 class _UsersStats extends StatelessWidget {
   final List<User> users;
 
@@ -424,7 +376,7 @@ class _UsersStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final int total = users.length;
-    final int active = users.where((User u) => u.isActive == true).length;
+    final int active = users.where((User user) => user.isActive).length;
     final int inactive = total - active;
 
     return LayoutBuilder(
@@ -466,6 +418,7 @@ class _UsersStats extends StatelessWidget {
   }
 }
 
+/// A metric card shown in the users summary row.
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;

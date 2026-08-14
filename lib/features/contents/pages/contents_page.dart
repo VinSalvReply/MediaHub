@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
+import 'package:mediahub/core/widgets/page_error.dart';
 import 'package:mediahub/features/contents/controllers/contents_controller.dart';
 import 'package:mediahub/features/contents/widgets/content_form_dialog.dart';
 import 'package:mediahub/features/contents/widgets/content_list_tile.dart';
@@ -247,7 +248,10 @@ class _ContentsPageState extends State<ContentsPage> {
         if (controller.errorMessage != null && controller.contents.isEmpty) {
           return Container(
             color: _bgColor,
-            child: _ContentsError(onRetry: () => controller.init()),
+            child: PageError(
+              title: 'Impossibile caricare i contenuti',
+              onRetry: () => controller.init(),
+            ),
           );
         }
 
@@ -1181,39 +1185,6 @@ class _SplitSection extends StatelessWidget {
           ),
           Text('$count', style: const TextStyle(color: _textMuted)),
         ],
-      ),
-    );
-  }
-}
-
-class _ContentsError extends StatelessWidget {
-  final VoidCallback onRetry;
-
-  const _ContentsError({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE7EAF0)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(Icons.error_rounded, size: 42, color: Color(0xFFEF4444)),
-            const SizedBox(height: 12),
-            const Text(
-              'Impossibile caricare i contenuti',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: const Text('Riprova')),
-          ],
-        ),
       ),
     );
   }
