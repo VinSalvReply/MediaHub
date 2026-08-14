@@ -108,7 +108,9 @@ class _EventsPageState extends State<EventsPage> {
       status: result.status,
       contents: result.contents,
     );
-    _toast(ok ? 'Evento creato' : (controller.error ?? 'Salvataggio fallito'));
+    _toast(
+      ok ? 'Evento creato' : (controller.errorMessage ?? 'Salvataggio fallito'),
+    );
   }
 
   Future<void> _openEditDialog(Event event) async {
@@ -126,7 +128,9 @@ class _EventsPageState extends State<EventsPage> {
       contents: result.contents,
     );
     _toast(
-      ok ? 'Evento aggiornato' : (controller.error ?? 'Aggiornamento fallito'),
+      ok
+          ? 'Evento aggiornato'
+          : (controller.errorMessage ?? 'Aggiornamento fallito'),
     );
   }
 
@@ -137,7 +141,7 @@ class _EventsPageState extends State<EventsPage> {
     _toast(
       ok
           ? 'Evento assegnato all\'utente'
-          : (controller.error ?? 'Assegnazione fallita'),
+          : (controller.errorMessage ?? 'Assegnazione fallita'),
     );
   }
 
@@ -145,7 +149,9 @@ class _EventsPageState extends State<EventsPage> {
     final bool ok = await controller.assignEventToUser(event, null);
     if (!mounted) return;
     _toast(
-      ok ? 'Evento disassegnato' : (controller.error ?? 'Operazione fallita'),
+      ok
+          ? 'Evento disassegnato'
+          : (controller.errorMessage ?? 'Operazione fallita'),
     );
   }
 
@@ -190,7 +196,9 @@ class _EventsPageState extends State<EventsPage> {
     if (confirm != true) return;
     final bool ok = await controller.removeEvent(event);
     _toast(
-      ok ? 'Evento eliminato' : (controller.error ?? 'Eliminazione fallita'),
+      ok
+          ? 'Evento eliminato'
+          : (controller.errorMessage ?? 'Eliminazione fallita'),
     );
   }
 
@@ -217,7 +225,7 @@ class _EventsPageState extends State<EventsPage> {
           );
         }
 
-        if (controller.error != null && controller.events.isEmpty) {
+        if (controller.errorMessage != null && controller.events.isEmpty) {
           return Container(
             color: _bgColor,
             child: _EventsError(onRetry: () => controller.loadEvents()),

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:mediahub/data/services/api_client.dart';
 
 /// HTTP service for user-scoped and global content operations.
@@ -68,6 +70,29 @@ class ContentService {
   Future<void> deleteContent(int contentId) async {
     await _api.delete('/contents/$contentId');
     _cache.remove(_contentsCacheKey);
+  }
+
+  Future<Map<String, dynamic>> uploadMedia({
+    Uint8List? bytes,
+    String? fileName,
+    String? filePath,
+  }) async {
+    return Map<String, dynamic>.from(
+      await _api.multipartPost(
+            '/media/upload',
+            bytes: bytes,
+            fileName: fileName,
+            filePath: filePath,
+          )
+          as Map<String, dynamic>,
+    );
+  }
+
+  Future<Map<String, dynamic>> importMedia(String sourceUrl) async {
+    return Map<String, dynamic>.from(
+      await _api.post('/media/import', <String, String>{'url': sourceUrl})
+          as Map<String, dynamic>,
+    );
   }
 
   List<Map<String, dynamic>> _listJson(dynamic raw) {

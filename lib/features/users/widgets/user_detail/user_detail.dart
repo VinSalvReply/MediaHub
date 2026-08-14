@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/core/constants/animation.dart';
 import 'package:mediahub/core/constants/responsive.dart';
-import 'package:mediahub/data/repositories/user_repository.dart';
+import 'package:mediahub/features/users/controllers/users_controller.dart';
 import 'package:mediahub/features/users/models/user.dart';
 import 'package:mediahub/features/users/models/user_detail_data.dart';
 import 'package:mediahub/features/users/widgets/user_detail/shimmer.dart';
@@ -29,8 +29,8 @@ class UserDetail extends StatefulWidget {
 
 class _UserDetailState extends State<UserDetail>
     with SingleTickerProviderStateMixin {
+  late final UsersController usersController;
   late Future<UserDetailData> future;
-  final UserRepository repo = UserRepository();
 
   late final AnimationController controller;
   late final Animation<double> scaleAnim;
@@ -38,7 +38,8 @@ class _UserDetailState extends State<UserDetail>
   @override
   void initState() {
     super.initState();
-    future = repo.getUserDetail(widget.user.id);
+    usersController = UsersController();
+    future = usersController.loadUserDetail(widget.user.id);
 
     controller = AnimationController(
       vsync: this,
@@ -80,6 +81,7 @@ class _UserDetailState extends State<UserDetail>
 
   @override
   void dispose() {
+    usersController.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -128,7 +130,9 @@ class _UserDetailState extends State<UserDetail>
                         return _UserDetailError(
                           onRetry: () {
                             setState(() {
-                              future = repo.getUserDetail(widget.user.id);
+                              future = usersController.loadUserDetail(
+                                widget.user.id,
+                              );
                             });
                           },
                         );
@@ -140,7 +144,6 @@ class _UserDetailState extends State<UserDetail>
                           child: _UserDetailSkeleton(),
                         );
                       }
-
                       final UserDetailData data = snapshot.data!;
                       final double padding = isMobile ? 16.0 : 24.0;
 

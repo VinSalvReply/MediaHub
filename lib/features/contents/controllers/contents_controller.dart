@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mediahub/data/dtos/media_upload_result.dart';
 import 'package:mediahub/data/repositories/content_repository.dart';
 import 'package:mediahub/data/repositories/event_repository.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
@@ -6,6 +7,7 @@ import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
 import 'package:mediahub/features/users/models/user.dart';
 
+/// Manages content-related data and user/event metadata used in the contents view.
 class ContentsController extends ChangeNotifier {
   final UserRepository _repository;
   final EventRepository _eventRepository;
@@ -19,14 +21,14 @@ class ContentsController extends ChangeNotifier {
        _eventRepository = eventRepository ?? EventRepository(),
        _contentRepository = contentRepository ?? ContentRepository();
 
-  List<User> users = <User>[];
-  List<Event> events = <Event>[];
-  List<ContentItem> contents = <ContentItem>[];
+  List<User> users = const <User>[];
+  List<Event> events = const <Event>[];
+  List<ContentItem> contents = const <ContentItem>[];
 
   bool isLoadingMeta = false;
   bool isLoadingContents = false;
   bool isMutating = false;
-  String? error;
+  String? errorMessage;
 
   Future<void> init() async {
     try {
@@ -34,9 +36,9 @@ class ContentsController extends ChangeNotifier {
       notifyListeners();
       users = await _repository.getUsers();
       events = await _eventRepository.getGlobalEvents();
-    } catch (e, st) {
-      debugPrint('ContentsController.init error: $e\n$st');
-      error = 'Impossibile caricare metadati contenuti';
+    } catch (error, stackTrace) {
+      debugPrint('ContentsController.init error: $error\n$stackTrace');
+      errorMessage = 'Impossibile caricare metadati contenuti';
     } finally {
       isLoadingMeta = false;
       notifyListeners();
@@ -47,15 +49,15 @@ class ContentsController extends ChangeNotifier {
   Future<void> loadContents() async {
     try {
       isLoadingContents = true;
-      error = null;
+      errorMessage = null;
       notifyListeners();
       contents = await _contentRepository.getGlobalContents();
       contents.sort(
         (ContentItem a, ContentItem b) => b.createdAt.compareTo(a.createdAt),
       );
-    } catch (e, st) {
-      debugPrint('ContentsController.loadContents error: $e\n$st');
-      error = 'Impossibile caricare i contenuti';
+    } catch (error, stackTrace) {
+      debugPrint('ContentsController.loadContents error: $error\n$stackTrace');
+      errorMessage = 'Impossibile caricare i contenuti';
     } finally {
       isLoadingContents = false;
       notifyListeners();
@@ -150,17 +152,43 @@ class ContentsController extends ChangeNotifier {
     });
   }
 
+  Future<MediaUploadResult> uploadMedia({
+    Uint8List? bytes,
+    String? fileName,
+    String? filePath,
+  }) async {
+    try {
+      return await _contentRepository.uploadMedia(
+        bytes: bytes,
+        fileName: fileName,
+        filePath: filePath,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('ContentsController.uploadMedia error: $error\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<MediaUploadResult> importMedia(String sourceUrl) async {
+    try {
+      return await _contentRepository.importMedia(sourceUrl);
+    } catch (error, stackTrace) {
+      debugPrint('ContentsController.importMedia error: $error\n$stackTrace');
+      rethrow;
+    }
+  }
+
   Future<bool> _mutate(Future<void> Function() action) async {
     try {
       isMutating = true;
-      error = null;
+      errorMessage = null;
       notifyListeners();
       await action();
       await loadContents();
       return true;
-    } catch (e, st) {
-      debugPrint('ContentsController._mutate error: $e\n$st');
-      error = 'Operazione contenuto fallita';
+    } catch (error, stackTrace) {
+      debugPrint('ContentsController._mutate error: $error\n$stackTrace');
+      errorMessage = 'Operazione contenuto fallita';
       notifyListeners();
       return false;
     } finally {

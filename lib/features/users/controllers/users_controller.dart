@@ -1,29 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:mediahub/data/repositories/user_repository.dart';
 import 'package:mediahub/features/users/models/user.dart';
+import 'package:mediahub/features/users/models/user_detail_data.dart';
 
+/// Controls loading and exposes the list of users.
 class UsersController extends ChangeNotifier {
-  final UserRepository repository = UserRepository();
+  final UserRepository _repository;
 
-  UsersController();
+  UsersController({UserRepository? repository})
+    : _repository = repository ?? UserRepository();
 
-  List<User> users = <User>[];
+  List<User> users = const <User>[];
   bool isLoading = false;
-  String? error;
+  String? errorMessage;
 
   Future<void> fetchUsers() async {
     try {
       isLoading = true;
-      error = null;
+      errorMessage = null;
       notifyListeners();
 
-      users = await repository.getUsers();
-    } catch (e, st) {
-      debugPrint('UsersController.fetchUsers error: $e\n$st');
-      error = "Errore nel caricamento";
+      users = await _repository.getUsers();
+    } catch (error, stackTrace) {
+      debugPrint('UsersController.fetchUsers error: $error\n$stackTrace');
+      errorMessage = 'Errore nel caricamento';
     } finally {
       isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<UserDetailData> loadUserDetail(int userId) async {
+    try {
+      return await _repository.getUserDetail(userId);
+    } catch (error, stackTrace) {
+      debugPrint('UsersController.loadUserDetail error: $error\n$stackTrace');
+      rethrow;
     }
   }
 }

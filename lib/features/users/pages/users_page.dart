@@ -64,7 +64,7 @@ class _UsersPageState extends State<UsersPage> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (controller.error != null) {
+        if (controller.errorMessage != null) {
           return _UsersError(onRetry: controller.fetchUsers);
         }
 

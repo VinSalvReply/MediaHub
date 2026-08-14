@@ -5,6 +5,7 @@ import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:mediahub/features/users/models/event.dart';
 import 'package:mediahub/features/users/models/user.dart';
 
+/// Manages event-related data and the associated users used in the events screen.
 class EventsController extends ChangeNotifier {
   final UserRepository _repository;
   final EventRepository _eventRepository;
@@ -15,22 +16,22 @@ class EventsController extends ChangeNotifier {
   }) : _repository = repository ?? UserRepository(),
        _eventRepository = eventRepository ?? EventRepository();
 
-  List<User> users = <User>[];
-  List<Event> events = <Event>[];
+  List<User> users = const <User>[];
+  List<Event> events = const <Event>[];
 
   bool isLoadingUsers = false;
   bool isLoadingEvents = false;
   bool isMutating = false;
-  String? error;
+  String? errorMessage;
 
   Future<void> init() async {
     try {
       isLoadingUsers = true;
       notifyListeners();
       users = await _repository.getUsers();
-    } catch (e, st) {
-      debugPrint('EventsController.init error: $e\n$st');
-      error = 'Impossibile caricare gli utenti';
+    } catch (error, stackTrace) {
+      debugPrint('EventsController.init error: $error\n$stackTrace');
+      errorMessage = 'Impossibile caricare gli utenti';
     } finally {
       isLoadingUsers = false;
       notifyListeners();
@@ -41,13 +42,13 @@ class EventsController extends ChangeNotifier {
   Future<void> loadEvents() async {
     try {
       isLoadingEvents = true;
-      error = null;
+      errorMessage = null;
       notifyListeners();
       events = await _eventRepository.getGlobalEvents();
       events.sort((Event a, Event b) => a.date.compareTo(b.date));
-    } catch (e, st) {
-      debugPrint('EventsController.loadEvents error: $e\n$st');
-      error = 'Impossibile caricare gli eventi';
+    } catch (error, stackTrace) {
+      debugPrint('EventsController.loadEvents error: $error\n$stackTrace');
+      errorMessage = 'Impossibile caricare gli eventi';
     } finally {
       isLoadingEvents = false;
       notifyListeners();
@@ -128,9 +129,9 @@ class EventsController extends ChangeNotifier {
       await action();
       await loadEvents();
       return true;
-    } catch (e, st) {
-      debugPrint('EventsController._mutate error: $e\n$st');
-      error = 'Operazione fallita';
+    } catch (error, stackTrace) {
+      debugPrint('EventsController._mutate error: $error\n$stackTrace');
+      errorMessage = 'Operazione fallita';
       notifyListeners();
       return false;
     } finally {

@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:mediahub/data/dtos/content_item_dto.dart';
+import 'package:mediahub/data/dtos/media_upload_result.dart';
 import 'package:mediahub/data/mappers/content_item_mapper.dart';
 import 'package:mediahub/data/services/content_service.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
@@ -44,11 +47,39 @@ class ContentRepository {
     return _contentService.deleteContent(contentId);
   }
 
+  Future<MediaUploadResult> uploadMedia({
+    Uint8List? bytes,
+    String? fileName,
+    String? filePath,
+  }) async {
+    final Map<String, dynamic> response = await _contentService.uploadMedia(
+      bytes: bytes,
+      fileName: fileName,
+      filePath: filePath,
+    );
+    return _mediaFromJson(response);
+  }
+
+  Future<MediaUploadResult> importMedia(String sourceUrl) async {
+    final Map<String, dynamic> response = await _contentService.importMedia(
+      sourceUrl,
+    );
+    return _mediaFromJson(response);
+  }
+
   List<ContentItem> _toContents(List<Map<String, dynamic>> response) {
     return response.map(_toContent).toList();
   }
 
   ContentItem _toContent(Map<String, dynamic> json) {
     return ContentItemDto.fromJson(json).toModel();
+  }
+
+  MediaUploadResult _mediaFromJson(Map<String, dynamic> json) {
+    return MediaUploadResult(
+      reference: (json['url'] ?? json['reference']) as String,
+      thumbnailReference:
+          (json['thumbnailUrl'] ?? json['thumbnailReference']) as String?,
+    );
   }
 }

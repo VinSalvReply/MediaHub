@@ -128,7 +128,7 @@ class _ContentsPageState extends State<ContentsPage> {
   Future<void> _openCreateDialog() async {
     final ContentFormResult? result = await showDialog<ContentFormResult>(
       context: context,
-      builder: (_) => const ContentFormDialog(),
+      builder: (_) => ContentFormDialog(contentsController: controller),
     );
     if (result == null) return;
     final bool ok = await controller.addContent(
@@ -142,14 +142,17 @@ class _ContentsPageState extends State<ContentsPage> {
       tags: result.tags,
     );
     _toast(
-      ok ? 'Contenuto creato' : (controller.error ?? 'Operazione fallita'),
+      ok
+          ? 'Contenuto creato'
+          : (controller.errorMessage ?? 'Operazione fallita'),
     );
   }
 
   Future<void> _openEditDialog(ContentItem item) async {
     final ContentFormResult? result = await showDialog<ContentFormResult>(
       context: context,
-      builder: (_) => ContentFormDialog(initial: item),
+      builder: (_) =>
+          ContentFormDialog(initial: item, contentsController: controller),
     );
     if (result == null) return;
     final bool ok = await controller.editContent(
@@ -164,7 +167,9 @@ class _ContentsPageState extends State<ContentsPage> {
       tags: result.tags,
     );
     _toast(
-      ok ? 'Contenuto aggiornato' : (controller.error ?? 'Operazione fallita'),
+      ok
+          ? 'Contenuto aggiornato'
+          : (controller.errorMessage ?? 'Operazione fallita'),
     );
   }
 
@@ -175,7 +180,7 @@ class _ContentsPageState extends State<ContentsPage> {
     _toast(
       ok
           ? 'Contenuto collegato all\'evento'
-          : (controller.error ?? 'Operazione fallita'),
+          : (controller.errorMessage ?? 'Operazione fallita'),
     );
   }
 
@@ -185,7 +190,7 @@ class _ContentsPageState extends State<ContentsPage> {
     _toast(
       ok
           ? 'Contenuto disassegnato'
-          : (controller.error ?? 'Operazione fallita'),
+          : (controller.errorMessage ?? 'Operazione fallita'),
     );
   }
 
@@ -210,7 +215,9 @@ class _ContentsPageState extends State<ContentsPage> {
     if (confirm != true) return;
     final bool ok = await controller.removeContent(item);
     _toast(
-      ok ? 'Contenuto eliminato' : (controller.error ?? 'Operazione fallita'),
+      ok
+          ? 'Contenuto eliminato'
+          : (controller.errorMessage ?? 'Operazione fallita'),
     );
   }
 
@@ -237,7 +244,7 @@ class _ContentsPageState extends State<ContentsPage> {
           );
         }
 
-        if (controller.error != null && controller.contents.isEmpty) {
+        if (controller.errorMessage != null && controller.contents.isEmpty) {
           return Container(
             color: _bgColor,
             child: _ContentsError(onRetry: () => controller.init()),

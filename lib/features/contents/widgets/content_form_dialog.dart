@@ -1,7 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mediahub/data/services/api_client.dart';
+import 'package:mediahub/data/dtos/media_upload_result.dart';
+import 'package:mediahub/features/contents/controllers/contents_controller.dart';
 import 'package:mediahub/features/users/models/content_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -79,8 +80,9 @@ class _SelectedMedia {
 
 class ContentFormDialog extends StatefulWidget {
   final ContentItem? initial;
+  final ContentsController? contentsController;
 
-  const ContentFormDialog({super.key, this.initial});
+  const ContentFormDialog({super.key, this.initial, this.contentsController});
 
   @override
   State<ContentFormDialog> createState() => _ContentFormDialogState();
@@ -88,7 +90,8 @@ class ContentFormDialog extends StatefulWidget {
 
 class _ContentFormDialogState extends State<ContentFormDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final ApiClient _apiClient = ApiClient();
+  late final ContentsController _contentsController;
+  late final bool _ownsContentsController;
   late final TextEditingController _titleCtrl;
   late final TextEditingController _mediaUrlCtrl;
   late final TextEditingController _postBodyCtrl;
@@ -103,6 +106,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
   @override
   void initState() {
     super.initState();
+    _ownsContentsController = widget.contentsController == null;
+    _contentsController = widget.contentsController ?? ContentsController();
     final ContentItem? c = widget.initial;
     _titleCtrl = TextEditingController(text: c?.title ?? '');
     _mediaUrlCtrl = TextEditingController();
@@ -124,7 +129,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
   @override
   void dispose() {
-    _apiClient.close();
+    if (_ownsContentsController) _contentsController.dispose();
     _titleCtrl.dispose();
     _mediaUrlCtrl.dispose();
     _postBodyCtrl.dispose();
@@ -229,7 +234,12 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
       final List<_SelectedMedia> mediaToAdd = await Future.wait(
         validFiles.map((PlatformFile file) async {
-          final _PersistedMedia persistedMedia = await _uploadLocalMedia(file);
+          final MediaUploadResult persistedMedia = await _contentsController
+              .uploadMedia(
+                bytes: file.bytes,
+                fileName: file.name,
+                filePath: file.path,
+              );
           return _SelectedMedia(
             reference: persistedMedia.reference,
             label: file.name,
@@ -279,7 +289,8 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
 
     try {
       setState(() => _isSyncingMedia = true);
-      final _PersistedMedia persistedMedia = await _importRemoteMedia(value);
+      final MediaUploadResult persistedMedia = await _contentsController
+          .importMedia(value);
       if (!mounted) return;
 
       setState(() {
@@ -371,27 +382,6 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         tags: _parseTags(),
       ),
     );
-  }
-
-  Future<_PersistedMedia> _uploadLocalMedia(PlatformFile file) async {
-    final Map<String, dynamic> response = Map<String, dynamic>.from(
-      await _apiClient.multipartPost(
-            '/media/upload',
-            bytes: file.bytes,
-            fileName: file.name,
-            filePath: file.path,
-          )
-          as Map<String, dynamic>,
-    );
-    return _PersistedMedia.fromJson(response);
-  }
-
-  Future<_PersistedMedia> _importRemoteMedia(String sourceUrl) async {
-    final Map<String, dynamic> response = Map<String, dynamic>.from(
-      await _apiClient.post('/media/import', <String, String>{'url': sourceUrl})
-          as Map<String, dynamic>,
-    );
-    return _PersistedMedia.fromJson(response);
   }
 
   @override
@@ -999,19 +989,5 @@ class _MediaPreviewCard extends StatelessWidget {
         const SnackBar(content: Text('Impossibile aprire il media.')),
       );
     }
-  }
-}
-
-class _PersistedMedia {
-  final String reference;
-  final String? thumbnailReference;
-
-  const _PersistedMedia({required this.reference, this.thumbnailReference});
-
-  factory _PersistedMedia.fromJson(Map<String, dynamic> json) {
-    return _PersistedMedia(
-      reference: json['url'] as String,
-      thumbnailReference: json['thumbnailUrl'] as String?,
-    );
   }
 }

@@ -6,7 +6,7 @@ import 'package:mediahub/core/constants/color.dart';
 import 'package:mediahub/core/constants/responsive.dart';
 import 'package:mediahub/core/utils/date.dart';
 import 'package:mediahub/core/utils/preserved_tween_animation_builder.dart';
-import 'package:mediahub/data/repositories/dashboard_repository.dart';
+import 'package:mediahub/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:mediahub/features/dashboard/models/dashboard_data.dart';
 import 'package:mediahub/features/users/widgets/user_detail/shimmer.dart';
 
@@ -21,14 +21,12 @@ class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeIn;
-  late Future<DashboardData> _future;
-
-  final DashboardRepository _repository = DashboardRepository();
+  late final DashboardController controller;
 
   @override
   void initState() {
     super.initState();
-    _future = _repository.getDashboard();
+    controller = DashboardController()..loadDashboard();
 
     _controller = AnimationController(
       vsync: this,
@@ -41,14 +39,13 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   void dispose() {
+    controller.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   void _reload() {
-    setState(() {
-      _future = _repository.getDashboard();
-    });
+    controller.loadDashboard();
   }
 
   @override
@@ -58,26 +55,27 @@ class _DashboardPageState extends State<DashboardPage>
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeIn,
-          child: FutureBuilder<DashboardData>(
-            future: _future,
-            builder:
-                (BuildContext context, AsyncSnapshot<DashboardData> snapshot) {
-                  if (snapshot.hasError) {
-                    return _DashboardError(onRetry: _reload);
-                  }
-
-                  if (!snapshot.hasData) {
-                    return const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: _DashboardSkeleton(),
-                    );
-                  }
-
-                  return _DashboardView(
-                    data: snapshot.data!,
-                    onRefreshTap: _reload,
-                  );
-                },
+          child: AnimatedBuilder(
+            animation: controller,
+            builder: (BuildContext context, _) {
+              if (controller.errorMessage != null && controller.data == null) {
+                return _DashboardError(onRetry: _reload);
+              }
+              if (controller.isLoading && controller.data == null) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: _DashboardSkeleton(),
+                );
+              }
+              final DashboardData? data = controller.data;
+              if (data == null) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: _DashboardSkeleton(),
+                );
+              }
+              return _DashboardView(data: data, onRefreshTap: _reload);
+            },
           ),
         ),
       ),
