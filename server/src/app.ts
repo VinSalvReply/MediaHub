@@ -10,6 +10,7 @@ import { adminRouter } from "./routes/admin.routes.js";
 import { contentsRouter } from "./routes/contents.routes.js";
 import { dashboardRouter } from "./routes/dashboard.routes.js";
 import { eventsRouter } from "./routes/events.routes.js";
+import { metricsRouter } from "./routes/metrics.routes.js";
 import { usersRouter } from "./routes/users.routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -19,7 +20,7 @@ export function createApp(): Express {
   const app = express();
   mkdirSync(mediaDirectory, { recursive: true });
 
-  app.use(cors());
+  app.use(cors({ origin: true, credentials: true }));
   app.use(express.json());
   app.use("/media", express.static(mediaDirectory));
 
@@ -35,6 +36,7 @@ export function createApp(): Express {
   app.use("/contents", contentsRouter);
   app.use("/dashboard", dashboardRouter);
   app.use("/admin", adminRouter);
+  app.use("/metrics", metricsRouter);
   app.use("/media", mediaRouter);
 
   app.use(errorHandler);

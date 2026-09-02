@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <!--
+  <head>
+    <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
 
@@ -14,26 +14,91 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-  <base href="$FLUTTER_BASE_HREF">
+    <base href="$FLUTTER_BASE_HREF" />
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="description" content="A new Flutter project." />
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="mediahub">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+    <!-- iOS meta tags & icons -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="mediahub" />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
 
-  <title>mediahub</title>
-  <link rel="manifest" href="manifest.json">
-</head>
-<body>
-  <!--
+    <title>mediahub</title>
+    <link rel="manifest" href="manifest.json" />
+  </head>
+  <body>
+    <script type="module">
+      import {
+        onCLS,
+        onFCP,
+        onINP,
+        onLCP,
+        onTTFB,
+      } from "https://unpkg.com/web-vitals@4?module";
+
+      const metricsEndpoint =
+        window.MEDIAHUB_METRICS_ENDPOINT ?? "http://localhost:3000/metrics";
+      const params = new URLSearchParams(window.location.search);
+      const buildVariant = params.get("build") ?? "unknown";
+      const formFactor =
+        params.get("form") ??
+        (navigator.userAgentData?.mobile || window.innerWidth <= 600
+          ? "mobile"
+          : "desktop");
+
+      const sendMetric = (metric) => {
+        const payload = JSON.stringify({
+          name: metric.name,
+          value: metric.value,
+          rating: metric.rating,
+          delta: metric.delta,
+          id: metric.id,
+          navigationType: metric.navigationType,
+          url: window.location.href,
+          userAgent: window.navigator.userAgent,
+          timestamp: Date.now(),
+          build: buildVariant,
+          formFactor,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          devicePixelRatio: window.devicePixelRatio,
+        });
+
+        console.log("[web-vitals]", metric.name, metric);
+
+        if (
+          navigator.sendBeacon?.(
+            metricsEndpoint,
+            new Blob([payload], { type: "application/json" }),
+          )
+        ) {
+          return;
+        }
+
+        fetch(metricsEndpoint, {
+          method: "POST",
+          body: payload,
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+        }).catch((error) =>
+          console.warn("[web-vitals] metric upload failed", error),
+        );
+      };
+
+      onCLS(sendMetric, { reportAllChanges: true });
+      onFCP(sendMetric, { reportAllChanges: true });
+      onINP(sendMetric, { reportAllChanges: true });
+      onLCP(sendMetric, { reportAllChanges: true });
+      onTTFB(sendMetric);
+    </script>
+
+    <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
     or to give the user feedback during the initialization process.
@@ -41,6 +106,6 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
-</body>
+    <script src="flutter_bootstrap.js" async></script>
+  </body>
 </html>

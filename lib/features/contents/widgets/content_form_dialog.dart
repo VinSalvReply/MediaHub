@@ -474,36 +474,21 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
         _ => FileType.media,
       };
 
-      final FilePickerResult? result = await FilePicker.pickFiles(
+      final List<PlatformFile> files = await FilePicker.pickFiles(
         type: pickerType,
-        allowMultiple: true,
-        withData: kIsWeb,
       );
-      if (!mounted || result == null || result.files.isEmpty) return;
-
-      final List<PlatformFile> validFiles = result.files
-          .where(
-            (PlatformFile file) =>
-                (file.path?.isNotEmpty ?? false) || file.bytes != null,
-          )
-          .toList();
-
-      if (validFiles.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossibile leggere i file selezionati.'),
-          ),
-        );
-        return;
-      }
+      if (!mounted || files.isEmpty) return;
 
       setState(() => _isSyncingMedia = true);
 
       final List<_SelectedMedia> mediaToAdd = await Future.wait(
-        validFiles.map((PlatformFile file) async {
+        files.map((PlatformFile file) async {
+          final Uint8List? bytes = !kIsWeb && (file.path?.isNotEmpty ?? false)
+              ? null
+              : await file.readAsBytes();
           final MediaUploadResult persistedMedia = await _contentsController
               .uploadMedia(
-                bytes: file.bytes,
+                bytes: bytes,
                 fileName: file.name,
                 filePath: file.path,
               );
@@ -511,7 +496,7 @@ class _ContentFormDialogState extends State<ContentFormDialog> {
             reference: persistedMedia.reference,
             label: file.name,
             thumbnailReference: persistedMedia.thumbnailReference,
-            bytes: file.bytes,
+            bytes: bytes,
           );
         }),
       );
