@@ -8,6 +8,6 @@ createApp().listen(PORT, () => {
   console.log(
     formatString("logs.serverListening", {
       port: PORT,
-    }),
+    }).trim() || `MediaHub server listening on http://localhost:${PORT}`,
   );
 });

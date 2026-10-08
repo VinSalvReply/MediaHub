@@ -19,68 +19,91 @@ function emptyDb(): Database {
     topUsers: [],
     strings: {
       errors: {
-        resourceNotFound: "",
-        internalServerError: "",
-        invalidField: "",
-        idLabel: "",
-        userNotFound: "",
-        eventNotFound: "",
-        contentNotFound: "",
-        queryParamMustBeNumber: "",
-        mediaUrlRequired: "",
-        mediaUploadMissingFile: "",
-        mediaImportFailed: "",
+        resourceNotFound: "Risorsa non trovata",
+        internalServerError: "Errore interno del server",
+        invalidField: "Campo non valido",
+        idLabel: "ID",
+        userNotFound: "Utente non trovato",
+        eventNotFound: "Evento non trovato",
+        contentNotFound: "Contenuto non trovato",
+        queryParamMustBeNumber: "Il parametro deve essere un numero",
+        mediaUrlRequired: "URL del media richiesto",
+        mediaUploadMissingFile: "File da caricare mancante",
+        mediaImportFailed: "Importazione media non riuscita",
       },
       defaults: {
-        untitled: "",
-        untitledContent: "",
+        untitled: "Evento senza titolo",
+        untitledContent: "Contenuto senza titolo",
         userRole: "User",
         userSegment: "Casual",
         activityType: "login",
-        activityDescription: "",
+        activityDescription: "Accesso effettuato",
         device: "web",
         eventStatus: "upcoming",
         contentType: "post",
         contentStatus: "draft",
         alertType: "info",
-        emailTemplate: "",
+        emailTemplate: "user{id}@mediahub.dev",
       },
       dashboard: {
-        contentTypeImage: "",
-        contentTypeVideo: "",
-        contentTypePost: "",
-        contentSubtitleTemplate: "",
-        eventLiveSubtitle: "",
-        eventPlannedSubtitle: "",
-        insightEventsWithContents: "",
-        insightPublishedContents: "",
-        insightLiveCoverage: "",
-        insightContentsWithMedia: "",
+        contentTypeImage: "Immagine",
+        contentTypeVideo: "Video",
+        contentTypePost: "Post",
+        contentSubtitleTemplate: "{type} - {eventTitle}",
+        eventLiveSubtitle: "Evento in diretta",
+        eventPlannedSubtitle: "Evento pianificato",
+        insightEventsWithContents: "Eventi con contenuti",
+        insightPublishedContents: "Contenuti pubblicati",
+        insightLiveCoverage: "Copertura eventi live",
+        insightContentsWithMedia: "Contenuti con media",
       },
       logs: {
-        serverListening: "",
-        seededUsers: "",
+        serverListening: "MediaHub server listening on http://localhost:{port}",
+        seededUsers: "Creati {count} utenti demo",
       },
       seed: {
-        names: [],
-        lastNames: [],
-        eventTitles: [],
-        contentTitles: [],
-        globalEventTitles: [],
-        globalContentTitles: [],
-        entityPostTemplate: "",
-        entityEventTemplate: "",
-        entities: [],
+        names: ["Luca", "Marco", "Giulia", "Francesca", "Alessandro", "Chiara", "Davide", "Elena"],
+        lastNames: ["Rossi", "Bianchi", "Ferrari", "Romano", "Gallo", "Conti"],
+        eventTitles: ["Flutter Meetup", "Tech Conference", "Design Sprint", "Hackathon", "Workshop UX"],
+        contentTitles: ["Landing Page Design", "Promo Video", "User Interview", "Marketing Campaign", "Dashboard UI"],
+        globalEventTitles: ["MediaHub Product Launch", "Community Live Q&A"],
+        globalContentTitles: ["Summer Campaign Hero Video", "Product Launch Social Carousel"],
+        entityPostTemplate: "Post #{id}",
+        entityEventTemplate: "Event #{id}",
+        entities: ["Profile update", "Media asset"],
         activityDescriptions: {
-          login: "",
-          edit: "",
-          upload: "",
-          delete: "",
+          login: "Accesso effettuato",
+          edit: "Modifica contenuto",
+          upload: "Caricamento asset",
+          delete: "Eliminazione elemento",
         },
-        emailTemplate: "",
+        emailTemplate: "user{id}@mediahub.dev",
       },
     },
   };
+}
+
+function withDefaults<T>(defaults: T, stored: unknown): T {
+  if (Array.isArray(defaults)) {
+    return Array.isArray(stored) && stored.length > 0 ? stored as T : defaults;
+  }
+  if (defaults !== null && typeof defaults === "object") {
+    const values = stored !== null && typeof stored === "object" && !Array.isArray(stored)
+      ? stored as Record<string, unknown>
+      : {};
+    return {
+      ...values,
+      ...Object.fromEntries(
+        Object.entries(defaults).map(([key, value]) => [
+          key,
+          withDefaults(value, values[key]),
+        ]),
+      ),
+    } as T;
+  }
+  return stored == null || (typeof stored === "string" && stored.trim() === "")
+    ? defaults
+    : stored as T;
 }
 
 export function loadDb(): Database {
@@ -89,10 +112,16 @@ export function loadDb(): Database {
     const parsed = JSON.parse(
       fs.readFileSync(DB_FILE, "utf8"),
     ) as Partial<Database>;
+    const defaults = emptyDb();
+    const strings = withDefaults(defaults.strings, parsed.strings);
     return {
-      ...emptyDb(),
+      ...defaults,
       ...parsed,
-      global_events: parsed.global_events ?? [],
+      strings,
+      global_events: (parsed.global_events ?? []).map((event) => ({
+        ...event,
+        title: event.title ?? strings.defaults.untitled,
+      })),
       global_contents: parsed.global_contents ?? [],
     } as Database;
   } catch {

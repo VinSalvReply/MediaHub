@@ -137,7 +137,7 @@ export function buildSeed(): Database {
 
     events[u.id] = Array.from({ length: 4 + rand(6) }, (_, i) => ({
       id: i + 1,
-      title: pick(seedEventTitles),
+      title: pick(seedEventTitles) ?? "",
       date: futureDate(),
       attendees: 20 + rand(200),
       status: pick(EVENT_STATUS),
@@ -158,7 +158,7 @@ export function buildSeed(): Database {
 
     contents[u.id] = Array.from({ length: 10 + rand(12) }, (_, i) => ({
       id: i + 1,
-      title: pick(seedContentTitles),
+      title: pick(seedContentTitles) ?? "",
       type: pick(CONTENT_TYPES),
       status: pick(CONTENT_STATUS),
       created_at: pastDate(),
@@ -238,6 +238,12 @@ export function buildSeed(): Database {
       event_id: global_events[0]?.id ?? null,
     },
   );
+
+  for (const event of global_events) {
+    event.contents = global_contents.filter(
+      (content) => content.event_id === event.id,
+    );
+  }
 
   return {
     users,
